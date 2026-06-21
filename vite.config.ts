@@ -4,7 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // GitHub Pages project page → served under /<repo>/. base must match the repo
 // name; the PWA manifest start_url/scope/id and the SW scope all derive from it.
-const base = "/vokabeltrainer/";
+const base = "/Vokablen-Trainer/";
 
 export default defineConfig({
   base,

@@ -4,14 +4,14 @@ Die App ist als PWA gebaut (installierbar, offline). Hosting: GitHub Pages,
 Build automatisch per GitHub Actions. Diese Schritte machst **du**.
 
 ## ⚠️ Wichtig: Repo-Name muss zum `base`-Pfad passen
-In `vite.config.ts` steht `const base = "/vokabeltrainer/";`. Der Teil zwischen
+In `vite.config.ts` steht `const base = "/Vokablen-Trainer/";`. Der Teil zwischen
 den Schrägstrichen **muss exakt dem Repo-Namen entsprechen**.
-- Repo heißt `vokabeltrainer` → nichts ändern.
+- Repo heißt `Vokablen-Trainer` → nichts ändern.
 - Anderer Name → sag mir den Namen, ich passe `base` an (sonst lädt nichts).
 
 ## 1. Leeres GitHub-Repo anlegen
 - Neues Repo, **ohne** README/.gitignore/Lizenz (leer).
-- Name: **`vokabeltrainer`** (Empfehlung; sonst siehe oben).
+- Name: **`Vokablen-Trainer`** (Empfehlung; sonst siehe oben).
 
 ## 2. Secrets hinterlegen
 Repo → **Settings → Secrets and variables → Actions → New repository secret**, zweimal:
@@ -31,15 +31,15 @@ Repo → **Settings → Pages → Build and deployment → Source: „GitHub Act
   git add -A
   git commit -m "Lilly-Anne's Vokabeltrainer"
   git branch -M main
-  git remote add origin https://github.com/<dein-user>/vokabeltrainer.git
+  git remote add origin https://github.com/martinkellerprivate-jpg/Vokablen-Trainer.git
   git push -u origin main      # Benutzername = GitHub-User, Passwort = der PAT
   ```
 - Der Push löst die Action aus (Tab **Actions**). Nach grünem Lauf steht die URL
-  unter **Settings → Pages**: `https://<dein-user>.github.io/vokabeltrainer/`.
+  unter **Settings → Pages**: `https://martinkellerprivate-jpg.github.io/Vokablen-Trainer/`.
 
 ## 5. Gate-Test (machen wir gemeinsam, auf der Live-URL)
 - Seite öffnen → installierbar (Browser bietet „Installieren" an).
-- **Installierte** App starten → öffnet auf `…/vokabeltrainer/` (nicht Root).
+- **Installierte** App starten → öffnet auf `…/Vokablen-Trainer/` (nicht Root).
 - Offline schalten (Flugmodus / DevTools→Network→Offline) → App lädt und ist
   nutzbar (Üben/Wortliste/Statistik/Settings); Sync zeigt „offline".
 - Login/Sync/Teilen funktionieren online wie gehabt.
