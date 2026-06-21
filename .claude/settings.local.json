@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/martinkeller/Downloads/**)",
+      "Bash(awk '{ print NR\": \"length\\($0\\)\" chars\" }' \"Lilly-Annes Vokabeltrainer.html\")",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
