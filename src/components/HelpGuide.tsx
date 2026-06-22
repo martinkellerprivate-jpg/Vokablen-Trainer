@@ -93,6 +93,20 @@ const SECTIONS: Section[] = [
       </>
     ),
   },
+  {
+    title: "9. Wie die App dir hilft zu behalten",
+    body: (
+      <>
+        <p>Du musst nichts davon einstellen — die App macht das automatisch. Drei Prinzipien, die nachweislich am besten beim Behalten helfen:</p>
+        <ul>
+          <li><b>Verteilt statt auf einmal (Timing):</b> Ein Wort kommt nicht am Stück, sondern über mehrere Tage verteilt zurück — möglichst kurz bevor du es vergisst. Der Schnellzugriff <b>„Fällige Wörter"</b> sammelt genau das, was heute dran ist. Kurze tägliche Einheiten schlagen einen langen Block am Wochenende.</li>
+          <li><b>Schwieriges öfter:</b> Wörter, die du falsch hattest oder nur zögerlich beantwortest, bringt die App häufiger zurück; sichere Wörter seltener. <b>„Schwierige Wörter"</b> bündelt deine Wackelkandidaten zum gezielten Üben.</li>
+          <li><b>Mischen (Interleaving):</b> Innerhalb einer Übung werden Wörter und Themen gemischt statt blockweise abgefragt. Das fühlt sich etwas schwerer an, festigt aber spürbar besser.</li>
+        </ul>
+        <p>Dazu der wichtigste Hebel, den <i>du</i> in der Hand hast: <b>erst selbst abrufen, dann nachsehen</b>. Genau dieses Anstrengen beim Erinnern (Modus <b>Type</b> oder <b>Recall</b>) verankert ein Wort fester als blosses Wiederlesen.</p>
+      </>
+    ),
+  },
 ];
 
 export function HelpGuide() {
