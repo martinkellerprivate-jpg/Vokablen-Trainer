@@ -7,7 +7,7 @@ import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile } from "../lib/engine";
 import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
-import { retrievabilityOf, isDueCard, retentionFor, initialCard } from "../lib/fsrs";
+import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
 import { TipPopup } from "./TipPopup";
@@ -16,6 +16,9 @@ import { LERN_TIPPS } from "./LearnTips";
 /* ===================================================================
  * practice.jsx — the flashcard trainer.
  * =================================================================== */
+const STUFE_ORDER = ["sitzt", "sitzt_fast", "sitzt_schlecht", "noch_nicht_geuebt"];
+const toneVarP = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
+
 export function Practice() {
   const store = useStore();
   const toast = useToast();
@@ -103,9 +106,8 @@ export function Practice() {
   const markDone = useCallback((id) => setDoneIds((prev) => prev.has(id) ? prev : new Set(prev).add(id)), []);
   const [runId, setRunId] = useState(0);
 
-  const startRun = () => {
+  const beginRun = (ids, modeOverride?) => {
     flushRef.current();                 // grade unfinished words from the previous run first
-    const ids = resolveScopeWords().map((w) => w.id);
     runWordsRef.current = ids;
     const retention = retentionFor(settings);
     const now = Date.now();
@@ -119,11 +121,18 @@ export function Practice() {
       bases[id] = initialCard(st);   // frozen pre-session FSRS baseline (FIX 1)
     }
     baseCardRef.current = bases;
-    runRef.current = buildRun(ids, meta2, scopeMode);
+    runRef.current = buildRun(ids, meta2, modeOverride || scopeMode);
     gradedRef.current = new Set();
     setDoneIds(new Set());
     setRunId((n) => n + 1);
     setCurrent(null); setFace("front"); setAnim(""); setResult(null); setSession([]); setTip(null);
+  };
+  const startRun = () => beginRun(resolveScopeWords().map((w) => w.id));
+  // V10: re-drill only the words that were wrong/needed a hint this round (mastery).
+  const startRoundRetry = () => {
+    const st = runRef.current; if (!st) return;
+    const failed = Object.values(st.words).filter((w: any) => w.failedOnce || w.usedHint).map((w: any) => w.id);
+    if (failed.length) beginRun(failed, "mastery");
   };
   useEffect(() => { startRun(); }, [pair, selKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -428,14 +437,23 @@ export function Practice() {
         </div>
       );
     }
-    // total > 0 && order empty → round finished (V10 enriches this into the end-card)
+    // V10: round finished → end-card with honest tally + targeted re-drill.
+    const ret = retentionFor(settings);
+    const sitNow = (st ? Object.keys(st.words) : []).filter((id) => deriveProfile(stats[id]?.fsrs, ret).stufe === "sitzt").length;
+    const back = total - sitNow;
+    const failedCount = st ? Object.values(st.words).filter((w: any) => w.failedOnce || w.usedHint).length : 0;
     return (
       <div className="practice-wrap">
         {scopeBar}
-        <div className="empty">
+        <div className="empty round-done">
           <div className="big">Runde geschafft</div>
-          <div>Alle Wörter dieser Runde durch. Wähle oben eine andere Auswahl — oder übe gleich nochmal.</div>
-          <button className="btn btn-primary" style={{ marginTop: 14 }} onClick={startRun}><Icon name="refresh" size={15} /> Nochmal üben</button>
+          <div className="round-tally">{sitNow} {sitNow === 1 ? "Wort sitzt" : "Wörter sitzen"} dauerhaft{back > 0 ? ` · ${back} ${back === 1 ? "kommt" : "kommen"} zur Wiederholung zurück` : ""}.</div>
+          <div className="round-actions">
+            <button className="btn btn-primary" onClick={() => store.setSettings({ practiceSel: "smart:due" })}>Fertig</button>
+            {failedCount > 0 && <button className="btn btn-amber" onClick={startRoundRetry}><Icon name="flame" size={15} /> Wackler nochmal ({failedCount})</button>}
+            <button className="btn btn-ghost btn-sm" onClick={startRun}><Icon name="refresh" size={14} /> Ganze Lektion nochmal</button>
+          </div>
+          <div className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Am besten morgen wieder — dann sitzt's dauerhaft.</div>
         </div>
       </div>
     );
@@ -447,9 +465,29 @@ export function Practice() {
     wrong: { tone: "red", label: "Not quite", icon: "x" },
   };
 
-  // V5/V8: run progress — distinct words mastered out of the frozen run.
-  const runTotal = runRef.current ? runRef.current.total : 0;
-  const runDone = doneIds.size;
+  // V11: progress = GLOBAL mastery over the frozen scope (deriveProfile), not the
+  // run series. Bar (below) + per-word dots (above), four colours from STUFE.
+  const masteryRetention = retentionFor(settings);
+  const scopeIds = runWordsRef.current;
+  const scopeTotal = scopeIds.length;
+  const scopeStufe: Record<string, string> = {};
+  const scopeDist: Record<string, number> = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, noch_nicht_geuebt: 0 };
+  for (const id of scopeIds) { const s = deriveProfile(stats[id]?.fsrs, masteryRetention).stufe; scopeStufe[id] = s; scopeDist[s] = (scopeDist[s] || 0) + 1; }
+  const sits = scopeDist.sitzt;
+  const DOTS_MAX = 80;
+  const masteryBar = scopeTotal > 0 ? (
+    <div className="mastery-strip p-session">
+      <div className="mastery-head">{sits} von {scopeTotal} sitzen</div>
+      <div className="stufe-band">
+        {STUFE_ORDER.map((k) => scopeDist[k] ? <i key={k} style={{ flex: scopeDist[k], background: toneVarP(STUFE[k].tone) }} /> : null)}
+      </div>
+    </div>
+  ) : null;
+  const wordDots = (scopeTotal > 0 && scopeTotal <= DOTS_MAX) ? (
+    <div className="word-dots p-smart">
+      {scopeIds.map((id) => <i key={id} className="wdot" style={{ background: toneVarP(STUFE[scopeStufe[id]].tone) }} />)}
+    </div>
+  ) : null;
 
   return (
     <div className={"practice-wrap" + (focus ? " focus-on" : "")}
@@ -482,6 +520,9 @@ export function Practice() {
           </button>
         </div>
       </div>
+
+      {/* V11: per-word mastery dots (global stufe), above the card */}
+      {wordDots}
 
       {/* card */}
       <div className="card-scene p-card">
@@ -569,11 +610,6 @@ export function Practice() {
               </>
             )}
           </div>
-          )}
-          {runTotal > 0 && (
-            <div className="card-progress" title={`${runDone} von ${runTotal} geschafft`} aria-hidden="true">
-              <i style={{ width: pct(runDone / runTotal) + "%" }} />
-            </div>
           )}
         </div>
       </div>
@@ -674,14 +710,8 @@ export function Practice() {
         )}
       </div>
 
-      {/* session strip */}
-      <div className="session-strip p-session">
-        <span>This session: <b>{session.length}</b></span>
-        <div className="dotrow">
-          {session.map((v, i) => <i key={i} className={v === "correct" ? "c" : v === "almost" ? "a" : "w"} />)}
-          {session.length === 0 && <span className="faint" style={{ fontSize: 12.5 }}>your streak of answers shows here</span>}
-        </div>
-      </div>
+      {/* V11: global mastery bar (replaces the old run series) */}
+      {masteryBar}
 
       {/* sporadic study tip at a natural pause (Phase 6) */}
       <TipPopup tip={tip} onClose={() => setTip(null)} />

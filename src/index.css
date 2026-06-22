@@ -244,6 +244,14 @@ input, button, textarea, select { font-family: inherit; }
 .stufe-band { display: flex; height: 7px; border-radius: 999px; overflow: hidden; margin-top: 9px; background: var(--bg-2); gap: 1px; }
 .stufe-band > i { display: block; min-width: 2px; transition: flex .3s ease; }
 .lchip-due { font-size: 10.5px; font-weight: 700; margin-left: 2px; }
+/* V11: per-word mastery dots + global mastery bar */
+.word-dots { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; width: min(560px, 100%); margin: 0 auto 10px; }
+.wdot { width: 9px; height: 9px; border-radius: 50%; }
+.mastery-strip { width: min(560px, 100%); margin: 14px auto 0; }
+.mastery-head { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; text-align: center; }
+/* V10: round end-card */
+.round-done .round-tally { font-size: 14.5px; color: var(--ink); margin-top: 6px; }
+.round-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
 
 /* answer area */
 .answer-zone { width: min(560px, 100%); display: flex; flex-direction: column; gap: 12px; }
