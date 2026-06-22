@@ -9,6 +9,7 @@ import { PAIRS, fk, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { resolveLesson, lessonProfile, snapshotMembers, examPrognosis } from "../lib/engine";
 import { STUFE, retentionFor, deriveProfile } from "../lib/fsrs";
+import { LessonBuilder } from "./LessonBuilder";
 
 const DAY = 86400000;
 const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--bg-2)";
@@ -37,6 +38,7 @@ export function LessonsTab() {
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [addSrc, setAddSrc] = useState("");
+  const [showDnd, setShowDnd] = useState(false);   // V18
 
   const pairLessons = useMemo(() => lessons.filter((l: any) => l.pair === pair), [lessons, pair]);
   const pairVocab = useMemo(() => vocab.filter((w: any) => w.pair === pair), [vocab, pair]);
@@ -91,8 +93,11 @@ export function LessonsTab() {
             {topics.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           <button className="btn btn-sm btn-primary" onClick={createFromTopic} disabled={!newTopic}><Icon name="plus" size={15} /> Aus Thema</button>
+          <button className={"btn btn-sm" + (showDnd ? " btn-primary" : "")} onClick={() => setShowDnd((s) => !s)}><Icon name="cards" size={15} /> Drag &amp; Drop</button>
         </div>
       </div>
+
+      {showDnd && <LessonBuilder pair={pair} />}
 
       {pairLessons.length === 0 && (
         <div className="empty"><div className="big">Noch keine Lektionen</div><div>Lege oben eine leere Lektion oder eine aus einem Thema an — oder wähle in der Wortliste Wörter aus.</div></div>

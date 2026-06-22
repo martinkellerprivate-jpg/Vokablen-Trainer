@@ -264,6 +264,17 @@ input, button, textarea, select { font-family: inherit; }
 /* V15: exam prognosis box on a lesson */
 .exam-box { margin-top: 10px; padding: 9px 11px; background: var(--amber-bg); border-radius: 10px; }
 .exam-head { font-size: 12.5px; color: var(--ink); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+/* V18: drag-&-drop lesson builder */
+.dnd-builder { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+@media (max-width: 640px) { .dnd-builder { grid-template-columns: 1fr; } }
+.dnd-target { border: 2px dashed var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); transition: border-color .15s ease, background .15s ease; }
+.dnd-target.hot { border-color: var(--amber); background: var(--amber-bg); }
+.dnd-source { border: 1px solid var(--line); border-radius: 12px; padding: 8px; background: var(--card); max-height: 320px; overflow-y: auto; }
+.dnd-grp { border-bottom: 1px solid var(--line-soft); }
+.dnd-grp:last-child { border-bottom: none; }
+.dnd-grp-head { display: flex; align-items: center; gap: 8px; padding: 8px 6px; font-size: 13.5px; font-weight: 600; cursor: grab; }
+.dnd-grp-head:hover { background: var(--bg-2); border-radius: 8px; }
+.dnd-words { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 6px 10px; }
 
 /* answer area */
 .answer-zone { width: min(560px, 100%); display: flex; flex-direction: column; gap: 12px; }
