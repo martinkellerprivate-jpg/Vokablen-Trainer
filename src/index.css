@@ -240,6 +240,11 @@ input, button, textarea, select { font-family: inherit; }
 .help-acc-body b { color: var(--ink); }
 .help-acc-body .help-callout { background: var(--amber-bg); border-radius: 10px; padding: 11px 13px; color: var(--ink); }
 
+/* V9/V11: four-colour mastery band (Stufen-Verteilung) */
+.stufe-band { display: flex; height: 7px; border-radius: 999px; overflow: hidden; margin-top: 9px; background: var(--bg-2); gap: 1px; }
+.stufe-band > i { display: block; min-width: 2px; transition: flex .3s ease; }
+.lchip-due { font-size: 10.5px; font-weight: 700; margin-left: 2px; }
+
 /* answer area */
 .answer-zone { width: min(560px, 100%); display: flex; flex-direction: column; gap: 12px; }
 .answer-row { display: flex; gap: 10px; }

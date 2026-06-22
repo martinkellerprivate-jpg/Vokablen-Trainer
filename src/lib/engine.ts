@@ -2,7 +2,7 @@
  * weighting. Pure logic — no React. */
 import type { Stat, Word } from "./types";
 import { practiceable } from "./pairs";
-import { isDueCard, retrievabilityOf } from "./fsrs";
+import { isDueCard, retrievabilityOf, deriveProfile } from "./fsrs";
 
 /* ---- classification & smart repetition --------------------------- */
 export const CATEGORY = {
@@ -93,18 +93,44 @@ export function trickyCount(vocab: Word[], stats: Record<string, Stat>, mc?: num
   return vocab.filter((w) => practiceable(w) && classifyWord(stats[w.id], mc) === "tricky").length;
 }
 
-/* Resolve a lesson to its words (V6). Dead member ids are skipped silently. */
+/* V9: resolve a (static) lesson to its words. Dead member ids skipped silently.
+ * Legacy dynamic lessons (pre-migration) still resolve via their source. */
 export function resolveLesson(lesson: any, vocab: Word[]): Word[] {
   if (!lesson) return [];
   const pairVocab = vocab.filter((w) => w.pair === lesson.pair);
-  if (lesson.kind === "static") {
-    const set = new Set(lesson.members || []);
+  if (lesson.members) {
+    const set = new Set(lesson.members);
     return pairVocab.filter((w) => set.has(w.id));
   }
-  const src = lesson.source || {};
+  const src = lesson.source || {};   // legacy fallback until lessonsStaticV9 migrates it
   if (src.type === "list") return pairVocab.filter((w) => (w.lists || []).includes(src.ref));
   if (src.type === "topic") return pairVocab.filter((w) => w.topic === src.ref);
   return [];
+}
+
+/* V9: snapshot the current words of a list or topic into a member-id array. */
+export function snapshotMembers(vocab: Word[], pair: string, src: { type: "list" | "topic"; ref: string }): string[] {
+  const pv = vocab.filter((w) => w.pair === pair);
+  const ws = src.type === "list" ? pv.filter((w) => (w.lists || []).includes(src.ref)) : pv.filter((w) => w.topic === src.ref);
+  return Array.from(new Set(ws.map((w) => w.id)));
+}
+
+/* V9/V14: lesson mastery aggregate from deriveProfile (the ONE source). Returns
+ * the count per Stufe, % "sitzt", the dominant colour, and last_review. */
+export function lessonProfile(lesson: any, vocab: Word[], stats: Record<string, any>, effRetention: number, now: number = Date.now()) {
+  const words = resolveLesson(lesson, vocab);
+  const dist: Record<string, number> = { noch_nicht_geuebt: 0, sitzt_schlecht: 0, sitzt_fast: 0, sitzt: 0 };
+  let lastReview = 0;
+  for (const w of words) {
+    const f = stats[w.id]?.fsrs;
+    const p = deriveProfile(f, effRetention, now);
+    dist[p.stufe] = (dist[p.stufe] || 0) + 1;
+    if (f?.last_review && f.last_review > lastReview) lastReview = f.last_review;
+  }
+  const total = words.length;
+  const pctSitzt = total ? dist.sitzt / total : 0;
+  const tone = total === 0 || dist.noch_nicht_geuebt === total ? "slate" : pctSitzt > 0.8 ? "green" : pctSitzt < 0.33 ? "red" : "amber";
+  return { total, dist, pctSitzt, tone, lastReview };
 }
 
 /* Resolve a built-in smart quick-access ("due" | "tricky") for one pair.

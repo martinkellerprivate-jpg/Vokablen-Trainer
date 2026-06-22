@@ -71,14 +71,19 @@ export interface ListT {
   createdAt: number;
 }
 
-export type LessonKind = "static" | "dynamic";
+// V9: lessons are ALWAYS static snapshots (a fixed set of word ids).
 export interface Lesson {
   id: string;
   name: string;
   pair: PairId;
-  kind: LessonKind;
-  members?: string[];                          // static: hand-picked word ids
-  source?: { type: "list" | "topic"; ref: string }; // dynamic: resolves at runtime
+  members: string[];                  // the fixed snapshot of word ids
+  createdAt?: number;
+  updatedAt?: number;
+  dueDate?: number;                   // optional exam deadline (V15)
+  origin?: string;                    // provenance label only (e.g. "Liste: Tiere"), no auto-sync
+  // legacy (pre-V9) — tolerated on read, migrated to members on load:
+  kind?: string;
+  source?: { type: "list" | "topic"; ref: string };
 }
 
 export interface DiffChar {

@@ -5,7 +5,7 @@ import { Icon } from "../ui/Icon";
 import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
-import { resolveLesson, resolveSmart } from "../lib/engine";
+import { resolveLesson, resolveSmart, lessonProfile } from "../lib/engine";
 import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
 import { retrievabilityOf, isDueCard, retentionFor, initialCard } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
@@ -376,14 +376,24 @@ export function Practice() {
       ))}
     </div>
   );
+  // V9: sort lessons by deadline (soonest first), show a mastery colour dot.
+  const lessonRetention = retentionFor(settings);
+  const dotTone = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
+  const lessonsSorted = [...pairLessons].sort((a, b) => (a.dueDate || Infinity) - (b.dueDate || Infinity) || (a.createdAt || 0) - (b.createdAt || 0));
   const lessonSelectorEl = pairLessons.length > 0 ? (
     <div className="lchips lesson-selector p-lessonsel">
       <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
-      {pairLessons.map((l) => (
+      {lessonsSorted.map((l) => {
+        const tone = lessonProfile(l, vocab, stats, lessonRetention).tone;
+        const days = l.dueDate ? Math.ceil((l.dueDate - Date.now()) / 86400000) : null;
+        return (
         <button key={l.id} className={"lchip" + (effective.kind === "lesson" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("lesson", l.id)}>
+          <span className="dot" style={{ width: 9, height: 9, borderRadius: "50%", background: dotTone(tone) }} />
           {l.name} <span className="lchip-n">{lessonCountOf(l)}</span>
+          {days != null && <span className="lchip-due" style={{ color: days <= 3 ? "var(--red)" : "var(--ink-faint)" }}>{days < 0 ? "überfällig" : days === 0 ? "heute" : `${days}T`}</span>}
         </button>
-      ))}
+        );
+      })}
     </div>
   ) : null;
   const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);

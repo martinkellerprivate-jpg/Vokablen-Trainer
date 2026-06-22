@@ -6,7 +6,7 @@ import { LS, load, save } from "../lib/storage";
 import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
-import { migrateTopics, lessonsForLists, swissifyVocab } from "../lib/migrate";
+import { migrateTopics, lessonsForLists, swissifyVocab, migrateLessonsStatic } from "../lib/migrate";
 import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION } from "../lib/fsrs";
 import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
 import type { Word, ListT } from "../lib/types";
@@ -103,6 +103,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (add.length) setLessonsState((les: any) => [...les, ...add]);
       applied.lessonsV6 = true;
     }
+    if (!done.lessonsStaticV9) { // V9 — convert all lessons to static snapshots (once)
+      setLessonsState((les: any) => migrateLessonsStatic(les, initRef.current.lists, initRef.current.vocab || [], newId));
+      applied.lessonsStaticV9 = true;
+    }
     if (Object.keys(applied).length) {
       setMeta((prev: any) => ({ ...prev, migrations: { ...(prev.migrations || {}), ...applied } }));
     }
@@ -182,31 +186,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     resetStatsForWords: (ids: string[]) => setStats((prev: any) => { const next = { ...prev }; ids.forEach((id) => { delete next[id]; }); return next; }),
     resetSettings: () => setSettings((p: any) => ({ ...p, ...RECOMMENDED })),
     // ---- lists (each new list gets a paired dynamic "whole list" lesson) ----
+    // V9: lists and lessons are decoupled — adding a list no longer creates a lesson.
     addList: (name: string, pair: string) => {
       const l = { id: newId(), name: name || "New list", pair: pair || "en-de", createdAt: Date.now() };
       setListsState((ls: any) => [...ls, l]);
-      setLessonsState((les: any) => [...les, { id: newId(), name: l.name, pair: l.pair, kind: "dynamic", source: { type: "list", ref: l.id } }]);
       return l.id;
     },
     renameList: (id: string, name: string) => {
       setListsState((ls: any) => ls.map((l: any) => (l.id === id ? { ...l, name } : l)));
-      setLessonsState((les: any) => les.map((le: any) => (le.source?.type === "list" && le.source.ref === id ? { ...le, name } : le)));
     },
     deleteList: (id: string) => {
       setListsState((ls: any) => ls.filter((l: any) => l.id !== id));
       setVocabState((v: any) => v.map((w: any) => ({ ...w, lists: (w.lists || []).filter((x: string) => x !== id) })));
-      setLessonsState((les: any) => les.filter((le: any) => !(le.source?.type === "list" && le.source.ref === id)));
+      // lessons are snapshots → unaffected by list deletion
     },
     toggleWordList: (wordId: string, listId: string) => setVocabState((v: any) => v.map((w: any) => w.id === wordId
       ? { ...w, lists: (w.lists || []).includes(listId) ? w.lists.filter((x: string) => x !== listId) : [...(w.lists || []), listId] }
       : w)),
-    // ---- lessons (V6) ----
-    addLesson: (lesson: any) => { const id = newId(); setLessonsState((les: any) => [...les, { id, ...lesson }]); return id; },
-    updateLesson: (id: string, patch: any) => setLessonsState((les: any) => les.map((l: any) => (l.id === id ? { ...l, ...patch } : l))),
+    // ---- lessons (V9: always static snapshots) ----
+    addLesson: (lesson: any) => { const id = newId(); const now = Date.now(); setLessonsState((les: any) => [...les, { id, members: [], createdAt: now, updatedAt: now, ...lesson }]); return id; },
+    updateLesson: (id: string, patch: any) => setLessonsState((les: any) => les.map((l: any) => (l.id === id ? { ...l, ...patch, updatedAt: Date.now() } : l))),
     deleteLesson: (id: string) => setLessonsState((les: any) => les.filter((l: any) => l.id !== id)),
     setLessons: (next: any[]) => setLessonsState(next),
     addWordsToLesson: (id: string, wordIds: string[]) => setLessonsState((les: any) => les.map((l: any) =>
-      l.id === id && l.kind === "static" ? { ...l, members: Array.from(new Set([...(l.members || []), ...wordIds])) } : l)),
+      l.id === id ? { ...l, members: Array.from(new Set([...(l.members || []), ...wordIds])), updatedAt: Date.now() } : l)),
+    removeWordFromLesson: (id: string, wordId: string) => setLessonsState((les: any) => les.map((l: any) =>
+      l.id === id ? { ...l, members: (l.members || []).filter((x: string) => x !== wordId), updatedAt: Date.now() } : l)),
     newId,
     // sync glue
     applyRemote,

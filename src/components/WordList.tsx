@@ -58,7 +58,7 @@ export function WordList() {
   const [lessonName, setLessonName] = useState("");
   const [addLessonId, setAddLessonId] = useState("");
   const toggleSel = (id) => setSelectedIds((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
-  const staticLessons = (store.lessons || []).filter((l) => l.pair === pair && l.kind === "static");
+  const staticLessons = (store.lessons || []).filter((l) => l.pair === pair);   // V9: all lessons are static
   const createLessonFromSel = () => {
     if (!selectedIds.length) return;
     const id = store.addLesson({ name: lessonName.trim() || "Auswahl", pair, kind: "static", members: [...selectedIds] });

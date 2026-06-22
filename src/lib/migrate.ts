@@ -49,3 +49,35 @@ export function lessonsForLists(lists: ListT[], existingLessons: any[], newId: (
   }
   return added;
 }
+
+/* V9 — convert ALL lessons to static snapshots (kind/source removed). Runs exactly
+ * once. FIX 3: the "list without a lesson → snapshot" fill happens ONLY in this
+ * single pass, never as a standing rule, so a deliberately-deleted list-lesson is
+ * not recreated on the next load. Empty FR/LA snapshots are skipped (no empties). */
+function snap(vocab: Word[], pair: string, src: { type: string; ref: string }): string[] {
+  const pv = vocab.filter((w) => w.pair === pair);
+  const ws = src.type === "list" ? pv.filter((w) => (w.lists || []).includes(src.ref)) : pv.filter((w) => w.topic === src.ref);
+  return Array.from(new Set(ws.map((w) => w.id)));
+}
+export function migrateLessonsStatic(lessons: any[], lists: ListT[], vocab: Word[], newId: () => string): any[] {
+  const now = Date.now();
+  const coveredLists = new Set<string>();
+  const out = lessons.map((l) => {
+    if (l.members && !l.source) return l;                 // already static
+    const src = l.source || {};
+    let members: string[] = l.members || [];
+    let origin = l.origin;
+    if (src.type === "list") { members = snap(vocab, l.pair, src); coveredLists.add(src.ref); origin = "Liste"; }
+    else if (src.type === "topic") { members = snap(vocab, l.pair, src); origin = "Thema: " + src.ref; }
+    const { kind, source, ...rest } = l;
+    return { ...rest, members: Array.from(new Set(members)), createdAt: l.createdAt || now, updatedAt: now, origin };
+  });
+  const added: any[] = [];
+  for (const list of lists) {                             // FIX 3: only in this one pass
+    if (coveredLists.has(list.id)) continue;
+    const members = snap(vocab, list.pair, { type: "list", ref: list.id });
+    if (!members.length) continue;                        // no empty lessons (FR/LA)
+    added.push({ id: newId(), name: list.name, pair: list.pair, members, createdAt: now, updatedAt: now, origin: "Liste" });
+  }
+  return [...out, ...added];
+}
