@@ -214,6 +214,8 @@ input, button, textarea, select { font-family: inherit; }
 .card-scene { position: relative; }
 .card-expand { position: absolute; top: 8px; right: 8px; z-index: 5; width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); display: grid; place-items: center; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .14s ease, color .14s ease, border-color .14s ease; }
 .card-expand:hover { color: var(--amber-deep); border-color: var(--amber); transform: scale(1.06); }
+/* B2: audio button fixed at the card's top-left, identical across all modes/faces */
+.card-audio { position: absolute; top: 8px; left: 8px; z-index: 5; width: 34px; height: 34px; border-radius: 9px; box-shadow: var(--shadow-sm); }
 .practice-wrap.focus-on { position: fixed; inset: 0; z-index: 200; margin: 0; background: oklch(0.2 0.02 70 / 0.62); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 22px; overflow: auto; }
 .practice-wrap.focus-on .p-smart, .practice-wrap.focus-on .p-lessonsel, .practice-wrap.focus-on .p-controls, .practice-wrap.focus-on .p-session { display: none; }
 .practice-wrap.focus-on .card-scene { width: min(94vw, 128vh); max-width: 1200px; }

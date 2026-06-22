@@ -132,6 +132,9 @@ export function Practice() {
     return vocab.filter((w) => set.has(w.id) && practiceable(w));
   }, [vocab, runId]);
   const poolById = useMemo(() => { const m = {}; for (const w of pool) m[w.id] = w; return m; }, [pool]);
+  // B1: multiple-choice distractors come from the WHOLE pair vocabulary, not the
+  // (possibly tiny) run scope — so a 1-word scope still yields full options.
+  const distractorPool = useMemo(() => vocab.filter((w) => w.pair === pair && practiceable(w)), [vocab, pair]);
 
   // Show a single study tip at a natural pause, every N scored cards.
   const TIP_EVERY = { off: 0, occasional: 12, frequent: 6 };
@@ -168,7 +171,7 @@ export function Practice() {
     setInput(""); setResult(null); setHintUsed(false); setPicked(null);
     // build multiple-choice options
     const nOpts = Math.max(2, Math.min(6, settings.choicesCount || 4));
-    const others = pool.filter((o) => o.id !== w.id);
+    const others = distractorPool.filter((o) => o.id !== w.id);   // B1: full pair vocab
     const distractors = [];
     const bag = [...others].sort(() => Math.random() - 0.5);
     for (const o of bag) {
@@ -179,7 +182,7 @@ export function Practice() {
     setChoices([w, ...distractors].sort(() => Math.random() - 0.5));
     setTimeout(() => inputRef.current && inputRef.current.focus(), 60);
     if (settings.autoAudio && hasTTS(srcKey)) setTimeout(() => speak(sideText(w, srcKey), srcKey), 130);
-  }, [pool, poolById, tgtKey, srcKey, settings.choicesCount, settings.autoAudio]);
+  }, [poolById, distractorPool, tgtKey, srcKey, settings.choicesCount, settings.autoAudio]);
 
   // V8: record the current word's resolution into the runqueue; fire ONE FSRS
   // grade at graduation. Memorize = pure exposition → seen, never graded.
@@ -397,14 +400,32 @@ export function Practice() {
     );
   }
   if (!current) {
-    const done = !!(runRef.current && runRef.current.total > 0);
+    // B3: three distinct reasons there's no current card.
+    const st = runRef.current;
+    const remaining = st ? st.order.length : 0;
+    const total = st ? st.total : 0;
+    if (remaining > 0) {   // transient: first card about to be picked
+      return <div className="practice-wrap">{scopeBar}<div className="empty"><div className="big">Bereit</div><div>Einen Moment …</div></div></div>;
+    }
+    if (total === 0) {     // nothing was due / everything already sits
+      return (
+        <div className="practice-wrap">
+          {scopeBar}
+          <div className="empty">
+            <div className="big">Alles sitzt — nichts fällig</div>
+            <div>In dieser Auswahl ist gerade nichts dran. Wähle oben eine andere Lektion / einen Schnellzugriff — oder komm später wieder.</div>
+          </div>
+        </div>
+      );
+    }
+    // total > 0 && order empty → round finished (V10 enriches this into the end-card)
     return (
       <div className="practice-wrap">
         {scopeBar}
         <div className="empty">
-          <div className="big">{done ? "Geschafft — diese Runde sitzt" : "Bereit"}</div>
-          <div>{done ? "Alle Wörter dieser Auswahl gemeistert. Wähle oben eine andere Lektion oder einen Schnellzugriff — oder übe gleich nochmal." : "Einen Moment …"}</div>
-          {done && <button className="btn btn-primary" style={{ marginTop: 14 }} onClick={startRun}><Icon name="refresh" size={15} /> Nochmal üben</button>}
+          <div className="big">Runde geschafft</div>
+          <div>Alle Wörter dieser Runde durch. Wähle oben eine andere Auswahl — oder übe gleich nochmal.</div>
+          <button className="btn btn-primary" style={{ marginTop: 14 }} onClick={startRun}><Icon name="refresh" size={15} /> Nochmal üben</button>
         </div>
       </div>
     );
@@ -458,6 +479,13 @@ export function Practice() {
           onClick={() => setFocus((f) => !f)}>
           <Icon name={focus ? "x" : "expand"} size={16} />
         </button>
+        {/* B2: one audio button, fixed top-left of the card across all modes/faces */}
+        {hasTTS(face === "front" ? srcLang : tgtLang) && (
+          <button className={"audio-btn card-audio" + (playing ? " playing" : "")} title="Hör es"
+            onClick={(e) => { e.stopPropagation(); const k = face === "front" ? srcKey : tgtKey; playAudio(sideText(current, k), face === "front" ? srcLang : tgtLang); }}>
+            <Icon name="volume" size={16} />
+          </button>
+        )}
         <div className={"flashcard" + (anim ? " " + anim : "")} data-card-style={settings.cardStyle || "ruled"} data-card-font={settings.cardFont || "serif"}>
           {face === "front" ? (
           /* FRONT */
@@ -472,12 +500,6 @@ export function Practice() {
               <div className="prompt-word">{sideText(current, srcKey)}</div>
               {srcKey !== NATIVE && latinContext(current) && (
                 <div className="faint" style={{ fontSize: 14, marginTop: -6 }}>{latinContext(current)}</div>
-              )}
-              {hasTTS(srcLang) && (
-              <button className={"audio-btn" + (playing ? " playing" : "")} title="Hear it"
-                onClick={(e) => { e.stopPropagation(); playAudio(sideText(current, srcKey), srcLang); }}>
-                <Icon name="volume" size={20} />
-              </button>
               )}
               <div className="prompt-hint">{mode === "recall" ? "Recall the answer, then flip" : mode === "memorize" ? "Tap the card to reveal" : (latinL3Answer ? "Alle Stammformen eingeben" : `Translate to ${labelOf(tgtKey)}`)}</div>
             </div>
@@ -495,12 +517,6 @@ export function Practice() {
                     </span>
                     {verdictMeta[result.verdict].label}
                   </div>
-                  {hasTTS(tgtLang) && (
-                  <button className="audio-btn" style={{ width: 38, height: 38 }} title="Hear it"
-                    onClick={() => playAudio(sideText(current, tgtKey), tgtLang)}>
-                    <Icon name="volume" size={17} />
-                  </button>
-                  )}
                 </div>
                 <div className="card-center" style={{ gap: 18 }}>
                   <div>
@@ -534,12 +550,6 @@ export function Practice() {
               <>
                 <div className="card-top">
                   <span className="topic-chip">{current.topic || "Vocabulary"}</span>
-                  {hasTTS(tgtLang) && (
-                  <button className="audio-btn" style={{ width: 38, height: 38 }} title="Hear it"
-                    onClick={(e) => { e.stopPropagation(); playAudio(sideText(current, tgtKey), tgtLang); }}>
-                    <Icon name="volume" size={17} />
-                  </button>
-                  )}
                 </div>
                 <div className="card-center" style={{ gap: 10 }}>
                   <div className="diff-label">{labelOf(tgtKey)}</div>

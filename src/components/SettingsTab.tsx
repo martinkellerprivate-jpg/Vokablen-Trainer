@@ -195,14 +195,11 @@ export function SettingsTab() {
         <Field title="Skin" recLabel="Papier" atRec={atR("skin")}
           desc="Farbwelt der ganzen App. Papier ist der gewohnte warme Look.">
 
-          <div className="set-slider" style={{ gap: 8 }}>
-            <span className="skin-swatch" style={{ background: settings.skin === "dark" ? "#2a2620" : settings.skin === "fresh" ? "#eef4f5" : "#f1e8d8" }} />
-            <select className="field" style={{ width: "100%" }} value={settings.skin} onChange={(e) => set("skin", e.target.value)}>
-              <option value="paper">Papier (warm)</option>
-              <option value="dark">Dunkel</option>
-              <option value="fresh">Frisch (kühl)</option>
-            </select>
-          </div>
+          <select className="field" style={{ width: "100%" }} value={settings.skin} onChange={(e) => set("skin", e.target.value)}>
+            <option value="paper">Papier (warm)</option>
+            <option value="dark">Dunkel</option>
+            <option value="fresh">Frisch (kühl)</option>
+          </select>
         </Field>
         <Field title="Kartenstil" recLabel="Liniert" atRec={atR("cardStyle")}
           desc="Aussehen der Karteikarte – unabhängig vom Skin.">
