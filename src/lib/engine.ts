@@ -2,7 +2,7 @@
  * weighting. Pure logic — no React. */
 import type { Stat, Word } from "./types";
 import { practiceable } from "./pairs";
-import { isDueCard, retrievabilityOf, deriveProfile } from "./fsrs";
+import { isDueCard, retrievabilityOf, deriveProfile, retrievabilityAt, effectiveRetentionFor } from "./fsrs";
 
 /* ---- classification & smart repetition --------------------------- */
 export const CATEGORY = {
@@ -102,16 +102,18 @@ export function resolveToday(pairVocab: Word[], stats: Record<string, any>, less
   const seen = new Set<string>();
   const out: Word[] = [];
   const add = (w: Word) => { if (!seen.has(w.id) && practiceable(w)) { seen.add(w.id); out.push(w); } };
-  pairVocab.filter((w) => isDue(stats[w.id], now, retention)).forEach(add);   // 1) due
+  // V15: per-word effective retention (deadline densification raises it near a due date)
+  const effFor = (w: Word) => effectiveRetentionFor(w, { targetRetention: retention }, lessons, now);
+  pairVocab.filter((w) => isDue(stats[w.id], now, effFor(w))).forEach(add);   // 1) due (override-aware)
   const pair = pairVocab[0]?.pair;
   for (const l of (lessons || [])) {                                          // 2) deadline-at-risk
     if (l.pair !== pair || !l.dueDate) continue;
     const daysLeft = (l.dueDate - now) / DAY_MS;
     if (daysLeft < 0 || daysLeft > 7) continue;
     const set = new Set(l.members || []);
-    pairVocab.filter((w) => set.has(w.id) && deriveProfile(stats[w.id]?.fsrs, retention, now).stufe !== "sitzt").forEach(add);
+    pairVocab.filter((w) => set.has(w.id) && deriveProfile(stats[w.id]?.fsrs, effFor(w), now).stufe !== "sitzt").forEach(add);
   }
-  out.sort((a, b) => retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
+  out.sort((a, b) => retrievabilityOf(stats[a.id], effFor(a), now) - retrievabilityOf(stats[b.id], effFor(b), now));
   const news = pairVocab.filter((w) => practiceable(w) && !(stats[w.id]?.fsrs)).slice(0, Math.max(0, newPerDay || 0));
   for (const w of news) { if (out.length >= dailyGoal) break; add(w); }       // 3) new quota toward goal
   return dailyGoal ? out.slice(0, Math.max(dailyGoal, 1)) : out;
@@ -135,6 +137,25 @@ export function sevenDayOutlook(pairVocab: Word[], stats: Record<string, any>, l
     if (idx >= 0 && idx < 7) days[idx].deadlines.push(l.name);
   }
   return days;
+}
+
+/* V15 — exam prognosis: for a lesson with a deadline, estimate each word's
+ * retrievability AT the exam day and bucket it. Honest "Schätzung". */
+export function examPrognosis(lesson: any, vocab: Word[], stats: Record<string, any>, now: number = Date.now()) {
+  if (!lesson?.dueDate) return null;
+  const words = resolveLesson(lesson, vocab);
+  const buckets: Record<string, Word[]> = { sicher: [], wackelig: [], vergessen: [] };
+  for (const w of words) {
+    const r = retrievabilityAt(stats[w.id]?.fsrs, lesson.dueDate);   // null = never practised
+    const b = r == null ? "vergessen" : r >= 0.9 ? "sicher" : r >= 0.7 ? "wackelig" : "vergessen";
+    buckets[b].push(w);
+  }
+  const daysLeft = Math.ceil((lesson.dueDate - now) / DAY_MS);
+  const need = buckets.wackelig.length + buckets.vergessen.length;
+  const perDay = daysLeft > 0 ? Math.ceil(need / daysLeft) : need;
+  // unreachable if even at a heavy pace some words can't be pulled to "sicher"
+  const unreachable = daysLeft <= 0 ? buckets.vergessen.length : Math.max(0, need - daysLeft * Math.max(perDay, 8));
+  return { due: lesson.dueDate, daysLeft, total: words.length, buckets, need, perDay, unreachable };
 }
 
 /* V9: resolve a (static) lesson to its words. Dead member ids skipped silently.

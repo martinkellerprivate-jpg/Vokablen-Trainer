@@ -7,7 +7,7 @@ import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/Icon";
 import { PAIRS, fk, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
-import { resolveLesson, lessonProfile, snapshotMembers } from "../lib/engine";
+import { resolveLesson, lessonProfile, snapshotMembers, examPrognosis } from "../lib/engine";
 import { STUFE, retentionFor, deriveProfile } from "../lib/fsrs";
 
 const DAY = 86400000;
@@ -136,6 +136,31 @@ export function LessonsTab() {
                   </span>
                 )}
               </div>
+
+              {/* V15: exam prognosis when a deadline is set */}
+              {l.dueDate && (() => {
+                const pg = examPrognosis(l, vocab, stats);
+                if (!pg) return null;
+                const seg = (n: number, tone: string) => n ? <i style={{ flex: n, background: toneVar(tone) }} /> : null;
+                return (
+                  <div className="exam-box">
+                    <div className="exam-head">
+                      <Icon name="target" size={13} /> {pg.daysLeft < 0 ? "Prüfung vorbei" : `Prüfung in ${pg.daysLeft} ${pg.daysLeft === 1 ? "Tag" : "Tagen"}`} · <b>{pg.buckets.sicher.length} von {pg.total} sicher</b> <span className="faint">· Schätzung</span>
+                    </div>
+                    <div className="stufe-band" style={{ marginTop: 7 }}>
+                      {seg(pg.buckets.sicher.length, "green")}{seg(pg.buckets.wackelig.length, "amber")}{seg(pg.buckets.vergessen.length, "red")}
+                    </div>
+                    {pg.need > 0 && pg.daysLeft >= 0 && (
+                      <div className="row" style={{ justifyContent: "space-between", marginTop: 7, gap: 8, flexWrap: "wrap" }}>
+                        <span className="faint" style={{ fontSize: 12 }}>üb die {pg.need} · ~{pg.perDay}/Tag{pg.unreachable > 0 ? ` · ${pg.unreachable} kaum noch auf grün` : ""}</span>
+                        <button className="btn btn-sm btn-amber" onClick={() => { store.setSettings({ practiceSel: "lesson:" + l.id }); window.dispatchEvent(new CustomEvent("vt-tab", { detail: "practice" })); }}>
+                          <Icon name="flame" size={13} /> Risiko üben ({pg.need})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {openEdit === l.id && (
                 <div className="chk-wrap" style={{ marginTop: 10, borderTop: "1px solid var(--line-soft)", paddingTop: 10 }}>

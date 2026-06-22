@@ -35,8 +35,21 @@ export function retentionFor(s?: any): number {
  * target; V15 raises it per active lesson deadline (highest wins). Every derivation
  * (card, stats, popup, today, due-list) must call this — never settings.targetRetention
  * directly — so the same word shows identical due everywhere. */
-export function effectiveRetentionFor(_word: any, settings: any, _lessons?: any[], _now?: number): number {
-  return retentionFor(settings);   // V15 will override here
+export const EXAM_WINDOW_DAYS = 10;   // densify within this many days before a deadline
+export const EXAM_RETENTION = 0.95;   // raised retention target while a deadline is near
+export function effectiveRetentionFor(word: any, settings: any, lessons?: any[], now: number = Date.now()): number {
+  const base = retentionFor(settings);
+  if (!word || !lessons || !lessons.length) return base;
+  // V15 auto-densification: a word in a lesson whose deadline is within the window
+  // gets a higher target → shorter intervals / earlier due. Highest wins; after the
+  // deadline the override is gone (snap-back). Pure derivation, no stored state.
+  let target = base;
+  for (const l of lessons) {
+    if (!l.dueDate || !(l.members || []).includes(word.id)) continue;
+    const daysLeft = (l.dueDate - now) / 86400000;
+    if (daysLeft >= 0 && daysLeft <= EXAM_WINDOW_DAYS) target = Math.max(target, EXAM_RETENTION);
+  }
+  return target;
 }
 
 /* ---- V13: the four mastery levels (S-axis). The ONLY colour/label source. ---- */
