@@ -140,17 +140,24 @@ export function resolveSmart(
   key: string, pairVocab: Word[], stats: Record<string, Stat>, mc?: number,
   opts?: { retention?: number; cap?: number },
 ): Word[] {
-  const sc = SMART[key]; if (!sc) return [];
   const now = Date.now();
   const retention = (opts && opts.retention) || 0.9;
-  // V13: due filtered/ordered via deriveProfile retention (FIX 4 consistency)
-  let words = key === "due"
-    ? pairVocab.filter((w) => practiceable(w) && isDue(stats[w.id], now, retention))
-    : pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
+  // V13/V14: FSRS-based smart scopes via deriveProfile (the one source).
+  //  due = istFaellig (R) · wackeln = stufe 'sitzt_schlecht' (S) · baldfaellig (R, !faellig)
+  //  leech = istLeech (D) · frischfragil = graded & S<S1 · kurzvorsitzt = S2*0.7..S2
+  const profOf = (id: string) => deriveProfile(stats[id]?.fsrs, retention, now);
+  let words: Word[];
   if (key === "due") {
-    words = words.slice().sort((a, b) =>
-      retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
+    words = pairVocab.filter((w) => practiceable(w) && isDue(stats[w.id], now, retention))
+      .sort((a, b) => retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
     if (opts && opts.cap && words.length > opts.cap) words = words.slice(0, opts.cap);
+    return words;
   }
-  return words;
+  if (key === "wackeln") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).stufe === "sitzt_schlecht");
+  if (key === "baldfaellig") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).baldFaellig);
+  if (key === "leech") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).istLeech);
+  if (key === "frischfragil") return pairVocab.filter((w) => { const f = stats[w.id]?.fsrs; return practiceable(w) && f && f.state !== 0 && f.stability < 3; });
+  if (key === "kurzvorsitzt") return pairVocab.filter((w) => { const s = stats[w.id]?.fsrs?.stability || 0; return practiceable(w) && s >= 14 * 0.7 && s < 14; });
+  const sc = SMART[key]; if (!sc) return [];
+  return pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
 }

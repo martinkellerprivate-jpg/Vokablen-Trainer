@@ -22,6 +22,8 @@ const ICONS: Record<string, string> = {
   expand: "M8 3H5a2 2 0 0 0-2 2v3 M21 8V5a2 2 0 0 0-2-2h-3 M16 21h3a2 2 0 0 0 2-2v-3 M3 16v3a2 2 0 0 0 2 2h3",
   help: "M12 17h.01 M9.1 9a3 3 0 1 1 4.6 3c-.8.6-1.7 1.2-1.7 2.5 M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z",
   chart: "M3 3v18h18 M7 14v4 M12 9v9 M17 5v13",
+  clock: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0 M12 7v5l3 2",
+  calendar: "M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M4 9h16 M8 3v4 M16 3v4",
   refresh: "M3 12a9 9 0 0 1 15-6.7L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-15 6.7L3 16 M3 21v-5h5",
   filter: "M3 5h18 M6 12h12 M10 19h4",
   swatch: "M2 12h20 M12 2v20",

@@ -5,7 +5,7 @@ import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/Icon";
 import { speak } from "../ui/speak";
 import { translateWord } from "../lib/translate";
-import { classifyWord, CATEGORY } from "../lib/engine";
+import { deriveProfile, retentionFor } from "../lib/fsrs";
 import { PAIRS, practiceable, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { isConfigured } from "../lib/supabase";
@@ -259,10 +259,11 @@ export function WordList() {
     toast("Exported your word list", "download");
   };
 
+  const WL_STUFE: any = { sitzt: ["green", "Sitzt"], sitzt_fast: ["amber", "Sitzt fast"], sitzt_schlecht: ["red", "Wackelt noch"], noch_nicht_geuebt: ["slate", "Noch nicht geübt"] };
   const catBadge = (w) => {
     if (!practiceable(w)) return <span className="badge red"><span className="dot" />Needs translation</span>;
-    const c = CATEGORY[classifyWord(stats[w.id], settings.masteryCorrect)];
-    return <span className={"badge " + c.tone}><span className="dot" />{c.label}</span>;
+    const [tone, label] = WL_STUFE[deriveProfile(stats[w.id]?.fsrs, retentionFor(settings)).stufe];   // V14: one source
+    return <span className={"badge " + tone}><span className="dot" />{label}</span>;
   };
 
   return (

@@ -3,11 +3,23 @@ import { useStore } from "../store/StoreProvider";
 import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/Icon";
 import { Ring, toneColor, pct } from "../ui/Ring";
-import { wordsForSelection, classifyWord, CATEGORY } from "../lib/engine";
+import { wordsForSelection, resolveSmart } from "../lib/engine";
+import { deriveProfile, retentionFor } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { buildInsights } from "../lib/insights";
 import { ListSelector } from "./ListSelector";
+
+// V14: the four FSRS levels (one source). Tone/labels match V13 STUFE.
+const STUFE_META: Record<string, any> = {
+  sitzt:             { label: "Sitzt",           tone: "green", blurb: "Sitzt sicher — hält lange." },
+  sitzt_fast:        { label: "Sitzt fast",      tone: "amber", blurb: "Fast da — noch ein paar Wiederholungen." },
+  sitzt_schlecht:    { label: "Wackelt noch",    tone: "red",   blurb: "Wackelt noch — kommt öfter zurück." },
+  noch_nicht_geuebt: { label: "Noch nicht geübt", tone: "slate", blurb: "Noch nicht geübt." },
+};
+const STUFE_KEYS = ["sitzt", "sitzt_fast", "sitzt_schlecht", "noch_nicht_geuebt"];
+const haeltText = (p: any) => p.haeltTage ? `hält ~${Math.round(p.haeltTage)} T` : "";
+const faelligText = (p: any, now = Date.now()) => p.due == null ? "" : p.istFaellig ? "fällig" : `fällig in ${Math.max(0, Math.ceil((p.due - now) / 86400000))} T`;
 
 /* ===================================================================
  * stats.jsx — detailed scoring: overall + category + word-by-word.
@@ -28,27 +40,28 @@ export function Stats() {
   const [sort, setSort] = useState({ key: "priority", dir: 1 });
   const [resetOpen, setResetOpen] = useState(false);
 
+  const ret = retentionFor(settings);
   const rows = useMemo(() => wordsForSelection(vocab.filter((w) => w.pair === pair), stats, settings.statLists, settings.masteryCorrect).map((w) => {
     const s = stats[w.id];
     const seen = s ? s.seen : 0;
     const acc = s && seen ? s.scoreSum / seen : 0;
-    const cat = !practiceable(w) ? "new" : classifyWord(s, settings.masteryCorrect);
-    const ema = s ? s.ema : 0;
+    const prof = deriveProfile(s?.fsrs, ret);
+    const stufe = !practiceable(w) ? "noch_nicht_geuebt" : prof.stufe;   // V14: one source
     const history = s ? s.history : [];
-    const priority = cat === "tricky" ? 0 : cat === "new" ? 1 : cat === "learned" ? 2 : 3;
-    return { w, seen, acc, cat, ema, history, priority };
-  }), [vocab, stats, settings.statLists, settings.masteryCorrect, pair]);
+    const priority = stufe === "sitzt_schlecht" ? 0 : stufe === "noch_nicht_geuebt" ? 1 : stufe === "sitzt_fast" ? 2 : 3;
+    return { w, seen, acc, stufe, prof, history, priority };
+  }), [vocab, stats, settings.statLists, ret, pair]);
 
   const counts = useMemo(() => {
-    const c = { effortless: 0, learned: 0, tricky: 0, new: 0 };
-    rows.forEach((r) => c[r.cat]++);
+    const c: any = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, noch_nicht_geuebt: 0 };
+    rows.forEach((r) => c[r.stufe]++);
     return c;
   }, [rows]);
 
   const totals = useMemo(() => {
     let seenSum = 0, scoreSum = 0;
     rows.forEach((r) => { const s = stats[r.w.id]; if (s) { seenSum += s.seen; scoreSum += s.scoreSum; } });
-    const mastered = counts.effortless + counts.learned;
+    const mastered = counts.sitzt;
     return {
       mastered, total: rows.length,
       overallAcc: seenSum ? scoreSum / seenSum : 0,
@@ -59,7 +72,7 @@ export function Stats() {
   const view = useMemo(() => {
     const q = query.toLowerCase().trim();
     let list = rows.filter((r) =>
-      (filter === "all" || r.cat === filter) &&
+      (filter === "all" || r.stufe === filter) &&
       (!q || fgnOf(r.w).toLowerCase().includes(q) || (r.w[NATIVE] || "").toLowerCase().includes(q)));
     const k = sort.key;
     list = [...list].sort((a, b) => {
@@ -92,7 +105,7 @@ export function Stats() {
 
   return (
     <div>
-      <ListSelector selected={settings.statLists} onChange={(s) => store.setSettings({ statLists: s })} pair={pair} mc={settings.masteryCorrect} />
+      <ListSelector selected={settings.statLists} onChange={(s) => store.setSettings({ statLists: s })} pair={pair} mc={settings.masteryCorrect} smart={[]} />
 
       {/* insights (Phase 6) */}
       <div className="panel" style={{ padding: "16px 18px", marginBottom: 22 }}>
@@ -134,11 +147,26 @@ export function Stats() {
         </div>
       </div>
 
-      {/* categories */}
-      <div className="section-title" style={{ marginBottom: 12 }}>How your words are doing</div>
+      {/* V14: FSRS insight lists — tappable, „üben" startet den Scope im Üben-Tab */}
+      <div className="lchips" style={{ justifyContent: "flex-start", marginBottom: 18 }}>
+        {[{ k: "leech", label: "Leeches", tone: "red", help: "Dauer-Problemwörter (oft vergessen)" },
+          { k: "frischfragil", label: "Frisch & fragil", tone: "amber", help: "Gerade gelernt, noch wackelig" },
+          { k: "kurzvorsitzt", label: "Kurz vor „sitzt\"", tone: "green", help: "Fast dauerhaft — ein Schubs reicht" }].map((c) => {
+          const n = resolveSmart(c.k, vocab.filter((w) => w.pair === pair), stats, settings.masteryCorrect, { retention: ret }).filter(practiceable).length;
+          return (
+            <button key={c.k} className={"lchip lchip-smart tone-" + c.tone} title={c.help} disabled={!n}
+              onClick={() => { store.setSettings({ practiceSel: "smart:" + c.k }); window.dispatchEvent(new CustomEvent("vt-tab", { detail: "practice" })); }}>
+              <Icon name="target" size={13} /> {c.label} <span className="lchip-n">{n}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* categories (V14: the four FSRS levels) */}
+      <div className="section-title" style={{ marginBottom: 12 }}>Wie deine Wörter sitzen</div>
       <div className="cat-grid">
-        {["effortless", "learned", "tricky", "new"].map((key) => {
-          const c = CATEGORY[key];
+        {STUFE_KEYS.map((key) => {
+          const c = STUFE_META[key];
           const n = counts[key];
           return (
             <button key={key} className="cat-card" aria-pressed={filter === key}
@@ -159,7 +187,7 @@ export function Stats() {
         <div className="section-title grow">Word by word</div>
         {filter !== "all" && (
           <button className="btn btn-ghost btn-sm" onClick={() => setFilter("all")}>
-            <Icon name="x" size={14} /> Clear filter: {CATEGORY[filter].label}
+            <Icon name="x" size={14} /> Filter aufheben: {STUFE_META[filter].label}
           </button>
         )}
         <div className="search" style={{ flex: "0 0 220px" }}>
@@ -185,7 +213,11 @@ export function Stats() {
               <tr key={r.w.id}>
                 <td className="cell-en">{fgnOf(r.w)}<div className="faint" style={{ fontSize: 11.5 }}>{r.w.topic}</div></td>
                 <td className="cell-de">{r.w[NATIVE]}</td>
-                <td><span className={"badge " + CATEGORY[r.cat].tone}><span className="dot" />{CATEGORY[r.cat].label}</span></td>
+                <td>
+                  <span className={"badge " + STUFE_META[r.stufe].tone}><span className="dot" />{STUFE_META[r.stufe].label}</span>
+                  {r.prof.istLeech && <span className="badge red" style={{ marginLeft: 5 }}><Icon name="flame" size={11} /> Leech</span>}
+                  {(haeltText(r.prof) || faelligText(r.prof)) && <div className="faint" style={{ fontSize: 11, marginTop: 3 }}>{[haeltText(r.prof), faelligText(r.prof)].filter(Boolean).join(" · ")}</div>}
+                </td>
                 <td>
                   {r.seen ? (
                     <div className="acc">

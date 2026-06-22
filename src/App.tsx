@@ -96,6 +96,12 @@ export function App() {
   const nWords = vocab.filter((w: any) => w.pair === settings.pair).length;
   const [tab, setTab] = useState(() => localStorage.getItem("vt_v1_tab") || "practice");
   useEffect(() => { localStorage.setItem("vt_v1_tab", tab); }, [tab]);
+  // V14: let other tabs (Stats insight lists) jump to a tab programmatically.
+  useEffect(() => {
+    const go = (e: any) => e?.detail && setTab(e.detail);
+    window.addEventListener("vt-tab", go);
+    return () => window.removeEventListener("vt-tab", go);
+  }, []);
 
   // appearance: apply the active skin to the document root (Phase 6 CR)
   useEffect(() => { document.documentElement.dataset.skin = settings.skin || "paper"; }, [settings.skin]);

@@ -48,15 +48,22 @@ export function Practice() {
   const latinL3Answer = isLat && tgtKey === foreign && latinMode === "L3";
 
   // ---- scope (V6): a chosen lesson OR a built-in smart quick-access -------
+  // V14: FSRS-based quick-access chips (one axis each). „Wackeln noch" = stufe
+  // 'sitzt_schlecht' (S), replaces the old classifyWord-„Schwierige". Leeches (D)
+  // live only in Stats, not here.
   const SMART_ACCESS = [
-    { ref: "due", label: "Fällige Wörter", icon: "target" },
-    { ref: "tricky", label: "Schwierige Wörter", icon: "flame" },
+    { ref: "due", label: "Fällige Wörter", icon: "target", tone: "amber" },
+    { ref: "wackeln", label: "Wackeln noch", icon: "flame", tone: "red" },
+    { ref: "baldfaellig", label: "Bald fällig", icon: "clock", tone: "amber" },
   ];
+  // visible chips = 3; the Stats insight lists (leech/frischfragil/kurzvorsitzt) are
+  // also valid practice scopes (started via „üben") but have no chip here.
+  const SMART_REFS = ["due", "wackeln", "baldfaellig", "leech", "frischfragil", "kurzvorsitzt"];
   const pairLessons = useMemo(() => lessons.filter((l) => l.pair === pair), [lessons, pair]);
   const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
   const rawSel = parseSel(settings.practiceSel);
   const selValid = rawSel.kind === "smart"
-    ? ["due", "tricky"].includes(rawSel.ref)
+    ? SMART_REFS.includes(rawSel.ref)
     : rawSel.kind === "lesson" && pairLessons.some((l) => l.id === rawSel.ref);
   // fall back to the first lesson of this pair, else the "due" quick-access
   const effective = selValid ? rawSel : (pairLessons[0] ? { kind: "lesson", ref: pairLessons[0].id } : { kind: "smart", ref: "due" });
@@ -66,10 +73,9 @@ export function Practice() {
   const resolveScopeWords = () => {
     const pv = vocab.filter((w) => w.pair === pair);
     if (effective.kind === "smart") {
-      // V8: "Fällige Wörter" → fragile-first + daily cap; "tricky" → as-is
-      const opts = effective.ref === "due"
-        ? { retention: retentionFor(settings), cap: settings.dailyGoal }
-        : undefined;
+      // V13/V14: all smart scopes use effectiveRetention; "Fällige" also daily-capped.
+      const opts: any = { retention: retentionFor(settings) };
+      if (effective.ref === "due") opts.cap = settings.dailyGoal;
       return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
     }
     return resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab).filter(practiceable);
@@ -372,13 +378,13 @@ export function Practice() {
 
   // ---- scope bar (V6): smart quick-access chips + lesson selector ----
   const pairVocabAll = vocab.filter((w) => w.pair === pair);
-  const smartCountOf = (ref) => resolveSmart(ref, pairVocabAll, stats, settings.masteryCorrect).filter(practiceable).length;
+  const smartCountOf = (ref) => resolveSmart(ref, pairVocabAll, stats, settings.masteryCorrect, { retention: retentionFor(settings) }).filter(practiceable).length;
   const lessonCountOf = (l) => resolveLesson(l, vocab).filter(practiceable).length;
   const smartChipsEl = (
     <div className="lchips smart-chips p-smart">
       {SMART_ACCESS.map((s) => (
         <button key={s.ref} title="Schnellzugriff"
-          className={"lchip lchip-smart tone-" + (s.ref === "due" ? "amber" : "red") + (effective.kind === "smart" && effective.ref === s.ref ? " on" : "")}
+          className={"lchip lchip-smart tone-" + s.tone + (effective.kind === "smart" && effective.ref === s.ref ? " on" : "")}
           onClick={() => pickScope("smart", s.ref)}>
           <Icon name={s.icon} size={14} /> {s.label} <span className="lchip-n">{smartCountOf(s.ref)}</span>
         </button>
