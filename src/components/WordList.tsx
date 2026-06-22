@@ -16,6 +16,7 @@ import { ListPicker } from "./ListSelector";
 import { ShareModal } from "./ShareModal";
 import { ReviewModal } from "./ReviewModal";
 import { PasteModal } from "./PasteModal";
+import { WordDetailModal } from "./WordDetailModal";
 import { useImport } from "./importContext";
 
 const WORTARTEN = ["Nomen", "Verb", "Adjektiv", "Zahlwort", "Adverb"];
@@ -55,6 +56,7 @@ export function WordList() {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteSeed, setPasteSeed] = useState("");   // V12: scan → paste seeded text
   const [pasteDraft, setPasteDraft] = useState(false);
+  const [detailWord, setDetailWord] = useState(null);   // V16: word-detail popup
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [lessonName, setLessonName] = useState("");
@@ -428,7 +430,7 @@ export function WordList() {
               </tr>
             ) : (
               <tr key={w.id} className={selectMode && selectedIds.includes(w.id) ? "row-sel" : ""} onClick={selectMode ? () => toggleSel(w.id) : undefined} style={selectMode ? { cursor: "pointer" } : undefined}>
-                <td className="cell-en">
+                <td className="cell-en" onClick={!selectMode ? () => setDetailWord(w) : undefined} style={!selectMode ? { cursor: "pointer" } : undefined} title={!selectMode ? "Details" : undefined}>
                   {selectMode && <input type="checkbox" checked={selectedIds.includes(w.id)} readOnly style={{ marginRight: 8, accentColor: "var(--amber-deep)" }} />}
                   {fgnOf(w) || <span className="faint">—</span>}
                   {isLat && w.lernform && <div className="faint" style={{ fontSize: 12, fontStyle: "italic" }}>{w.lernform}</div>}
@@ -464,6 +466,7 @@ export function WordList() {
       <PasteModal open={pasteOpen} pair={pair} initialText={pasteSeed} draftHint={pasteDraft}
         onClose={() => setPasteOpen(false)}
         onParsed={(rows) => { setPasteOpen(false); setReviewRows(rows); }} />
+      <WordDetailModal open={!!detailWord} word={detailWord} onClose={() => setDetailWord(null)} onEdit={(w) => startEdit(w)} />
       <ReviewModal open={!!reviewRows} rows={reviewRows} pair={pair}
         onClose={() => setReviewRows(null)}
         onConfirm={(rows) => { setReviewRows(null); setPendingImport(rows); }} />
