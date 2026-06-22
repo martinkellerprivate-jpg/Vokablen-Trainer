@@ -5,7 +5,7 @@ import { Icon } from "../ui/Icon";
 import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
-import { resolveLesson, resolveSmart, lessonProfile } from "../lib/engine";
+import { resolveLesson, resolveSmart, lessonProfile, resolveToday, sevenDayOutlook } from "../lib/engine";
 import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
 import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
@@ -52,29 +52,32 @@ export function Practice() {
   // 'sitzt_schlecht' (S), replaces the old classifyWord-„Schwierige". Leeches (D)
   // live only in Stats, not here.
   const SMART_ACCESS = [
+    { ref: "heute", label: "Heute dran", icon: "calendar", tone: "green" },   // V17 default learning path
     { ref: "due", label: "Fällige Wörter", icon: "target", tone: "amber" },
     { ref: "wackeln", label: "Wackeln noch", icon: "flame", tone: "red" },
     { ref: "baldfaellig", label: "Bald fällig", icon: "clock", tone: "amber" },
   ];
-  // visible chips = 3; the Stats insight lists (leech/frischfragil/kurzvorsitzt) are
+  // visible chips above; the Stats insight lists (leech/frischfragil/kurzvorsitzt) are
   // also valid practice scopes (started via „üben") but have no chip here.
-  const SMART_REFS = ["due", "wackeln", "baldfaellig", "leech", "frischfragil", "kurzvorsitzt"];
+  const SMART_REFS = ["heute", "due", "wackeln", "baldfaellig", "leech", "frischfragil", "kurzvorsitzt"];
   const pairLessons = useMemo(() => lessons.filter((l) => l.pair === pair), [lessons, pair]);
   const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
   const rawSel = parseSel(settings.practiceSel);
   const selValid = rawSel.kind === "smart"
     ? SMART_REFS.includes(rawSel.ref)
     : rawSel.kind === "lesson" && pairLessons.some((l) => l.id === rawSel.ref);
-  // fall back to the first lesson of this pair, else the "due" quick-access
-  const effective = selValid ? rawSel : (pairLessons[0] ? { kind: "lesson", ref: pairLessons[0].id } : { kind: "smart", ref: "due" });
+  // V17: default learning path = "Heute dran"
+  const effective = selValid ? rawSel : { kind: "smart", ref: "heute" };
   const selKey = effective.kind + ":" + effective.ref;
   const pickScope = (kind, ref) => store.setSettings({ practiceSel: kind + ":" + ref });
   // live resolution of the chosen scope (for chip counts + to seed a run)
   const resolveScopeWords = () => {
     const pv = vocab.filter((w) => w.pair === pair);
     if (effective.kind === "smart") {
+      const ret = retentionFor(settings);
+      if (effective.ref === "heute") return resolveToday(pv, stats, lessons, ret, settings.dailyGoal, settings.newPerDay);   // V17
       // V13/V14: all smart scopes use effectiveRetention; "Fällige" also daily-capped.
-      const opts: any = { retention: retentionFor(settings) };
+      const opts: any = { retention: ret };
       if (effective.ref === "due") opts.cap = settings.dailyGoal;
       return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
     }
@@ -378,7 +381,9 @@ export function Practice() {
 
   // ---- scope bar (V6): smart quick-access chips + lesson selector ----
   const pairVocabAll = vocab.filter((w) => w.pair === pair);
-  const smartCountOf = (ref) => resolveSmart(ref, pairVocabAll, stats, settings.masteryCorrect, { retention: retentionFor(settings) }).filter(practiceable).length;
+  const smartCountOf = (ref) => ref === "heute"
+    ? resolveToday(pairVocabAll, stats, lessons, retentionFor(settings), settings.dailyGoal, settings.newPerDay).length
+    : resolveSmart(ref, pairVocabAll, stats, settings.masteryCorrect, { retention: retentionFor(settings) }).filter(practiceable).length;
   const lessonCountOf = (l) => resolveLesson(l, vocab).filter(practiceable).length;
   const smartChipsEl = (
     <div className="lchips smart-chips p-smart">
@@ -411,6 +416,27 @@ export function Practice() {
       })}
     </div>
   ) : null;
+  // V17: 7-day outlook, shown under the chips when "Heute dran" is the scope.
+  const outlookEl = (effective.kind === "smart" && effective.ref === "heute") ? (() => {
+    const days = sevenDayOutlook(pairVocabAll, stats, lessons, retentionFor(settings));
+    const DN = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    return (
+      <div className="outlook p-smart">
+        <span className="outlook-label"><Icon name="calendar" size={12} /> 7-Tage-Ausblick <span className="faint">· Schätzung</span></span>
+        <div className="outlook-days">
+          {days.map((d, i) => { const dt = new Date(d.day); const lbl = i === 0 ? "heute" : DN[dt.getDay()];
+            return (
+              <div key={i} className={"outlook-day" + (d.deadlines.length ? " has-deadline" : "")} title={`${lbl}: ${d.count} fällig${d.deadlines.length ? " · Deadline: " + d.deadlines.join(", ") : ""}`}>
+                <span className="od-n">{d.count}</span>
+                <span className="od-d">{lbl}</span>
+                {d.deadlines.length > 0 && <span className="od-flag" />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  })() : null;
   const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);
 
   if (!pool.length) {
@@ -500,6 +526,7 @@ export function Practice() {
       onClick={focus ? (e) => { if (e.target === e.currentTarget) setFocus(false); } : undefined}>
       {focus && <div className="focus-rotate-hint">Drehe dein Gerät quer für mehr Platz</div>}
       {smartChipsEl}
+      {outlookEl}
       {lessonSelectorEl}
       {/* controls */}
       <div className="practice-controls p-controls">

@@ -93,6 +93,50 @@ export function trickyCount(vocab: Word[], stats: Record<string, Stat>, mc?: num
   return vocab.filter((w) => practiceable(w) && classifyWord(stats[w.id], mc) === "tricky").length;
 }
 
+/* V17 — rolling "Heute dran": fresh each call, NO stored plan. Candidates =
+ * due ∪ deadline-at-risk (lessons with a near dueDate, words not yet sitting) ∪
+ * a small new-word quota. Ordered by retrievability (most fragile first),
+ * capped to the daily goal. */
+const DAY_MS = 86400000;
+export function resolveToday(pairVocab: Word[], stats: Record<string, any>, lessons: any[], retention: number, dailyGoal: number, newPerDay: number, now: number = Date.now()): Word[] {
+  const seen = new Set<string>();
+  const out: Word[] = [];
+  const add = (w: Word) => { if (!seen.has(w.id) && practiceable(w)) { seen.add(w.id); out.push(w); } };
+  pairVocab.filter((w) => isDue(stats[w.id], now, retention)).forEach(add);   // 1) due
+  const pair = pairVocab[0]?.pair;
+  for (const l of (lessons || [])) {                                          // 2) deadline-at-risk
+    if (l.pair !== pair || !l.dueDate) continue;
+    const daysLeft = (l.dueDate - now) / DAY_MS;
+    if (daysLeft < 0 || daysLeft > 7) continue;
+    const set = new Set(l.members || []);
+    pairVocab.filter((w) => set.has(w.id) && deriveProfile(stats[w.id]?.fsrs, retention, now).stufe !== "sitzt").forEach(add);
+  }
+  out.sort((a, b) => retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
+  const news = pairVocab.filter((w) => practiceable(w) && !(stats[w.id]?.fsrs)).slice(0, Math.max(0, newPerDay || 0));
+  for (const w of news) { if (out.length >= dailyGoal) break; add(w); }       // 3) new quota toward goal
+  return dailyGoal ? out.slice(0, Math.max(dailyGoal, 1)) : out;
+}
+
+/* V17 — 7-day outlook: words coming due per day (from deriveProfile.due) + lesson deadlines. */
+export function sevenDayOutlook(pairVocab: Word[], stats: Record<string, any>, lessons: any[], retention: number, now: number = Date.now()) {
+  const startOfDay = (t: number) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const today0 = startOfDay(now);
+  const days = Array.from({ length: 7 }, (_, i) => ({ day: today0 + i * DAY_MS, count: 0, deadlines: [] as string[] }));
+  for (const w of pairVocab) {
+    const p = deriveProfile(stats[w.id]?.fsrs, retention, now);
+    if (p.due == null) continue;
+    const idx = Math.round((startOfDay(Math.max(p.due, now)) - today0) / DAY_MS);
+    if (idx >= 0 && idx < 7) days[idx].count++;
+  }
+  const pair = pairVocab[0]?.pair;
+  for (const l of (lessons || [])) {
+    if (l.pair !== pair || !l.dueDate) continue;
+    const idx = Math.round((startOfDay(l.dueDate) - today0) / DAY_MS);
+    if (idx >= 0 && idx < 7) days[idx].deadlines.push(l.name);
+  }
+  return days;
+}
+
 /* V9: resolve a (static) lesson to its words. Dead member ids skipped silently.
  * Legacy dynamic lessons (pre-migration) still resolve via their source. */
 export function resolveLesson(lesson: any, vocab: Word[]): Word[] {
