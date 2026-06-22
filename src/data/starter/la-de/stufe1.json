@@ -1,0 +1,1406 @@
+{
+ "pair": "la-de",
+ "stufe": 1,
+ "words": [
+  {
+   "grundform": "amicus",
+   "lernform": "amicus, amici m",
+   "wortart": "Substantiv",
+   "german": "der Freund",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "vir",
+   "lernform": "vir, viri m",
+   "wortart": "Substantiv",
+   "german": "der Mann",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "femina",
+   "lernform": "femina, feminae f",
+   "wortart": "Substantiv",
+   "german": "die Frau",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "puer",
+   "lernform": "puer, pueri m",
+   "wortart": "Substantiv",
+   "german": "der Junge",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "puella",
+   "lernform": "puella, puellae f",
+   "wortart": "Substantiv",
+   "german": "das Mädchen",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "pater",
+   "lernform": "pater, patris m",
+   "wortart": "Substantiv",
+   "german": "der Vater",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "mater",
+   "lernform": "mater, matris f",
+   "wortart": "Substantiv",
+   "german": "die Mutter",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "frater",
+   "lernform": "frater, fratris m",
+   "wortart": "Substantiv",
+   "german": "der Bruder",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "soror",
+   "lernform": "soror, sororis f",
+   "wortart": "Substantiv",
+   "german": "die Schwester",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "filius",
+   "lernform": "filius, filii m",
+   "wortart": "Substantiv",
+   "german": "der Sohn",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "familia",
+   "lernform": "familia, familiae f",
+   "wortart": "Substantiv",
+   "german": "die Familie",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "homo",
+   "lernform": "homo, hominis m",
+   "wortart": "Substantiv",
+   "german": "der Mensch",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "dominus",
+   "lernform": "dominus, domini m",
+   "wortart": "Substantiv",
+   "german": "der Herr",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "servus",
+   "lernform": "servus, servi m",
+   "wortart": "Substantiv",
+   "german": "der Sklave",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "amicitia",
+   "lernform": "amicitia, amicitiae f",
+   "wortart": "Substantiv",
+   "german": "die Freundschaft",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "rex",
+   "lernform": "rex, regis m",
+   "wortart": "Substantiv",
+   "german": "der König",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "regina",
+   "lernform": "regina, reginae f",
+   "wortart": "Substantiv",
+   "german": "die Königin",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "deus",
+   "lernform": "deus, dei m",
+   "wortart": "Substantiv",
+   "german": "der Gott",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "grundform": "corpus",
+   "lernform": "corpus, corporis n",
+   "wortart": "Substantiv",
+   "german": "der Körper",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "caput",
+   "lernform": "caput, capitis n",
+   "wortart": "Substantiv",
+   "german": "der Kopf",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "manus",
+   "lernform": "manus, manus f",
+   "wortart": "Substantiv",
+   "german": "die Hand",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "oculus",
+   "lernform": "oculus, oculi m",
+   "wortart": "Substantiv",
+   "german": "das Auge",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "animus",
+   "lernform": "animus, animi m",
+   "wortart": "Substantiv",
+   "german": "der Geist, der Mut",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "vox",
+   "lernform": "vox, vocis f",
+   "wortart": "Substantiv",
+   "german": "die Stimme",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "mors",
+   "lernform": "mors, mortis f",
+   "wortart": "Substantiv",
+   "german": "der Tod",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "vita",
+   "lernform": "vita, vitae f",
+   "wortart": "Substantiv",
+   "german": "das Leben",
+   "topic": "Körper"
+  },
+  {
+   "grundform": "terra",
+   "lernform": "terra, terrae f",
+   "wortart": "Substantiv",
+   "german": "die Erde, das Land",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "aqua",
+   "lernform": "aqua, aquae f",
+   "wortart": "Substantiv",
+   "german": "das Wasser",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "silva",
+   "lernform": "silva, silvae f",
+   "wortart": "Substantiv",
+   "german": "der Wald",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "mare",
+   "lernform": "mare, maris n",
+   "wortart": "Substantiv",
+   "german": "das Meer",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "mons",
+   "lernform": "mons, montis m",
+   "wortart": "Substantiv",
+   "german": "der Berg",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "flumen",
+   "lernform": "flumen, fluminis n",
+   "wortart": "Substantiv",
+   "german": "der Fluss",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "caelum",
+   "lernform": "caelum, caeli n",
+   "wortart": "Substantiv",
+   "german": "der Himmel",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "sol",
+   "lernform": "sol, solis m",
+   "wortart": "Substantiv",
+   "german": "die Sonne",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "luna",
+   "lernform": "luna, lunae f",
+   "wortart": "Substantiv",
+   "german": "der Mond",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "stella",
+   "lernform": "stella, stellae f",
+   "wortart": "Substantiv",
+   "german": "der Stern",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "ventus",
+   "lernform": "ventus, venti m",
+   "wortart": "Substantiv",
+   "german": "der Wind",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "ignis",
+   "lernform": "ignis, ignis m",
+   "wortart": "Substantiv",
+   "german": "das Feuer",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "animal",
+   "lernform": "animal, animalis n",
+   "wortart": "Substantiv",
+   "german": "das Tier",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "equus",
+   "lernform": "equus, equi m",
+   "wortart": "Substantiv",
+   "german": "das Pferd",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "insula",
+   "lernform": "insula, insulae f",
+   "wortart": "Substantiv",
+   "german": "die Insel",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "ager",
+   "lernform": "ager, agri m",
+   "wortart": "Substantiv",
+   "german": "der Acker, das Feld",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "rosa",
+   "lernform": "rosa, rosae f",
+   "wortart": "Substantiv",
+   "german": "die Rose",
+   "topic": "Natur"
+  },
+  {
+   "grundform": "domus",
+   "lernform": "domus, domus f",
+   "wortart": "Substantiv",
+   "german": "das Haus",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "villa",
+   "lernform": "villa, villae f",
+   "wortart": "Substantiv",
+   "german": "das Landhaus",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "murus",
+   "lernform": "murus, muri m",
+   "wortart": "Substantiv",
+   "german": "die Mauer",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "porta",
+   "lernform": "porta, portae f",
+   "wortart": "Substantiv",
+   "german": "das Tor",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "hortus",
+   "lernform": "hortus, horti m",
+   "wortart": "Substantiv",
+   "german": "der Garten",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "via",
+   "lernform": "via, viae f",
+   "wortart": "Substantiv",
+   "german": "die Strasse, der Weg",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "urbs",
+   "lernform": "urbs, urbis f",
+   "wortart": "Substantiv",
+   "german": "die Stadt",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "oppidum",
+   "lernform": "oppidum, oppidi n",
+   "wortart": "Substantiv",
+   "german": "die Stadt (befestigt)",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "templum",
+   "lernform": "templum, templi n",
+   "wortart": "Substantiv",
+   "german": "der Tempel",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "forum",
+   "lernform": "forum, fori n",
+   "wortart": "Substantiv",
+   "german": "der Marktplatz",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "mensa",
+   "lernform": "mensa, mensae f",
+   "wortart": "Substantiv",
+   "german": "der Tisch",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "liber",
+   "lernform": "liber, libri m",
+   "wortart": "Substantiv",
+   "german": "das Buch",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "pecunia",
+   "lernform": "pecunia, pecuniae f",
+   "wortart": "Substantiv",
+   "german": "das Geld",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "vinum",
+   "lernform": "vinum, vini n",
+   "wortart": "Substantiv",
+   "german": "der Wein",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "donum",
+   "lernform": "donum, doni n",
+   "wortart": "Substantiv",
+   "german": "das Geschenk",
+   "topic": "Haus & Stadt"
+  },
+  {
+   "grundform": "bellum",
+   "lernform": "bellum, belli n",
+   "wortart": "Substantiv",
+   "german": "der Krieg",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "pax",
+   "lernform": "pax, pacis f",
+   "wortart": "Substantiv",
+   "german": "der Friede",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "populus",
+   "lernform": "populus, populi m",
+   "wortart": "Substantiv",
+   "german": "das Volk",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "miles",
+   "lernform": "miles, militis m",
+   "wortart": "Substantiv",
+   "german": "der Soldat",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "dux",
+   "lernform": "dux, ducis m",
+   "wortart": "Substantiv",
+   "german": "der Anführer",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "hostis",
+   "lernform": "hostis, hostis m",
+   "wortart": "Substantiv",
+   "german": "der Feind",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "civis",
+   "lernform": "civis, civis m",
+   "wortart": "Substantiv",
+   "german": "der Bürger",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "exercitus",
+   "lernform": "exercitus, exercitus m",
+   "wortart": "Substantiv",
+   "german": "das Heer",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "lex",
+   "lernform": "lex, legis f",
+   "wortart": "Substantiv",
+   "german": "das Gesetz",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "libertas",
+   "lernform": "libertas, libertatis f",
+   "wortart": "Substantiv",
+   "german": "die Freiheit",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "imperium",
+   "lernform": "imperium, imperii n",
+   "wortart": "Substantiv",
+   "german": "die Herrschaft",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "consilium",
+   "lernform": "consilium, consilii n",
+   "wortart": "Substantiv",
+   "german": "der Plan, der Rat",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "periculum",
+   "lernform": "periculum, periculi n",
+   "wortart": "Substantiv",
+   "german": "die Gefahr",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "auxilium",
+   "lernform": "auxilium, auxilii n",
+   "wortart": "Substantiv",
+   "german": "die Hilfe",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "victoria",
+   "lernform": "victoria, victoriae f",
+   "wortart": "Substantiv",
+   "german": "der Sieg",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "virtus",
+   "lernform": "virtus, virtutis f",
+   "wortart": "Substantiv",
+   "german": "die Tapferkeit",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "gloria",
+   "lernform": "gloria, gloriae f",
+   "wortart": "Substantiv",
+   "german": "der Ruhm",
+   "topic": "Krieg & Staat"
+  },
+  {
+   "grundform": "tempus",
+   "lernform": "tempus, temporis n",
+   "wortart": "Substantiv",
+   "german": "die Zeit",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "dies",
+   "lernform": "dies, diei m",
+   "wortart": "Substantiv",
+   "german": "der Tag",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "nox",
+   "lernform": "nox, noctis f",
+   "wortart": "Substantiv",
+   "german": "die Nacht",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "hora",
+   "lernform": "hora, horae f",
+   "wortart": "Substantiv",
+   "german": "die Stunde",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "annus",
+   "lernform": "annus, anni m",
+   "wortart": "Substantiv",
+   "german": "das Jahr",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "fortuna",
+   "lernform": "fortuna, fortunae f",
+   "wortart": "Substantiv",
+   "german": "das Glück, das Schicksal",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "fides",
+   "lernform": "fides, fidei f",
+   "wortart": "Substantiv",
+   "german": "die Treue",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "spes",
+   "lernform": "spes, spei f",
+   "wortart": "Substantiv",
+   "german": "die Hoffnung",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "res",
+   "lernform": "res, rei f",
+   "wortart": "Substantiv",
+   "german": "die Sache",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "ira",
+   "lernform": "ira, irae f",
+   "wortart": "Substantiv",
+   "german": "der Zorn",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "cura",
+   "lernform": "cura, curae f",
+   "wortart": "Substantiv",
+   "german": "die Sorge",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "verbum",
+   "lernform": "verbum, verbi n",
+   "wortart": "Substantiv",
+   "german": "das Wort",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "nomen",
+   "lernform": "nomen, nominis n",
+   "wortart": "Substantiv",
+   "german": "der Name",
+   "topic": "Zeit & Schicksal"
+  },
+  {
+   "grundform": "sum",
+   "lernform": "sum, esse, fui",
+   "wortart": "Verb",
+   "german": "sein",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "possum",
+   "lernform": "possum, posse, potui",
+   "wortart": "Verb",
+   "german": "können",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "eo",
+   "lernform": "eo, ire, ii, itum",
+   "wortart": "Verb",
+   "german": "gehen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "volo",
+   "lernform": "volo, velle, volui",
+   "wortart": "Verb",
+   "german": "wollen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "fero",
+   "lernform": "fero, ferre, tuli, latum",
+   "wortart": "Verb",
+   "german": "tragen, bringen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "amo",
+   "lernform": "amo, amare, amavi, amatum",
+   "wortart": "Verb",
+   "german": "lieben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "laudo",
+   "lernform": "laudo, laudare, laudavi, laudatum",
+   "wortart": "Verb",
+   "german": "loben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "voco",
+   "lernform": "voco, vocare, vocavi, vocatum",
+   "wortart": "Verb",
+   "german": "rufen, nennen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "do",
+   "lernform": "do, dare, dedi, datum",
+   "wortart": "Verb",
+   "german": "geben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "paro",
+   "lernform": "paro, parare, paravi, paratum",
+   "wortart": "Verb",
+   "german": "vorbereiten",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "pugno",
+   "lernform": "pugno, pugnare, pugnavi, pugnatum",
+   "wortart": "Verb",
+   "german": "kämpfen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "specto",
+   "lernform": "specto, spectare, spectavi, spectatum",
+   "wortart": "Verb",
+   "german": "betrachten",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "narro",
+   "lernform": "narro, narrare, narravi, narratum",
+   "wortart": "Verb",
+   "german": "erzählen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "ambulo",
+   "lernform": "ambulo, ambulare, ambulavi, ambulatum",
+   "wortart": "Verb",
+   "german": "spazieren gehen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "habeo",
+   "lernform": "habeo, habere, habui, habitum",
+   "wortart": "Verb",
+   "german": "haben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "video",
+   "lernform": "video, videre, vidi, visum",
+   "wortart": "Verb",
+   "german": "sehen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "moneo",
+   "lernform": "moneo, monere, monui, monitum",
+   "wortart": "Verb",
+   "german": "ermahnen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "teneo",
+   "lernform": "teneo, tenere, tenui, tentum",
+   "wortart": "Verb",
+   "german": "halten",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "deleo",
+   "lernform": "deleo, delere, delevi, deletum",
+   "wortart": "Verb",
+   "german": "zerstören",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "maneo",
+   "lernform": "maneo, manere, mansi, mansum",
+   "wortart": "Verb",
+   "german": "bleiben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "timeo",
+   "lernform": "timeo, timere, timui",
+   "wortart": "Verb",
+   "german": "fürchten",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "rideo",
+   "lernform": "rideo, ridere, risi, risum",
+   "wortart": "Verb",
+   "german": "lachen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "respondeo",
+   "lernform": "respondeo, respondere, respondi, responsum",
+   "wortart": "Verb",
+   "german": "antworten",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "iubeo",
+   "lernform": "iubeo, iubere, iussi, iussum",
+   "wortart": "Verb",
+   "german": "befehlen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "ago",
+   "lernform": "ago, agere, egi, actum",
+   "wortart": "Verb",
+   "german": "treiben, tun",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "duco",
+   "lernform": "duco, ducere, duxi, ductum",
+   "wortart": "Verb",
+   "german": "führen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "dico",
+   "lernform": "dico, dicere, dixi, dictum",
+   "wortart": "Verb",
+   "german": "sagen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "scribo",
+   "lernform": "scribo, scribere, scripsi, scriptum",
+   "wortart": "Verb",
+   "german": "schreiben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "mitto",
+   "lernform": "mitto, mittere, misi, missum",
+   "wortart": "Verb",
+   "german": "schicken",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "pono",
+   "lernform": "pono, ponere, posui, positum",
+   "wortart": "Verb",
+   "german": "setzen, stellen, legen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "peto",
+   "lernform": "peto, petere, petivi, petitum",
+   "wortart": "Verb",
+   "german": "bitten, aufsuchen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "vinco",
+   "lernform": "vinco, vincere, vici, victum",
+   "wortart": "Verb",
+   "german": "siegen, besiegen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "lego",
+   "lernform": "lego, legere, legi, lectum",
+   "wortart": "Verb",
+   "german": "lesen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "gero",
+   "lernform": "gero, gerere, gessi, gestum",
+   "wortart": "Verb",
+   "german": "tragen, führen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "capio",
+   "lernform": "capio, capere, cepi, captum",
+   "wortart": "Verb",
+   "german": "fassen, ergreifen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "facio",
+   "lernform": "facio, facere, feci, factum",
+   "wortart": "Verb",
+   "german": "machen, tun",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "fugio",
+   "lernform": "fugio, fugere, fugi, fugitum",
+   "wortart": "Verb",
+   "german": "fliehen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "vivo",
+   "lernform": "vivo, vivere, vixi, victum",
+   "wortart": "Verb",
+   "german": "leben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "curro",
+   "lernform": "curro, currere, cucurri, cursum",
+   "wortart": "Verb",
+   "german": "laufen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "relinquo",
+   "lernform": "relinquo, relinquere, reliqui, relictum",
+   "wortart": "Verb",
+   "german": "zurücklassen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "credo",
+   "lernform": "credo, credere, credidi, creditum",
+   "wortart": "Verb",
+   "german": "glauben",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "defendo",
+   "lernform": "defendo, defendere, defendi, defensum",
+   "wortart": "Verb",
+   "german": "verteidigen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "audio",
+   "lernform": "audio, audire, audivi, auditum",
+   "wortart": "Verb",
+   "german": "hören",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "venio",
+   "lernform": "venio, venire, veni, ventum",
+   "wortart": "Verb",
+   "german": "kommen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "invenio",
+   "lernform": "invenio, invenire, inveni, inventum",
+   "wortart": "Verb",
+   "german": "finden",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "munio",
+   "lernform": "munio, munire, munivi, munitum",
+   "wortart": "Verb",
+   "german": "befestigen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "scio",
+   "lernform": "scio, scire, scivi, scitum",
+   "wortart": "Verb",
+   "german": "wissen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "dormio",
+   "lernform": "dormio, dormire, dormivi, dormitum",
+   "wortart": "Verb",
+   "german": "schlafen",
+   "topic": "Verben"
+  },
+  {
+   "grundform": "bonus",
+   "lernform": "bonus, bona, bonum",
+   "wortart": "Adjektiv",
+   "german": "gut",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "malus",
+   "lernform": "malus, mala, malum",
+   "wortart": "Adjektiv",
+   "german": "schlecht",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "magnus",
+   "lernform": "magnus, magna, magnum",
+   "wortart": "Adjektiv",
+   "german": "gross",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "parvus",
+   "lernform": "parvus, parva, parvum",
+   "wortart": "Adjektiv",
+   "german": "klein",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "multus",
+   "lernform": "multus, multa, multum",
+   "wortart": "Adjektiv",
+   "german": "viel",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "longus",
+   "lernform": "longus, longa, longum",
+   "wortart": "Adjektiv",
+   "german": "lang",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "altus",
+   "lernform": "altus, alta, altum",
+   "wortart": "Adjektiv",
+   "german": "hoch, tief",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "novus",
+   "lernform": "novus, nova, novum",
+   "wortart": "Adjektiv",
+   "german": "neu",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "clarus",
+   "lernform": "clarus, clara, clarum",
+   "wortart": "Adjektiv",
+   "german": "hell, berühmt",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "pulcher",
+   "lernform": "pulcher, pulchra, pulchrum",
+   "wortart": "Adjektiv",
+   "german": "schön",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "liber",
+   "lernform": "liber, libera, liberum",
+   "wortart": "Adjektiv",
+   "german": "frei",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "laetus",
+   "lernform": "laetus, laeta, laetum",
+   "wortart": "Adjektiv",
+   "german": "fröhlich",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "miser",
+   "lernform": "miser, misera, miserum",
+   "wortart": "Adjektiv",
+   "german": "unglücklich, elend",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "primus",
+   "lernform": "primus, prima, primum",
+   "wortart": "Adjektiv",
+   "german": "der erste",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "fortis",
+   "lernform": "fortis, forte",
+   "wortart": "Adjektiv",
+   "german": "tapfer, stark",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "omnis",
+   "lernform": "omnis, omne",
+   "wortart": "Adjektiv",
+   "german": "jeder, ganz",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "gravis",
+   "lernform": "gravis, grave",
+   "wortart": "Adjektiv",
+   "german": "schwer, ernst",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "facilis",
+   "lernform": "facilis, facile",
+   "wortart": "Adjektiv",
+   "german": "leicht",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "brevis",
+   "lernform": "brevis, breve",
+   "wortart": "Adjektiv",
+   "german": "kurz",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "ingens",
+   "lernform": "ingens, ingentis",
+   "wortart": "Adjektiv",
+   "german": "gewaltig",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "felix",
+   "lernform": "felix, felicis",
+   "wortart": "Adjektiv",
+   "german": "glücklich",
+   "topic": "Eigenschaften"
+  },
+  {
+   "grundform": "unus",
+   "lernform": "unus, una, unum",
+   "wortart": "Zahlwort",
+   "german": "ein, einer",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "duo",
+   "lernform": "duo, duae, duo",
+   "wortart": "Zahlwort",
+   "german": "zwei",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "tres",
+   "lernform": "tres, tria",
+   "wortart": "Zahlwort",
+   "german": "drei",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "quattuor",
+   "lernform": "quattuor",
+   "wortart": "Zahlwort",
+   "german": "vier",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "quinque",
+   "lernform": "quinque",
+   "wortart": "Zahlwort",
+   "german": "fünf",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "decem",
+   "lernform": "decem",
+   "wortart": "Zahlwort",
+   "german": "zehn",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "centum",
+   "lernform": "centum",
+   "wortart": "Zahlwort",
+   "german": "hundert",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "ego",
+   "lernform": "ego, mei",
+   "wortart": "Pronomen",
+   "german": "ich",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "tu",
+   "lernform": "tu, tui",
+   "wortart": "Pronomen",
+   "german": "du",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "is",
+   "lernform": "is, ea, id",
+   "wortart": "Pronomen",
+   "german": "er, sie, es; dieser",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "hic",
+   "lernform": "hic, haec, hoc",
+   "wortart": "Pronomen",
+   "german": "dieser (hier)",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "ille",
+   "lernform": "ille, illa, illud",
+   "wortart": "Pronomen",
+   "german": "jener",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "qui",
+   "lernform": "qui, quae, quod",
+   "wortart": "Pronomen",
+   "german": "welcher, der",
+   "topic": "Zahlen & Pronomen"
+  },
+  {
+   "grundform": "saepe",
+   "lernform": "saepe",
+   "wortart": "Adverb",
+   "german": "oft",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "semper",
+   "lernform": "semper",
+   "wortart": "Adverb",
+   "german": "immer",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "numquam",
+   "lernform": "numquam",
+   "wortart": "Adverb",
+   "german": "niemals",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "iam",
+   "lernform": "iam",
+   "wortart": "Adverb",
+   "german": "schon, bereits",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "nunc",
+   "lernform": "nunc",
+   "wortart": "Adverb",
+   "german": "jetzt",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "bene",
+   "lernform": "bene",
+   "wortart": "Adverb",
+   "german": "gut",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "diu",
+   "lernform": "diu",
+   "wortart": "Adverb",
+   "german": "lange",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "statim",
+   "lernform": "statim",
+   "wortart": "Adverb",
+   "german": "sofort",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ita",
+   "lernform": "ita",
+   "wortart": "Adverb",
+   "german": "so",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "non",
+   "lernform": "non",
+   "wortart": "Adverb",
+   "german": "nicht",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "in",
+   "lernform": "in (+ Abl./Akk.)",
+   "wortart": "Präposition",
+   "german": "in, auf",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ad",
+   "lernform": "ad (+ Akk.)",
+   "wortart": "Präposition",
+   "german": "zu, nach",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "cum",
+   "lernform": "cum (+ Abl.)",
+   "wortart": "Präposition",
+   "german": "mit",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ex",
+   "lernform": "ex/e (+ Abl.)",
+   "wortart": "Präposition",
+   "german": "aus",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ab",
+   "lernform": "ab/a (+ Abl.)",
+   "wortart": "Präposition",
+   "german": "von, weg von",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "de",
+   "lernform": "de (+ Abl.)",
+   "wortart": "Präposition",
+   "german": "von, über",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "per",
+   "lernform": "per (+ Akk.)",
+   "wortart": "Präposition",
+   "german": "durch",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "sine",
+   "lernform": "sine (+ Abl.)",
+   "wortart": "Präposition",
+   "german": "ohne",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "post",
+   "lernform": "post (+ Akk.)",
+   "wortart": "Präposition",
+   "german": "nach, hinter",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ante",
+   "lernform": "ante (+ Akk.)",
+   "wortart": "Präposition",
+   "german": "vor",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "et",
+   "lernform": "et",
+   "wortart": "Konjunktion",
+   "german": "und",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "sed",
+   "lernform": "sed",
+   "wortart": "Konjunktion",
+   "german": "aber",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "aut",
+   "lernform": "aut",
+   "wortart": "Konjunktion",
+   "german": "oder",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "nam",
+   "lernform": "nam",
+   "wortart": "Konjunktion",
+   "german": "denn",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "quod",
+   "lernform": "quod",
+   "wortart": "Konjunktion",
+   "german": "weil",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "si",
+   "lernform": "si",
+   "wortart": "Konjunktion",
+   "german": "wenn, falls",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "ut",
+   "lernform": "ut",
+   "wortart": "Konjunktion",
+   "german": "dass, damit; wie",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "tamen",
+   "lernform": "tamen",
+   "wortart": "Konjunktion",
+   "german": "dennoch",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "igitur",
+   "lernform": "igitur",
+   "wortart": "Konjunktion",
+   "german": "also, daher",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "grundform": "neque",
+   "lernform": "neque",
+   "wortart": "Konjunktion",
+   "german": "und nicht",
+   "topic": "Kleine Wörter"
+  }
+ ]
+}

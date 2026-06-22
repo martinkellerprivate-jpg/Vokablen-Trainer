@@ -11,6 +11,7 @@ import { PAIRS } from "./lib/pairs";
 import { AccountModal } from "./components/AccountModal";
 import { ImportShareModal } from "./components/ImportShareModal";
 import { ImportContext } from "./components/importContext";
+import { OnboardingModal } from "./components/OnboardingModal";
 import { LearnTips } from "./components/LearnTips";
 import { Practice } from "./components/Practice";
 import { WordList } from "./components/WordList";
@@ -125,6 +126,7 @@ export function App() {
       {tab === "stats" && <Stats />}
       {tab === "settings" && <SettingsTab />}
       <ImportShareModal open={importOpen} initialToken={importToken} onClose={() => setImportOpen(false)} />
+      <OnboardingModal />
     </div>
     </ImportContext.Provider>
   );

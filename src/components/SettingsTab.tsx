@@ -6,6 +6,7 @@ import { RECOMMENDED } from "../lib/defaults";
 import { useAuth } from "../sync/auth";
 import { exportAllData, deleteLocalData } from "../lib/accountData";
 import { deleteCloudAccount } from "../sync/share";
+import { STARTERS, activateStarter, isStarterActivated } from "../data/starter";
 
 /* ===================================================================
  * settingsTab.jsx — adjustable engine parameters with research-backed
@@ -67,6 +68,7 @@ export function SettingsTab() {
   const [delErr, setDelErr] = useState("");
   const cloudActive = auth.configured && !!auth.user;
   const doExport = () => { exportAllData(new Date().toISOString()); toast("Daten exportiert", "download"); };
+  const addStarter = (pair: string, stufe: number) => { const r = activateStarter(store, pair, stufe); toast(`„${r.label}" aktiviert · ${r.added} Wört${r.added === 1 ? "" : "er"}`, "check"); };
   const doDelete = async () => {
     if (confirmText.trim().toUpperCase() !== "LÖSCHEN") return;
     setDelBusy(true); setDelErr("");
@@ -226,6 +228,21 @@ export function SettingsTab() {
             <option value="handwriting">Handschrift (Patrick Hand)</option>
           </select>
         </Field>
+      </div>
+
+      {/* Grundwortschatz (Starter-Listen) */}
+      <div className="set-section">
+        <div className="set-section-h"><Icon name="sparkle" size={16} /> Grundwortschatz</div>
+        {STARTERS.map((s) => {
+          const done = isStarterActivated(settings, s.pair, s.stufe);
+          return (
+            <Field key={s.key} title={s.label} desc={`${s.count} häufige Wörter, nach Themen sortiert. Wird als eigene Liste hinzugefügt (bereits vorhandene Wörter werden übersprungen).`}>
+              {done
+                ? <span className="badge green"><span className="dot" />Aktiviert</span>
+                : <button className="btn btn-sm" onClick={() => addStarter(s.pair, s.stufe)}><Icon name="plus" size={15} /> Hinzufügen</button>}
+            </Field>
+          );
+        })}
       </div>
 
       {/* Konto & Daten */}

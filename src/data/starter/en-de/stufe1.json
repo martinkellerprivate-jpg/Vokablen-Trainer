@@ -1,0 +1,1141 @@
+{
+ "pair": "en-de",
+ "stufe": 1,
+ "words": [
+  {
+   "foreign": "mother",
+   "german": "die Mutter",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "father",
+   "german": "der Vater",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "parents",
+   "german": "die Eltern",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "child",
+   "german": "das Kind",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "son",
+   "german": "der Sohn",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "daughter",
+   "german": "die Tochter",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "brother",
+   "german": "der Bruder",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "sister",
+   "german": "die Schwester",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "grandmother",
+   "german": "die Grossmutter",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "grandfather",
+   "german": "der Grossvater",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "family",
+   "german": "die Familie",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "man",
+   "german": "der Mann",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "woman",
+   "german": "die Frau",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "boy",
+   "german": "der Junge",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "girl",
+   "german": "das Mädchen",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "baby",
+   "german": "das Baby",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "friend",
+   "german": "der Freund",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "name",
+   "german": "der Name",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "people",
+   "german": "die Leute",
+   "topic": "Menschen & Familie"
+  },
+  {
+   "foreign": "body",
+   "german": "der Körper",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "head",
+   "german": "der Kopf",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "hair",
+   "german": "die Haare",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "face",
+   "german": "das Gesicht",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "eye",
+   "german": "das Auge",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "ear",
+   "german": "das Ohr",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "nose",
+   "german": "die Nase",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "mouth",
+   "german": "der Mund",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "tooth",
+   "german": "der Zahn",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "hand",
+   "german": "die Hand",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "arm",
+   "german": "der Arm",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "leg",
+   "german": "das Bein",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "foot",
+   "german": "der Fuss",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "finger",
+   "german": "der Finger",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "heart",
+   "german": "das Herz",
+   "topic": "Körper"
+  },
+  {
+   "foreign": "animal",
+   "german": "das Tier",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "dog",
+   "german": "der Hund",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "cat",
+   "german": "die Katze",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "horse",
+   "german": "das Pferd",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "cow",
+   "german": "die Kuh",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "pig",
+   "german": "das Schwein",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "sheep",
+   "german": "das Schaf",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "bird",
+   "german": "der Vogel",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "fish",
+   "german": "der Fisch",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "mouse",
+   "german": "die Maus",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "rabbit",
+   "german": "das Kaninchen",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "bear",
+   "german": "der Bär",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "lion",
+   "german": "der Löwe",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "elephant",
+   "german": "der Elefant",
+   "topic": "Tiere"
+  },
+  {
+   "foreign": "food",
+   "german": "das Essen",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "bread",
+   "german": "das Brot",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "butter",
+   "german": "die Butter",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "cheese",
+   "german": "der Käse",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "egg",
+   "german": "das Ei",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "milk",
+   "german": "die Milch",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "water",
+   "german": "das Wasser",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "juice",
+   "german": "der Saft",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "apple",
+   "german": "der Apfel",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "banana",
+   "german": "die Banane",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "orange",
+   "german": "die Orange",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "potato",
+   "german": "die Kartoffel",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "meat",
+   "german": "das Fleisch",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "fish (food)",
+   "german": "der Fisch",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "soup",
+   "german": "die Suppe",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "cake",
+   "german": "der Kuchen",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "sugar",
+   "german": "der Zucker",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "salt",
+   "german": "das Salz",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "breakfast",
+   "german": "das Frühstück",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "lunch",
+   "german": "das Mittagessen",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "dinner",
+   "german": "das Abendessen",
+   "topic": "Essen & Trinken"
+  },
+  {
+   "foreign": "house",
+   "german": "das Haus",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "home",
+   "german": "das Zuhause",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "room",
+   "german": "das Zimmer",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "door",
+   "german": "die Tür",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "window",
+   "german": "das Fenster",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "wall",
+   "german": "die Wand",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "floor",
+   "german": "der Boden",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "table",
+   "german": "der Tisch",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "chair",
+   "german": "der Stuhl",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "bed",
+   "german": "das Bett",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "kitchen",
+   "german": "die Küche",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "bathroom",
+   "german": "das Badezimmer",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "garden",
+   "german": "der Garten",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "key",
+   "german": "der Schlüssel",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "lamp",
+   "german": "die Lampe",
+   "topic": "Haus"
+  },
+  {
+   "foreign": "clothes",
+   "german": "die Kleidung",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "shirt",
+   "german": "das Hemd",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "trousers",
+   "german": "die Hose",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "dress",
+   "german": "das Kleid",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "jacket",
+   "german": "die Jacke",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "coat",
+   "german": "der Mantel",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "shoe",
+   "german": "der Schuh",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "sock",
+   "german": "die Socke",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "hat",
+   "german": "der Hut",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "glove",
+   "german": "der Handschuh",
+   "topic": "Kleidung"
+  },
+  {
+   "foreign": "colour",
+   "german": "die Farbe",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "red",
+   "german": "rot",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "blue",
+   "german": "blau",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "green",
+   "german": "grün",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "yellow",
+   "german": "gelb",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "black",
+   "german": "schwarz",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "white",
+   "german": "weiss",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "brown",
+   "german": "braun",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "grey",
+   "german": "grau",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "orange (colour)",
+   "german": "orange",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "pink",
+   "german": "rosa",
+   "topic": "Farben"
+  },
+  {
+   "foreign": "one",
+   "german": "eins",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "two",
+   "german": "zwei",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "three",
+   "german": "drei",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "four",
+   "german": "vier",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "five",
+   "german": "fünf",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "six",
+   "german": "sechs",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "seven",
+   "german": "sieben",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "eight",
+   "german": "acht",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "nine",
+   "german": "neun",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "ten",
+   "german": "zehn",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "hundred",
+   "german": "hundert",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "number",
+   "german": "die Zahl",
+   "topic": "Zahlen"
+  },
+  {
+   "foreign": "time",
+   "german": "die Zeit",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "day",
+   "german": "der Tag",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "night",
+   "german": "die Nacht",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "morning",
+   "german": "der Morgen",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "evening",
+   "german": "der Abend",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "hour",
+   "german": "die Stunde",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "minute",
+   "german": "die Minute",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "week",
+   "german": "die Woche",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "month",
+   "german": "der Monat",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "year",
+   "german": "das Jahr",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "today",
+   "german": "heute",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "tomorrow",
+   "german": "morgen",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "yesterday",
+   "german": "gestern",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "Monday",
+   "german": "der Montag",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "week-end",
+   "german": "das Wochenende",
+   "topic": "Zeit"
+  },
+  {
+   "foreign": "school",
+   "german": "die Schule",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "teacher",
+   "german": "der Lehrer",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "pupil",
+   "german": "der Schüler",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "book",
+   "german": "das Buch",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "pen",
+   "german": "der Stift",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "pencil",
+   "german": "der Bleistift",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "paper",
+   "german": "das Papier",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "word",
+   "german": "das Wort",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "question",
+   "german": "die Frage",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "answer",
+   "german": "die Antwort",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "lesson",
+   "german": "die Stunde",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "homework",
+   "german": "die Hausaufgabe",
+   "topic": "Schule"
+  },
+  {
+   "foreign": "nature",
+   "german": "die Natur",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "sun",
+   "german": "die Sonne",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "moon",
+   "german": "der Mond",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "star",
+   "german": "der Stern",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "sky",
+   "german": "der Himmel",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "tree",
+   "german": "der Baum",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "flower",
+   "german": "die Blume",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "grass",
+   "german": "das Gras",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "mountain",
+   "german": "der Berg",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "river",
+   "german": "der Fluss",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "sea",
+   "german": "das Meer",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "rain",
+   "german": "der Regen",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "snow",
+   "german": "der Schnee",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "wind",
+   "german": "der Wind",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "fire",
+   "german": "das Feuer",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "stone",
+   "german": "der Stein",
+   "topic": "Natur"
+  },
+  {
+   "foreign": "to be",
+   "german": "sein",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to have",
+   "german": "haben",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to go",
+   "german": "gehen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to come",
+   "german": "kommen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to make",
+   "german": "machen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to do",
+   "german": "tun",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to say",
+   "german": "sagen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to see",
+   "german": "sehen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to eat",
+   "german": "essen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to drink",
+   "german": "trinken",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to sleep",
+   "german": "schlafen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to read",
+   "german": "lesen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to write",
+   "german": "schreiben",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to play",
+   "german": "spielen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to learn",
+   "german": "lernen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to speak",
+   "german": "sprechen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to give",
+   "german": "geben",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to take",
+   "german": "nehmen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to buy",
+   "german": "kaufen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to run",
+   "german": "rennen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to walk",
+   "german": "laufen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to live",
+   "german": "leben",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to love",
+   "german": "lieben",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to like",
+   "german": "mögen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to want",
+   "german": "wollen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to know",
+   "german": "wissen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to think",
+   "german": "denken",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to work",
+   "german": "arbeiten",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to help",
+   "german": "helfen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to find",
+   "german": "finden",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to open",
+   "german": "öffnen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "to close",
+   "german": "schliessen",
+   "topic": "Verben"
+  },
+  {
+   "foreign": "big",
+   "german": "gross",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "small",
+   "german": "klein",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "good",
+   "german": "gut",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "bad",
+   "german": "schlecht",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "new",
+   "german": "neu",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "old",
+   "german": "alt",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "young",
+   "german": "jung",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "long",
+   "german": "lang",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "short",
+   "german": "kurz",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "hot",
+   "german": "heiss",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "cold",
+   "german": "kalt",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "happy",
+   "german": "glücklich",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "sad",
+   "german": "traurig",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "fast",
+   "german": "schnell",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "slow",
+   "german": "langsam",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "easy",
+   "german": "einfach",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "difficult",
+   "german": "schwierig",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "nice",
+   "german": "nett",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "beautiful",
+   "german": "schön",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "strong",
+   "german": "stark",
+   "topic": "Adjektive"
+  },
+  {
+   "foreign": "and",
+   "german": "und",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "or",
+   "german": "oder",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "but",
+   "german": "aber",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "not",
+   "german": "nicht",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "yes",
+   "german": "ja",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "no",
+   "german": "nein",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "with",
+   "german": "mit",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "without",
+   "german": "ohne",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "here",
+   "german": "hier",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "there",
+   "german": "dort",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "now",
+   "german": "jetzt",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "always",
+   "german": "immer",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "never",
+   "german": "nie",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "very",
+   "german": "sehr",
+   "topic": "Kleine Wörter"
+  },
+  {
+   "foreign": "also",
+   "german": "auch",
+   "topic": "Kleine Wörter"
+  }
+ ]
+}
