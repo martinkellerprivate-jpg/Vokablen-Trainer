@@ -18,7 +18,7 @@ export const DEFAULT_VOCAB = [
   { en: "green",      de: "grün",            topic: "Colours" },
   { en: "yellow",     de: "gelb",            topic: "Colours" },
   { en: "black",      de: "schwarz",         topic: "Colours" },
-  { en: "white",      de: "weiß",            topic: "Colours" },
+  { en: "white",      de: "weiss",           topic: "Colours" },
 
   // Numbers
   { en: "one",        de: "eins",            topic: "Numbers" },
@@ -32,7 +32,7 @@ export const DEFAULT_VOCAB = [
   { en: "sister",     de: "die Schwester",   topic: "Family" },
   { en: "brother",    de: "der Bruder",      topic: "Family" },
   { en: "family",     de: "die Familie",     topic: "Family" },
-  { en: "grandmother",de: "die Großmutter",  topic: "Family" },
+  { en: "grandmother",de: "die Grossmutter", topic: "Family" },
 
   // School
   { en: "school",     de: "die Schule",      topic: "School" },
@@ -55,7 +55,7 @@ export const DEFAULT_VOCAB = [
   { en: "hand",       de: "die Hand",        topic: "Body" },
   { en: "head",       de: "der Kopf",        topic: "Body" },
   { en: "eye",        de: "das Auge",        topic: "Body" },
-  { en: "foot",       de: "der Fuß",         topic: "Body" },
+  { en: "foot",       de: "der Fuss",        topic: "Body" },
 
   // Home
   { en: "house",      de: "das Haus",        topic: "Home" },
@@ -70,7 +70,7 @@ export const DEFAULT_VOCAB = [
   { en: "Monday",     de: "Montag",          topic: "Time" },
 
   // Words & actions
-  { en: "big",        de: "groß",            topic: "Words" },
+  { en: "big",        de: "gross",           topic: "Words" },
   { en: "small",      de: "klein",           topic: "Words" },
   { en: "good",       de: "gut",             topic: "Words" },
   { en: "happy",      de: "glücklich",       topic: "Words" },

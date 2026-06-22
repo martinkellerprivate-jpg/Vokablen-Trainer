@@ -206,6 +206,37 @@ input, button, textarea, select { font-family: inherit; }
 .audio-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--card-2); display: grid; place-items: center; color: var(--amber-deep); box-shadow: var(--shadow-sm); transition: all .15s ease; }
 .audio-btn:hover { transform: scale(1.06); box-shadow: var(--shadow); }
 .audio-btn.playing { background: var(--amber); color: #fff; }
+/* V5: run progress bar, pinned to the foot of the card; skin-token coloured */
+.card-progress { position: absolute; left: 26px; right: 26px; bottom: 13px; height: 5px; border-radius: 999px; background: var(--bg-2); overflow: hidden; z-index: 3; pointer-events: none; }
+.card-progress > i { display: block; height: 100%; border-radius: 999px; background: var(--amber); transition: width .45s cubic-bezier(.2,.7,.2,1); }
+
+/* V2: expand-to-focus control + focus/zoom mode */
+.card-scene { position: relative; }
+.card-expand { position: absolute; top: 8px; right: 8px; z-index: 5; width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); display: grid; place-items: center; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .14s ease, color .14s ease, border-color .14s ease; }
+.card-expand:hover { color: var(--amber-deep); border-color: var(--amber); transform: scale(1.06); }
+.practice-wrap.focus-on { position: fixed; inset: 0; z-index: 200; margin: 0; background: oklch(0.2 0.02 70 / 0.62); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 22px; overflow: auto; }
+.practice-wrap.focus-on .p-smart, .practice-wrap.focus-on .p-lessonsel, .practice-wrap.focus-on .p-controls, .practice-wrap.focus-on .p-session { display: none; }
+.practice-wrap.focus-on .card-scene { width: min(94vw, 128vh); max-width: 1200px; }
+.practice-wrap.focus-on .answer-zone { width: min(94vw, 128vh); max-width: 1200px; }
+.focus-rotate-hint { display: none; }
+@media (orientation: portrait) and (max-width: 900px) {
+  .practice-wrap.focus-on .focus-rotate-hint { display: block; color: #fff; font-size: 13px; font-weight: 600; background: oklch(0.3 0.02 70 / 0.55); padding: 8px 16px; border-radius: 999px; }
+  .practice-wrap.focus-on .card-scene, .practice-wrap.focus-on .answer-zone { width: 94vw; }
+}
+
+/* V7: Anleitung accordion */
+.help-acc { display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow-y: auto; margin-top: 4px; }
+.help-acc-item { border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; }
+.help-acc-item.open { border-color: var(--amber); }
+.help-acc-head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 14.5px; color: var(--ink); text-align: left; }
+.help-acc-head:hover { color: var(--amber-deep); }
+.help-acc-item.open .help-acc-head { color: var(--amber-deep); }
+.help-acc-body { padding: 2px 16px 15px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+.help-acc-body p { margin: 0 0 10px; }
+.help-acc-body p:last-child { margin-bottom: 0; }
+.help-acc-body ul { margin: 0 0 10px; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
+.help-acc-body b { color: var(--ink); }
+.help-acc-body .help-callout { background: var(--amber-bg); border-radius: 10px; padding: 11px 13px; color: var(--ink); }
 
 /* answer area */
 .answer-zone { width: min(560px, 100%); display: flex; flex-direction: column; gap: 12px; }
@@ -522,3 +553,49 @@ table.vt tr:hover .row-actions { opacity: 1; }
 /* study-tip popup (Phase 6) — shown at a pause under the card */
 .tip-pop { width: min(560px, 100%); display: flex; gap: 12px; align-items: flex-start; background: var(--amber-bg); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; box-shadow: var(--shadow-sm); animation: toastin .25s ease; }
 .tip-pop-num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--amber); color: #fff; display: grid; place-items: center; }
+
+/* multi-select row highlight (V6 hand-pick) */
+table.vt tr.row-sel td { background: var(--amber-bg); }
+
+/* tab labels: full word on desktop, short word on mobile */
+.tab-short { display: none; }
+
+/* ====================================================================
+   V1 — iPhone reflow + fixed bottom navigation (desktop unchanged)
+   ==================================================================== */
+@media (max-width: 640px) {
+  .app { padding: 0 12px calc(78px + env(safe-area-inset-bottom)); }
+  .topbar { gap: 10px; padding: 14px 2px 8px; }
+  .brand-name { font-size: 18px; white-space: normal; }
+
+  /* fixed bottom navigation */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    margin: 0; border-radius: 0; border: none; border-top: 1px solid var(--line);
+    background: var(--card); gap: 2px; z-index: 50; backdrop-filter: none;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  .tab { flex-direction: column; gap: 3px; padding: 7px 2px; font-size: 11px; min-height: 48px; border-radius: 10px; }
+  .tab[aria-selected="true"] { background: var(--bg-2); box-shadow: none; }
+  .tab-full { display: none; }
+  .tab-short { display: inline; }
+  .tab .badge-count { display: none; }
+
+  /* practice reflow — card prominent, answer under it, the rest below */
+  .practice-wrap { gap: 14px; }
+  .p-smart { order: 1; }
+  .p-card { order: 2; }
+  .p-answer { order: 3; }
+  .p-controls { order: 4; }
+  .p-lessonsel { order: 5; }
+  .p-session { order: 6; }
+  .card-scene { width: 100%; }
+  .answer-row .field { font-size: 16px; } /* ≥16px avoids iOS focus-zoom */
+
+  /* hide bottom nav while the keyboard is up (typing) */
+  body.typing .tabs, body.kbd-open .tabs { display: none; }
+  body.typing .app, body.kbd-open .app { padding-bottom: 16px; }
+
+  /* comfortable tap targets */
+  .btn, .icon-btn, .lchip, .seg button, .pairseg button { min-height: 40px; }
+}

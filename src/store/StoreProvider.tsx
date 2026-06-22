@@ -6,6 +6,7 @@ import { LS, load, save } from "../lib/storage";
 import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
+import { migrateTopics, lessonsForLists, swissifyVocab } from "../lib/migrate";
 import type { Word, ListT } from "../lib/types";
 
 function seedVocab(): Word[] {
@@ -42,13 +43,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   if (!initRef.current) initRef.current = initData();
   const [vocab, setVocabState] = React.useState(initRef.current.vocab);
   const [lists, setListsState] = React.useState(initRef.current.lists);
+  const [lessons, setLessonsState] = React.useState(() => load(LS.lessons, []));
   const [stats, setStats] = React.useState(() => load(LS.stats, {}));
   const [meta, setMeta] = React.useState(() => load(LS.meta, {
     lastDate: null, streak: 0, todayCount: 0, dailyGoal: 20, totalReviews: 0,
   }));
   const [settings, setSettings] = React.useState(() => {
     // Addendum §2: default direction is German → foreign (n2f).
-    const s = { direction: "n2f", pair: "en-de", selectedLists: [], statLists: [], ...RECOMMENDED, ...load(LS.settings, {}) };
+    const s = { direction: "n2f", pair: "en-de", selectedLists: [], statLists: [], practiceSel: "", ...RECOMMENDED, ...load(LS.settings, {}) };
     if (s.direction === "en2de") s.direction = "f2n";
     if (s.direction === "de2en") s.direction = "n2f";
     if (s.articleMode == null) s.articleMode = s.requireArticle ? "required-full" : "required-partial";
@@ -61,7 +63,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const remoteKeys = React.useRef<Set<string>>(new Set());
   const onLocalChange = React.useRef<((key: string) => void) | null>(null);
   const setterFor: Record<string, (v: any) => void> = {
-    vocab: setVocabState, lists: setListsState, stats: setStats, meta: setMeta, settings: setSettings,
+    vocab: setVocabState, lists: setListsState, lessons: setLessonsState, stats: setStats, meta: setMeta, settings: setSettings,
   };
   const applyRemote = React.useCallback((key: string, data: any) => {
     remoteKeys.current.add(key);
@@ -76,9 +78,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => persist("vocab", LS.vocab, vocab), [vocab]);
   React.useEffect(() => persist("lists", LS.lists, lists), [lists]);
+  React.useEffect(() => persist("lessons", LS.lessons, lessons), [lessons]);
   React.useEffect(() => persist("stats", LS.stats, stats), [stats]);
   React.useEffect(() => persist("meta", LS.meta, meta), [meta]);
   React.useEffect(() => persist("settings", LS.settings, settings), [settings]);
+
+  // One-time, versioned data migrations (recorded in meta.migrations).
+  const migratedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (migratedRef.current) return;
+    migratedRef.current = true;
+    const done = (meta.migrations || {}) as Record<string, boolean>;
+    const applied: Record<string, boolean> = {};
+    if (!done.topicsDe) { setVocabState((v: any) => migrateTopics(v)); applied.topicsDe = true; } // V4
+    if (!done.swissV3) { setVocabState((v: any) => swissifyVocab(v)); applied.swissV3 = true; } // V3 — ß → ss
+    if (!done.lessonsV6) { // V6 — one list-lesson per existing list
+      const add = lessonsForLists(initRef.current.lists, load(LS.lessons, []), newId);
+      if (add.length) setLessonsState((les: any) => [...les, ...add]);
+      applied.lessonsV6 = true;
+    }
+    if (Object.keys(applied).length) {
+      setMeta((prev: any) => ({ ...prev, migrations: { ...(prev.migrations || {}), ...applied } }));
+    }
+  }, []);
 
   const recordAttempt = React.useCallback((wordId: string, score: number, verdict: string, isNew: boolean, errorType: any = null) => {
     setStats((prev: any) => {
@@ -122,7 +144,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const api = {
-    vocab, stats, meta, settings, lists,
+    vocab, stats, meta, settings, lists, lessons,
     setVocab: setVocabState,
     setSettings: (patch: any) => setSettings((p: any) => ({ ...p, ...patch })),
     setMeta: (patch: any) => setMeta((p: any) => ({ ...p, ...patch })),
@@ -135,13 +157,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     resetStats: () => { setStats({}); setMeta({ lastDate: null, streak: 0, todayCount: 0, newToday: 0, totalReviews: 0 }); },
     resetStatsForWords: (ids: string[]) => setStats((prev: any) => { const next = { ...prev }; ids.forEach((id) => { delete next[id]; }); return next; }),
     resetSettings: () => setSettings((p: any) => ({ ...p, ...RECOMMENDED })),
-    // ---- lists ----
-    addList: (name: string, pair: string) => { const l = { id: newId(), name: name || "New list", pair: pair || "en-de", createdAt: Date.now() }; setListsState((ls: any) => [...ls, l]); return l.id; },
-    renameList: (id: string, name: string) => setListsState((ls: any) => ls.map((l: any) => (l.id === id ? { ...l, name } : l))),
-    deleteList: (id: string) => { setListsState((ls: any) => ls.filter((l: any) => l.id !== id)); setVocabState((v: any) => v.map((w: any) => ({ ...w, lists: (w.lists || []).filter((x: string) => x !== id) }))); },
+    // ---- lists (each new list gets a paired dynamic "whole list" lesson) ----
+    addList: (name: string, pair: string) => {
+      const l = { id: newId(), name: name || "New list", pair: pair || "en-de", createdAt: Date.now() };
+      setListsState((ls: any) => [...ls, l]);
+      setLessonsState((les: any) => [...les, { id: newId(), name: l.name, pair: l.pair, kind: "dynamic", source: { type: "list", ref: l.id } }]);
+      return l.id;
+    },
+    renameList: (id: string, name: string) => {
+      setListsState((ls: any) => ls.map((l: any) => (l.id === id ? { ...l, name } : l)));
+      setLessonsState((les: any) => les.map((le: any) => (le.source?.type === "list" && le.source.ref === id ? { ...le, name } : le)));
+    },
+    deleteList: (id: string) => {
+      setListsState((ls: any) => ls.filter((l: any) => l.id !== id));
+      setVocabState((v: any) => v.map((w: any) => ({ ...w, lists: (w.lists || []).filter((x: string) => x !== id) })));
+      setLessonsState((les: any) => les.filter((le: any) => !(le.source?.type === "list" && le.source.ref === id)));
+    },
     toggleWordList: (wordId: string, listId: string) => setVocabState((v: any) => v.map((w: any) => w.id === wordId
       ? { ...w, lists: (w.lists || []).includes(listId) ? w.lists.filter((x: string) => x !== listId) : [...(w.lists || []), listId] }
       : w)),
+    // ---- lessons (V6) ----
+    addLesson: (lesson: any) => { const id = newId(); setLessonsState((les: any) => [...les, { id, ...lesson }]); return id; },
+    updateLesson: (id: string, patch: any) => setLessonsState((les: any) => les.map((l: any) => (l.id === id ? { ...l, ...patch } : l))),
+    deleteLesson: (id: string) => setLessonsState((les: any) => les.filter((l: any) => l.id !== id)),
+    setLessons: (next: any[]) => setLessonsState(next),
+    addWordsToLesson: (id: string, wordIds: string[]) => setLessonsState((les: any) => les.map((l: any) =>
+      l.id === id && l.kind === "static" ? { ...l, members: Array.from(new Set([...(l.members || []), ...wordIds])) } : l)),
     newId,
     // sync glue
     applyRemote,

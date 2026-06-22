@@ -70,6 +70,16 @@ export interface ListT {
   createdAt: number;
 }
 
+export type LessonKind = "static" | "dynamic";
+export interface Lesson {
+  id: string;
+  name: string;
+  pair: PairId;
+  kind: LessonKind;
+  members?: string[];                          // static: hand-picked word ids
+  source?: { type: "list" | "topic"; ref: string }; // dynamic: resolves at runtime
+}
+
 export interface DiffChar {
   ch: string;
   status: "ok" | "wrong" | "missing" | "extra";
@@ -113,5 +123,6 @@ export interface Settings {
   pair: PairId;
   selectedLists: string[];
   statLists: string[];
+  practiceSel: string;     // "lesson:<id>" | "smart:due" | "smart:tricky" | ""
   [key: string]: any;
 }

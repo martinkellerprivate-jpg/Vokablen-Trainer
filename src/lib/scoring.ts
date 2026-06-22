@@ -64,9 +64,14 @@ export function scoreAnswer(user: string, correct: string, opts?: ScoreOpts): Sc
   const userOrig = (user || "").trim();
   const corrOrig = (correct || "").trim();
   const norm = (s: string) => { const x = (s || "").trim().replace(/\s+/g, " "); return lenientCase ? x.toLowerCase() : x; };
-  const fold = (s: string) => norm(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // V3 (Swiss orthography): treat \u00df and ss as equivalent for matching. Applied
+  // only on the comparison side, so the character diff keeps the original text.
+  const ss = (s: string) => s.replace(/\u00df/g, "ss");
+  const fold = (s: string) => ss(norm(s)).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const ue = norm(userOrig);
   const ce = norm(corrOrig);
+  const ueM = ss(ue);
+  const ceM = ss(ce);
 
   // Character diff for display (always computed, on lowercased strings)
   const ops = align(ce.toLowerCase(), ue.toLowerCase());
@@ -90,12 +95,12 @@ export function scoreAnswer(user: string, correct: string, opts?: ScoreOpts): Sc
 
   if (!ue) return { score: 0, verdict: "wrong", note: "No answer", targetDiff, userDiff, errorType: null };
 
-  // Exact
-  if (ue === ce) return { score: 1, verdict: "correct", note: "", targetDiff, userDiff, errorType: null };
+  // Exact (ß/ss-insensitive)
+  if (ueM === ceM) return { score: 1, verdict: "correct", note: "", targetDiff, userDiff, errorType: null };
 
   // Article (der/die/das …): exact already handled above
-  const cNoArt = norm(stripArticle(corrOrig));
-  const uNoArt = norm(stripArticle(userOrig));
+  const cNoArt = ss(norm(stripArticle(corrOrig)));
+  const uNoArt = ss(norm(stripArticle(userOrig)));
   if (hasArticle(corrOrig) && cNoArt && uNoArt === cNoArt) {
     if (articleMode === "optional")
       return { score: 1, verdict: "correct", note: "", targetDiff, userDiff, errorType: null };
@@ -111,10 +116,10 @@ export function scoreAnswer(user: string, correct: string, opts?: ScoreOpts): Sc
   }
 
   // Near miss (typos)
-  const dist = levenshtein(ce, ue);
-  const maxLen = Math.max(ce.length, ue.length) || 1;
+  const dist = levenshtein(ceM, ueM);
+  const maxLen = Math.max(ceM.length, ueM.length) || 1;
   const sim = 1 - dist / maxLen;
-  const tol = Math.max(1, Math.round(ce.length * 0.34));
+  const tol = Math.max(1, Math.round(ceM.length * 0.34));
   if (dist <= tol && sim >= 0.5) {
     const score = Math.max(0.35, Math.min(0.8, sim));
     return finalize({ score, verdict: "almost", note: "So close — check the spelling", targetDiff, userDiff, errorType: "typo" });

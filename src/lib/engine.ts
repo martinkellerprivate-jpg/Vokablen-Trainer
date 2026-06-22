@@ -89,3 +89,24 @@ export function wordsForSelection(vocab: Word[], stats: Record<string, Stat>, se
 export function trickyCount(vocab: Word[], stats: Record<string, Stat>, mc?: number) {
   return vocab.filter((w) => practiceable(w) && classifyWord(stats[w.id], mc) === "tricky").length;
 }
+
+/* Resolve a lesson to its words (V6). Dead member ids are skipped silently. */
+export function resolveLesson(lesson: any, vocab: Word[]): Word[] {
+  if (!lesson) return [];
+  const pairVocab = vocab.filter((w) => w.pair === lesson.pair);
+  if (lesson.kind === "static") {
+    const set = new Set(lesson.members || []);
+    return pairVocab.filter((w) => set.has(w.id));
+  }
+  const src = lesson.source || {};
+  if (src.type === "list") return pairVocab.filter((w) => (w.lists || []).includes(src.ref));
+  if (src.type === "topic") return pairVocab.filter((w) => w.topic === src.ref);
+  return [];
+}
+
+/* Resolve a built-in smart quick-access ("due" | "tricky") for one pair. */
+export function resolveSmart(key: string, pairVocab: Word[], stats: Record<string, Stat>, mc?: number): Word[] {
+  const sc = SMART[key]; if (!sc) return [];
+  const now = Date.now();
+  return pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
+}

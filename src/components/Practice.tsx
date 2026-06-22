@@ -5,10 +5,9 @@ import { Icon } from "../ui/Icon";
 import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
-import { wordsForSelection, weightForWord, SMART_KEYS } from "../lib/engine";
+import { weightForWord, resolveLesson, resolveSmart } from "../lib/engine";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
-import { ListSelector } from "./ListSelector";
 import { TipPopup } from "./TipPopup";
 import { LERN_TIPPS } from "./LearnTips";
 
@@ -18,7 +17,7 @@ import { LERN_TIPPS } from "./LearnTips";
 export function Practice() {
   const store = useStore();
   const toast = useToast();
-  const { vocab, stats, settings, recordAttempt, meta } = store;
+  const { vocab, stats, settings, recordAttempt, meta, lessons } = store;
   const pair = settings.pair;
   const P = PAIRS[pair] || PAIRS["en-de"];
   const foreign = P.foreign;                       // 'en' | 'fr'
@@ -43,7 +42,29 @@ export function Practice() {
   const latinContext = (w) => (isLat && w.lernform && latinHeadword(w) !== w.lernform) ? w.lernform : "";
   const latinL3Answer = isLat && tgtKey === foreign && latinMode === "L3";
 
-  const pool = useMemo(() => wordsForSelection(vocab.filter((w) => w.pair === pair), stats, settings.selectedLists, settings.masteryCorrect).filter(practiceable), [vocab, stats, settings.selectedLists, settings.masteryCorrect, pair]);
+  // ---- scope (V6): a chosen lesson OR a built-in smart quick-access -------
+  const SMART_ACCESS = [
+    { ref: "due", label: "Fällige Wörter", icon: "target" },
+    { ref: "tricky", label: "Schwierige Wörter", icon: "flame" },
+  ];
+  const pairLessons = useMemo(() => lessons.filter((l) => l.pair === pair), [lessons, pair]);
+  const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
+  const rawSel = parseSel(settings.practiceSel);
+  const selValid = rawSel.kind === "smart"
+    ? ["due", "tricky"].includes(rawSel.ref)
+    : rawSel.kind === "lesson" && pairLessons.some((l) => l.id === rawSel.ref);
+  // fall back to the first lesson of this pair, else the "due" quick-access
+  const effective = selValid ? rawSel : (pairLessons[0] ? { kind: "lesson", ref: pairLessons[0].id } : { kind: "smart", ref: "due" });
+  const selKey = effective.kind + ":" + effective.ref;
+  const pickScope = (kind, ref) => store.setSettings({ practiceSel: kind + ":" + ref });
+  // live resolution of the chosen scope (for chip counts + to seed a run)
+  const resolveScopeWords = () => {
+    const pv = vocab.filter((w) => w.pair === pair);
+    const words = effective.kind === "smart"
+      ? resolveSmart(effective.ref, pv, stats, settings.masteryCorrect)
+      : resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab);
+    return words.filter(practiceable);
+  };
 
   const [current, setCurrent] = useState(null);
   const [face, setFace] = useState("front");   // front | back (only one in DOM)
@@ -56,9 +77,30 @@ export function Practice() {
   const [playing, setPlaying] = useState(false);
   const [session, setSession] = useState([]); // recent verdicts
   const [tip, setTip] = useState(null);        // current study-tip popup (Phase 6)
+  const [focus, setFocus] = useState(false);   // V2: zoom / focus card mode
   const inputRef = useRef(null);
   const recentRef = useRef([]);                // recently shown ids (spacing)
   const answeredRef = useRef(0);               // scored answers this session (tip cadence)
+
+  // ---- run snapshot (V5/V6): freeze the word set when the scope or pair
+  // changes, so a dynamic/smart scope (e.g. "Fällige Wörter") doesn't shrink
+  // mid-run and so the progress bar is stable. Also the single source of the
+  // B1 rebuild: changing pair/scope re-freezes AND resets the session.
+  const runWordsRef = useRef([]);
+  const [doneIds, setDoneIds] = useState(() => new Set()); // distinct ids "done" this run (V5 progress)
+  const markDone = useCallback((id) => setDoneIds((prev) => prev.has(id) ? prev : new Set(prev).add(id)), []);
+  const [runId, setRunId] = useState(0);
+  useEffect(() => {
+    runWordsRef.current = resolveScopeWords().map((w) => w.id);
+    setDoneIds(new Set());
+    setRunId((n) => n + 1);
+    setCurrent(null); setFace("front"); setAnim(""); setResult(null); setSession([]); setTip(null);
+  }, [pair, selKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pool = useMemo(() => {
+    const set = new Set(runWordsRef.current);
+    return vocab.filter((w) => set.has(w.id) && practiceable(w));
+  }, [vocab, runId]);
 
   // Show a single study tip at a natural pause, every N scored cards.
   const TIP_EVERY = { off: 0, occasional: 12, frequent: 6 };
@@ -123,24 +165,25 @@ export function Practice() {
     if (settings.autoAudio && hasTTS(srcKey)) setTimeout(() => speak(sideText(w, srcKey), srcKey), 130);
   }, [pool, stats, tgtKey, srcKey, meta.newToday, settings.newPerDay, settings.missWeight, settings.masteryCorrect, settings.spacingGap, settings.choicesCount, settings.autoAudio]);
 
-  // first card / when pool appears
-  useEffect(() => { if (!current && pool.length) pickNext(null); }, [pool, current, pickNext]);
-  // repick when the list selection changes (skip initial mount)
-  const selMounted = useRef(false);
+  // First card whenever the (frozen) pool appears, or self-heal if `current`
+  // became stale (e.g. an async cloud sync swapped vocab under the initial
+  // pick). The freeze effect above already did the B1 reset, so Practice never
+  // stays blank — on mount or on any pair/scope change.
   useEffect(() => {
-    if (!selMounted.current) { selMounted.current = true; return; }
-    setCurrent(null); setFace("front"); setAnim("");
-  }, [settings.selectedLists, settings.pair]);
+    if (face === "back" || anim) return;        // never interrupt a result/flip
+    if (pool.length && (!current || !pool.some((w) => w.id === current.id))) pickNext(null);
+  }, [pool, current, pickNext, face, anim]);
 
   const finish = useCallback((res) => {
     const st = stats[current.id];
     const isNew = !st || !st.seen;
     setResult(res);
     recordAttempt(current.id, res.score, res.verdict, isNew, res.errorType ?? null);
+    if (res.verdict === "correct") markDone(current.id);   // V5: "done" once correct
     setSession((s) => [...s, res.verdict].slice(-12));
     maybeTip();
     flip("back");
-  }, [current, recordAttempt, flip, stats, maybeTip]);
+  }, [current, recordAttempt, flip, stats, maybeTip, markDone]);
 
   const answerOpts = () => ({ lenientCase: settings.lenientCase, strictAccents: settings.strictAccents, articleMode: settings.articleMode, acceptPartial: settings.acceptPartial });
 
@@ -172,8 +215,9 @@ export function Practice() {
   // Recall / Memorize: reveal the answer without scoring yet
   const reveal = useCallback(() => {
     if (!current || face === "back" || anim) return;
+    if (mode === "memorize") markDone(current.id);   // V5: Memorize counts a card as "seen"
     flip("back");
-  }, [current, face, anim, flip]);
+  }, [current, face, anim, flip, mode, markDone]);
 
   // Recall: self-graded (got it / missed it)
   const grade = useCallback((correct) => {
@@ -181,10 +225,11 @@ export function Practice() {
     const st = stats[current.id];
     const isNew = !st || !st.seen;
     recordAttempt(current.id, correct ? 1 : 0, correct ? "correct" : "wrong", isNew);
+    if (correct) markDone(current.id);   // V5: Recall "Got it" counts as done
     setSession((s) => [...s, correct ? "correct" : "wrong"].slice(-12));
     maybeTip();
     flip("front", () => pickNext(current.id));
-  }, [current, anim, stats, recordAttempt, flip, pickNext, maybeTip]);
+  }, [current, anim, stats, recordAttempt, flip, pickNext, maybeTip, markDone]);
 
   const useHint = useCallback(() => {
     if (!current || face === "back" || anim) return;
@@ -237,13 +282,48 @@ export function Practice() {
     return () => window.removeEventListener("keydown", onKey);
   }, [face, anim, mode, result, choices, check, choose, next, reveal, grade]);
 
+  // V2: leave focus mode on Escape (iOS can't force rotation — we only react).
+  useEffect(() => {
+    if (!focus) return;
+    const onEsc = (e) => { if (e.key === "Escape") setFocus(false); };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [focus]);
+
+  // ---- scope bar (V6): smart quick-access chips + lesson selector ----
+  const pairVocabAll = vocab.filter((w) => w.pair === pair);
+  const smartCountOf = (ref) => resolveSmart(ref, pairVocabAll, stats, settings.masteryCorrect).filter(practiceable).length;
+  const lessonCountOf = (l) => resolveLesson(l, vocab).filter(practiceable).length;
+  const smartChipsEl = (
+    <div className="lchips smart-chips p-smart">
+      {SMART_ACCESS.map((s) => (
+        <button key={s.ref} title="Schnellzugriff"
+          className={"lchip lchip-smart tone-" + (s.ref === "due" ? "amber" : "red") + (effective.kind === "smart" && effective.ref === s.ref ? " on" : "")}
+          onClick={() => pickScope("smart", s.ref)}>
+          <Icon name={s.icon} size={14} /> {s.label} <span className="lchip-n">{smartCountOf(s.ref)}</span>
+        </button>
+      ))}
+    </div>
+  );
+  const lessonSelectorEl = pairLessons.length > 0 ? (
+    <div className="lchips lesson-selector p-lessonsel">
+      <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
+      {pairLessons.map((l) => (
+        <button key={l.id} className={"lchip" + (effective.kind === "lesson" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("lesson", l.id)}>
+          {l.name} <span className="lchip-n">{lessonCountOf(l)}</span>
+        </button>
+      ))}
+    </div>
+  ) : null;
+  const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);
+
   if (!pool.length) {
     return (
       <div className="practice-wrap">
-        <ListSelector selected={settings.selectedLists} onChange={(s) => store.setSettings({ selectedLists: s })} pair={pair} mc={settings.masteryCorrect} smart={SMART_KEYS} />
+        {scopeBar}
         <div className="empty">
-          <div className="big">No words to practise here</div>
-          <div>{vocab.length ? "Pick different lists above, or add words in the Word List tab." : "Add some vocabulary in the Word List tab to get started."}</div>
+          <div className="big">Hier gibt es nichts zu üben</div>
+          <div>{pairLessons.length ? "Wähle oben eine andere Lektion oder einen Schnellzugriff." : "Erstelle im Lessons-Tab eine Lektion oder füge im Word-List-Tab Wörter hinzu."}</div>
         </div>
       </div>
     );
@@ -256,11 +336,18 @@ export function Practice() {
     wrong: { tone: "red", label: "Not quite", icon: "x" },
   };
 
+  // V5: run progress — distinct words "done" out of the frozen run snapshot.
+  const runTotal = runWordsRef.current.length;
+  const runDone = runWordsRef.current.filter((id) => doneIds.has(id)).length;
+
   return (
-    <div className="practice-wrap">
-      <ListSelector selected={settings.selectedLists} onChange={(s) => store.setSettings({ selectedLists: s })} pair={pair} mc={settings.masteryCorrect} smart={SMART_KEYS} />
+    <div className={"practice-wrap" + (focus ? " focus-on" : "")}
+      onClick={focus ? (e) => { if (e.target === e.currentTarget) setFocus(false); } : undefined}>
+      {focus && <div className="focus-rotate-hint">Drehe dein Gerät quer für mehr Platz</div>}
+      {smartChipsEl}
+      {lessonSelectorEl}
       {/* controls */}
-      <div className="practice-controls">
+      <div className="practice-controls p-controls">
         <div className="dir-pill">
           <span className={"lang-tag active"}>{labelOf(srcKey)}</span>
           <button className="swap" title="Swap direction"
@@ -286,7 +373,11 @@ export function Practice() {
       </div>
 
       {/* card */}
-      <div className="card-scene">
+      <div className="card-scene p-card">
+        <button className="card-expand" title={focus ? "Fokus verlassen (Esc)" : "Karte vergrössern"}
+          onClick={() => setFocus((f) => !f)}>
+          <Icon name={focus ? "x" : "expand"} size={16} />
+        </button>
         <div className={"flashcard" + (anim ? " " + anim : "")} data-card-style={settings.cardStyle || "ruled"} data-card-font={settings.cardFont || "serif"}>
           {face === "front" ? (
           /* FRONT */
@@ -379,11 +470,16 @@ export function Practice() {
             )}
           </div>
           )}
+          {runTotal > 0 && (
+            <div className="card-progress" title={`${runDone} von ${runTotal} geschafft`} aria-hidden="true">
+              <i style={{ width: pct(runDone / runTotal) + "%" }} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* answer zone */}
-      <div className="answer-zone">
+      <div className="answer-zone p-answer">
         {face === "front" ? (
           mode === "type" ? (
             <>
@@ -479,7 +575,7 @@ export function Practice() {
       </div>
 
       {/* session strip */}
-      <div className="session-strip">
+      <div className="session-strip p-session">
         <span>This session: <b>{session.length}</b></span>
         <div className="dotrow">
           {session.map((v, i) => <i key={i} className={v === "correct" ? "c" : v === "almost" ? "a" : "w"} />)}

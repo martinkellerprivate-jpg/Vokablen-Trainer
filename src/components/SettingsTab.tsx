@@ -221,7 +221,7 @@ export function SettingsTab() {
           </select>
         </Field>
         <Field title="Kartenschrift" recLabel="Serif" atRec={atR("cardFont")}
-          desc="Schrift des großen Karten-Worts und der Antwort. Die übrige Oberfläche bleibt gleich.">
+          desc="Schrift des grossen Karten-Worts und der Antwort. Die übrige Oberfläche bleibt gleich.">
           <select className="field" style={{ width: "100%" }} value={settings.cardFont} onChange={(e) => set("cardFont", e.target.value)}>
             <option value="serif">Serif (Source Serif)</option>
             <option value="arial">Arial</option>
@@ -272,7 +272,7 @@ export function SettingsTab() {
               <p style={{ marginBottom: 10 }}><b style={{ color: "var(--ink)" }}>Platzhalter — die vollständige Datenschutzerklärung folgt vor dem Launch.</b></p>
               <p style={{ marginBottom: 8 }}>Deine Vokabeln, Listen und Fortschritte werden zuerst lokal auf deinem Gerät gespeichert. Wenn du dich anmeldest, werden sie zusätzlich mit der Cloud (Supabase) synchronisiert, damit sie auf deinen Geräten verfügbar sind.</p>
               <p style={{ marginBottom: 8 }}>Du kannst deine Daten jederzeit als Datei exportieren und deinen Account vollständig löschen (oben unter „Konto & Daten").</p>
-              <p>Ohne Anmeldung bleibt alles ausschließlich auf diesem Gerät.</p>
+              <p>Ohne Anmeldung bleibt alles ausschliesslich auf diesem Gerät.</p>
             </div>
             <div className="modal-foot"><button className="btn btn-primary" onClick={() => setPrivacyOpen(false)}>Verstanden</button></div>
           </div>

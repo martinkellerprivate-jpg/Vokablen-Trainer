@@ -6,6 +6,7 @@ export const LS = {
   meta: "vt_v1_meta",
   settings: "vt_v1_settings",
   lists: "vt_v1_lists",
+  lessons: "vt_v1_lessons",
 };
 
 export const load = (key: string, fallback: any) => {

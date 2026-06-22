@@ -15,6 +15,6 @@ export const supabase: SupabaseClient | null = isConfigured
     })
   : null;
 
-/* The five synced documents — same keys as the local vt_v1_* store. */
-export const DOC_KEYS = ["vocab", "lists", "stats", "meta", "settings"] as const;
+/* The synced documents — same keys as the local vt_v1_* store. */
+export const DOC_KEYS = ["vocab", "lists", "lessons", "stats", "meta", "settings"] as const;
 export type DocKey = (typeof DOC_KEYS)[number];

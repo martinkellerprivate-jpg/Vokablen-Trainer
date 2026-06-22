@@ -13,7 +13,9 @@ import { ImportShareModal } from "./components/ImportShareModal";
 import { ImportContext } from "./components/importContext";
 import { OnboardingModal } from "./components/OnboardingModal";
 import { LearnTips } from "./components/LearnTips";
+import { HelpGuide } from "./components/HelpGuide";
 import { Practice } from "./components/Practice";
+import { LessonsTab } from "./components/LessonsTab";
 import { WordList } from "./components/WordList";
 import { Stats } from "./components/Stats";
 import { SettingsTab } from "./components/SettingsTab";
@@ -51,6 +53,7 @@ function Header() {
         </>
       )}
       <LearnTips />
+      <HelpGuide />
       <div className="metric" title="Days practised in a row">
         <span className="ic" style={{ color: "var(--red)" }}><Icon name="flame" size={19} /></span>
         <div><b>{meta.streak || 0}</b><small>day streak</small></div>
@@ -81,10 +84,11 @@ function PairSwitcher() {
 }
 
 const TABS = [
-  { id: "practice", label: "Practise", icon: "cards" },
-  { id: "words", label: "Word List", icon: "list" },
-  { id: "stats", label: "Statistics", icon: "chart" },
-  { id: "settings", label: "Settings", icon: "gear" },
+  { id: "practice", label: "Practise", short: "Üben", icon: "cards" },
+  { id: "lessons", label: "Lessons", short: "Lektionen", icon: "book" },
+  { id: "words", label: "Word List", short: "Wörter", icon: "list" },
+  { id: "stats", label: "Statistics", short: "Statistik", icon: "chart" },
+  { id: "settings", label: "Settings", short: "Mehr", icon: "gear" },
 ];
 
 export function App() {
@@ -95,6 +99,20 @@ export function App() {
 
   // appearance: apply the active skin to the document root (Phase 6 CR)
   useEffect(() => { document.documentElement.dataset.skin = settings.skin || "paper"; }, [settings.skin]);
+
+  // V1: hide the fixed mobile bottom-nav while typing so the iOS keyboard
+  // doesn't collide with it. Uses both focus events and the visualViewport API.
+  useEffect(() => {
+    const setTyping = (on: boolean) => document.body.classList.toggle("typing", on);
+    const onFocusIn = (e: any) => { if (e.target?.matches?.("input,textarea")) setTyping(true); };
+    const onFocusOut = () => setTyping(false);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    const vv = window.visualViewport;
+    const onVV = () => { if (vv) document.body.classList.toggle("kbd-open", (window.innerHeight - vv.height) > 140); };
+    vv?.addEventListener("resize", onVV);
+    return () => { document.removeEventListener("focusin", onFocusIn); document.removeEventListener("focusout", onFocusOut); vv?.removeEventListener("resize", onVV); };
+  }, []);
 
   // shared-list import: top-level modal, opened by the toolbar or a #share= link
   const [importOpen, setImportOpen] = useState(false);
@@ -115,13 +133,16 @@ export function App() {
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button key={t.id} className="tab" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}>
-            <Icon name={t.icon} size={17} /> {t.label}
+            <Icon name={t.icon} size={17} />
+            <span className="tab-full">{t.label}</span>
+            <span className="tab-short">{t.short}</span>
             {t.id === "words" && <span className="badge-count">{nWords}</span>}
           </button>
         ))}
       </div>
       {tab !== "settings" && <PairSwitcher />}
       {tab === "practice" && <Practice />}
+      {tab === "lessons" && <LessonsTab />}
       {tab === "words" && <WordList />}
       {tab === "stats" && <Stats />}
       {tab === "settings" && <SettingsTab />}

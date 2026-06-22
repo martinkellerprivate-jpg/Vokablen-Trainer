@@ -9,7 +9,7 @@ export const LERN_TIPPS = [
   { h: "Lieber täglich kurz als selten lang",
     b: "10–15 Minuten jeden Tag bringen mehr als eine Stunde am Wochenende. In den Pausen zwischen den Einheiten festigt dein Gehirn die Wörter ganz von selbst." },
   { h: "Erst selbst überlegen, dann umdrehen",
-    b: "Tippe deine Antwort wirklich ein, bevor du die Lösung ansiehst. Genau dieses Anstrengen beim Erinnern macht ein Wort fest – nicht das bloße Anschauen." },
+    b: "Tippe deine Antwort wirklich ein, bevor du die Lösung ansiehst. Genau dieses Anstrengen beim Erinnern macht ein Wort fest – nicht das blosse Anschauen." },
   { h: "Ein Wort braucht viele Begegnungen",
     b: "Fast niemand kann ein Wort nach einmal Sehen. Dass dir ein Wort über mehrere Tage immer wieder begegnet, ist normal – und genau so soll es sein." },
   { h: "Mach deine Fehler zu Freunden",
@@ -27,7 +27,7 @@ export const LERN_TIPPS = [
   { h: "Schlaf macht das Lernen fertig",
     b: "Was du abends übst, festigt sich im Schlaf. Eine kurze Wiederholung kurz vor dem Schlafengehen wirkt oft besonders gut." },
   { h: "Dranbleiben schlägt alles",
-    b: "Deine Tages-Serie (die Flamme oben) zählt mehr als ein einzelner Mega-Tag. Regelmäßigkeit ist deine Superkraft." },
+    b: "Deine Tages-Serie (die Flamme oben) zählt mehr als ein einzelner Mega-Tag. Regelmässigkeit ist deine Superkraft." },
 ];
 
 export function LearnTips() {

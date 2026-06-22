@@ -53,6 +53,24 @@ export function WordList() {
   const [shareName, setShareName] = useState("");
   const [reviewRows, setReviewRows] = useState(null);   // P5: shared review screen
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [lessonName, setLessonName] = useState("");
+  const [addLessonId, setAddLessonId] = useState("");
+  const toggleSel = (id) => setSelectedIds((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
+  const staticLessons = (store.lessons || []).filter((l) => l.pair === pair && l.kind === "static");
+  const createLessonFromSel = () => {
+    if (!selectedIds.length) return;
+    const id = store.addLesson({ name: lessonName.trim() || "Auswahl", pair, kind: "static", members: [...selectedIds] });
+    toast(`Lektion „${lessonName.trim() || "Auswahl"}" · ${selectedIds.length} Wörter`, "check");
+    setSelectedIds([]); setLessonName(""); setSelectMode(false); return id;
+  };
+  const addSelToLesson = () => {
+    if (!selectedIds.length || !addLessonId) return;
+    store.addWordsToLesson(addLessonId, selectedIds);
+    toast(`${selectedIds.length} Wörter zur Lektion hinzugefügt`, "check");
+    setSelectedIds([]); setAddLessonId(""); setSelectMode(false);
+  };
   const fileRef = useRef(null);
   const canShare = isConfigured && !!auth.user;
 
@@ -292,6 +310,7 @@ export function WordList() {
         <button className="btn btn-sm" onClick={downloadTemplate}><Icon name="download" size={15} /> Template</button>
         <button className="btn btn-sm" onClick={exportList}><Icon name="download" size={15} /> Export</button>
         {isConfigured && <button className="btn btn-sm" onClick={() => openImport()}><Icon name="download" size={15} /> Liste importieren</button>}
+        <button className={"btn btn-sm" + (selectMode ? " btn-primary" : "")} onClick={() => { setSelectMode((m) => !m); setSelectedIds([]); }}><Icon name="check" size={15} /> {selectMode ? "Auswahl beenden" : "Auswählen"}</button>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }}
           onChange={(e) => { onImportFile(e.target.files[0]); e.target.value = ""; }} />
       </div>
@@ -339,6 +358,27 @@ export function WordList() {
         <span className="muted" style={{ fontSize: 13.5 }}><b style={{ color: "var(--ink)" }}>{filtered.length}</b> word{filtered.length === 1 ? "" : "s"}{activeList !== "__all" ? ` in “${listNameOf(activeList)}”` : ""}</span>
       </div>
 
+      {/* multi-select → static lesson (V6) */}
+      {selectMode && (
+        <div className="panel" style={{ padding: 12, marginBottom: 12 }}>
+          <div className="row wrap" style={{ gap: 10, alignItems: "center" }}>
+            <span style={{ fontWeight: 600 }}>{selectedIds.length} ausgewählt</span>
+            <span className="grow" />
+            <input className="field" style={{ width: 160 }} placeholder="Neue Lektion …" value={lessonName} onChange={(e) => setLessonName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createLessonFromSel()} />
+            <button className="btn btn-sm btn-primary" disabled={!selectedIds.length} onClick={createLessonFromSel}><Icon name="plus" size={14} /> Neue Lektion</button>
+            {staticLessons.length > 0 && (
+              <>
+                <select className="field" style={{ width: "auto", minWidth: 130 }} value={addLessonId} onChange={(e) => setAddLessonId(e.target.value)}>
+                  <option value="">Zu Lektion …</option>
+                  {staticLessons.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+                <button className="btn btn-sm" disabled={!selectedIds.length || !addLessonId} onClick={addSelToLesson}>Hinzufügen</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* table */}
       <div className="table-wrap">
         <table className="vt">
@@ -384,8 +424,10 @@ export function WordList() {
                 </td>
               </tr>
             ) : (
-              <tr key={w.id}>
-                <td className="cell-en">{fgnOf(w) || <span className="faint">—</span>}
+              <tr key={w.id} className={selectMode && selectedIds.includes(w.id) ? "row-sel" : ""} onClick={selectMode ? () => toggleSel(w.id) : undefined} style={selectMode ? { cursor: "pointer" } : undefined}>
+                <td className="cell-en">
+                  {selectMode && <input type="checkbox" checked={selectedIds.includes(w.id)} readOnly style={{ marginRight: 8, accentColor: "var(--amber-deep)" }} />}
+                  {fgnOf(w) || <span className="faint">—</span>}
                   {isLat && w.lernform && <div className="faint" style={{ fontSize: 12, fontStyle: "italic" }}>{w.lernform}</div>}
                   {(w.topic || (isLat && w.wortart)) && <div className="faint" style={{ fontSize: 11.5 }}>{[isLat ? w.wortart : null, w.topic].filter(Boolean).join(" · ")}</div>}
                   {w.review && <span className="badge amber" style={{ marginTop: 4 }}><span className="dot" />Review</span>}
@@ -398,11 +440,13 @@ export function WordList() {
                 </td>
                 <td>{catBadge(w)}</td>
                 <td>
+                  {!selectMode && (
                   <div className="row-actions">
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Hear" onClick={() => speak(w.de, "de")}><Icon name="volume" size={15} /></button>
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Edit" onClick={() => startEdit(w)}><Icon name="edit" size={15} /></button>
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Delete" onClick={() => store.deleteWord(w.id)}><Icon name="trash" size={15} /></button>
                   </div>
+                  )}
                 </td>
               </tr>
             ))}
