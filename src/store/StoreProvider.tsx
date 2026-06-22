@@ -7,6 +7,8 @@ import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
 import { migrateTopics, lessonsForLists, swissifyVocab } from "../lib/migrate";
+import { deriveRating, gradeFromCard, initialCard, retentionFor } from "../lib/fsrs";
+import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
 import type { Word, ListT } from "../lib/types";
 
 function seedVocab(): Word[] {
@@ -143,12 +145,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // V8 — fire exactly ONE FSRS grade per word per session (at graduation / first
+  // resolution). recordAttempt keeps the legacy per-attempt fields; this only
+  // touches stat.fsrs. Memorize → deriveRating returns "no-grade" → no-op.
+  const gradeWord = React.useCallback((wordId: string, outcome: SessionOutcome, mode: string, baseCard?: SerializedCard) => {
+    const rating = deriveRating(outcome, mode);
+    if (rating === "no-grade") return;
+    setStats((prev: any) => {
+      const s = prev[wordId];
+      if (!s) return prev;   // recordAttempt runs first, so a legacy stat exists
+      // grade from the run-start baseline so exactly one increment happens per
+      // session (FIX 1) — not from the live stat already mutated this session.
+      const base = baseCard || initialCard(s);
+      const fsrsCard = gradeFromCard(base, rating as number, retentionFor(settings.lernIntensity));
+      return { ...prev, [wordId]: { ...s, fsrs: fsrsCard } };
+    });
+  }, [settings.lernIntensity]);
+
   const api = {
     vocab, stats, meta, settings, lists, lessons,
     setVocab: setVocabState,
     setSettings: (patch: any) => setSettings((p: any) => ({ ...p, ...patch })),
     setMeta: (patch: any) => setMeta((p: any) => ({ ...p, ...patch })),
     recordAttempt,
+    gradeWord,
     addWord: (w: any) => setVocabState((v: any) => [{ id: newId(), review: false, source: "manual", pair: "en-de", lists: [], ...w }, ...v]),
     addWords: (arr: any[]) => setVocabState((v: any) => [...arr.map((w) => ({ id: newId(), review: false, source: "import", pair: "en-de", lists: [], ...w })), ...v]),
     updateWord: (id: string, patch: any) => setVocabState((v: any) => v.map((w: any) => (w.id === id ? { ...w, ...patch } : w))),

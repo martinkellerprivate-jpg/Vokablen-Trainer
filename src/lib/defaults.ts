@@ -8,9 +8,8 @@ export const RECOMMENDED: Partial<Settings> = {
   autoAudio: false,       // auto-play pronunciation each card
   dailyGoal: 30,          // cards/day target (~15 min daily session)
   newPerDay: 10,          // new words introduced per day (8–12 is ideal)
-  missWeight: 4,          // how strongly missed words come back
-  spacingGap: 3,          // min other cards before a word repeats
-  masteryCorrect: 3,      // correct-in-a-row before a word counts as learned
+  lernIntensity: "normal", // V8: FSRS retention target (locker/normal/intensiv = 85/90/95%)
+  masteryCorrect: 3,      // internal default for classifyWord display (sliders removed in V8)
   lenientCase: true,      // ignore upper/lower case
   strictAccents: false,   // umlaut/accent slips = small mistake, not wrong
   articleMode: "required-partial", // missing der/die/das = small deduction

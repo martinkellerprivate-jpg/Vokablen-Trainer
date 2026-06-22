@@ -52,6 +52,7 @@ export interface Stat {
   streak: number;
   lastTs?: number;
   history: HistoryEntry[];
+  fsrs?: import("./fsrs").SerializedCard;   // V8 — FSRS scheduler state (lazy warm-start)
 }
 
 export interface Meta {
@@ -107,9 +108,10 @@ export interface Settings {
   autoAudio: boolean;
   dailyGoal: number;
   newPerDay: number;
-  missWeight: number;
-  spacingGap: number;
-  masteryCorrect: number;
+  lernIntensity?: "locker" | "normal" | "intensiv";   // V8 — maps to FSRS retention target
+  missWeight?: number;       // V8: deprecated (FSRS internal), kept optional for old data
+  spacingGap?: number;       // V8: deprecated
+  masteryCorrect?: number;   // V8: deprecated
   lenientCase: boolean;
   strictAccents: boolean;
   articleMode: "optional" | "required-full" | "required-partial";

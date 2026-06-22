@@ -132,18 +132,10 @@ export function SettingsTab() {
           desc="Limiting how many brand-new words appear each day prevents overload — once reached, the day focuses on reviewing.">
           <SliderControl value={settings.newPerDay} min={3} max={30} step={1} onChange={(v) => set("newPerDay", v)} />
         </Field>
-        <Field title="How often mistakes come back" recLabel={`${R.missWeight} (balanced)`} atRec={atR("missWeight")}
-          desc="Words you get wrong are shown more often. Higher means much more aggressive drilling of weak words.">
-          <SliderControl value={settings.missWeight} min={1} max={8} step={1} onChange={(v) => set("missWeight", v)}
-            fmt={(v) => (v <= 2 ? "gentle" : v >= 6 ? "aggressive" : "balanced")} />
-        </Field>
-        <Field title="Spacing before a word repeats" recLabel={`${R.spacingGap} cards`} atRec={atR("spacingGap")}
-          desc="The same word won't reappear until at least this many other cards have passed. Spacing out repetitions improves retention.">
-          <SliderControl value={settings.spacingGap} min={1} max={10} step={1} onChange={(v) => set("spacingGap", v)} fmt={(v) => v + " cards"} />
-        </Field>
-        <Field title="Correct answers to ‘learn’ a word" recLabel={`${R.masteryCorrect} in a row`} atRec={atR("masteryCorrect")}
-          desc="A word counts as Learned after this many correct answers in a row, then appears rarely. Words need several spaced exposures to truly stick.">
-          <SliderControl value={settings.masteryCorrect} min={1} max={6} step={1} onChange={(v) => set("masteryCorrect", v)} fmt={(v) => v + "×"} />
+        <Field title="Lernintensität" recLabel="Normal" atRec={settings.lernIntensity === "normal" || !settings.lernIntensity}
+          desc="Wie gut die App ein Wort im Gedächtnis halten will, bevor sie es zur Wiederholung bringt. Intensiver = häufigere Wiederholung, sicherer im Behalten. Alles Weitere regelt die App automatisch.">
+          <Seg value={settings.lernIntensity || "normal"} onChange={(v) => set("lernIntensity", v)}
+            options={[{ v: "locker", label: "Locker" }, { v: "normal", label: "Normal" }, { v: "intensiv", label: "Intensiv" }]} />
         </Field>
       </div>
 

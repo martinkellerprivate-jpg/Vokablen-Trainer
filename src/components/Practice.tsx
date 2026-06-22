@@ -5,7 +5,9 @@ import { Icon } from "../ui/Icon";
 import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
-import { weightForWord, resolveLesson, resolveSmart } from "../lib/engine";
+import { resolveLesson, resolveSmart } from "../lib/engine";
+import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
+import { retrievabilityOf, isDueCard, retentionFor, initialCard } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
 import { TipPopup } from "./TipPopup";
@@ -60,10 +62,14 @@ export function Practice() {
   // live resolution of the chosen scope (for chip counts + to seed a run)
   const resolveScopeWords = () => {
     const pv = vocab.filter((w) => w.pair === pair);
-    const words = effective.kind === "smart"
-      ? resolveSmart(effective.ref, pv, stats, settings.masteryCorrect)
-      : resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab);
-    return words.filter(practiceable);
+    if (effective.kind === "smart") {
+      // V8: "Fällige Wörter" → fragile-first + daily cap; "tricky" → as-is
+      const opts = effective.ref === "due"
+        ? { retention: retentionFor(settings.lernIntensity), cap: settings.dailyGoal }
+        : undefined;
+      return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
+    }
+    return resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab).filter(practiceable);
   };
 
   const [current, setCurrent] = useState(null);
@@ -82,25 +88,50 @@ export function Practice() {
   const recentRef = useRef([]);                // recently shown ids (spacing)
   const answeredRef = useRef(0);               // scored answers this session (tip cadence)
 
-  // ---- run snapshot (V5/V6): freeze the word set when the scope or pair
-  // changes, so a dynamic/smart scope (e.g. "Fällige Wörter") doesn't shrink
-  // mid-run and so the progress bar is stable. Also the single source of the
-  // B1 rebuild: changing pair/scope re-freezes AND resets the session.
+  const scopeMode = effective.kind === "smart" ? "review" : "mastery";   // V8
+
+  // ---- run snapshot (V5/V6/V8): freeze the word set when scope/pair changes,
+  // then build a runqueue (shuffle-bag + mastery loop) over the frozen ids. Each
+  // word is FSRS-graded exactly once per session (at graduation / first review).
   const runWordsRef = useRef([]);
-  const [doneIds, setDoneIds] = useState(() => new Set()); // distinct ids "done" this run (V5 progress)
+  const runRef = useRef(null);          // V8 RunState
+  const gradedRef = useRef(new Set());  // V8 ids already FSRS-graded this run (once-only)
+  const baseCardRef = useRef({});       // V8 pre-session FSRS baseline per word (grade from this)
+  const shownAtRef = useRef(0);         // V8 when the current card was shown
+  const flushRef = useRef(() => {});    // V8 latest session-end flush
+  const [doneIds, setDoneIds] = useState(() => new Set()); // V5: mastered ids this run
   const markDone = useCallback((id) => setDoneIds((prev) => prev.has(id) ? prev : new Set(prev).add(id)), []);
   const [runId, setRunId] = useState(0);
-  useEffect(() => {
-    runWordsRef.current = resolveScopeWords().map((w) => w.id);
+
+  const startRun = () => {
+    flushRef.current();                 // grade unfinished words from the previous run first
+    const ids = resolveScopeWords().map((w) => w.id);
+    runWordsRef.current = ids;
+    const retention = retentionFor(settings.lernIntensity);
+    const now = Date.now();
+    const meta2 = {};
+    const bases = {};
+    for (const id of ids) {
+      const st = stats[id];
+      const r = retrievabilityOf(st, retention, now);
+      const hasCard = !!(st && st.fsrs);
+      meta2[id] = { retrievability: r, due: hasCard ? isDueCard(st, now) : true, solid: hasCard && r >= SOLID_R };
+      bases[id] = initialCard(st);   // frozen pre-session FSRS baseline (FIX 1)
+    }
+    baseCardRef.current = bases;
+    runRef.current = buildRun(ids, meta2, scopeMode);
+    gradedRef.current = new Set();
     setDoneIds(new Set());
     setRunId((n) => n + 1);
     setCurrent(null); setFace("front"); setAnim(""); setResult(null); setSession([]); setTip(null);
-  }, [pair, selKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+  useEffect(() => { startRun(); }, [pair, selKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pool = useMemo(() => {
     const set = new Set(runWordsRef.current);
     return vocab.filter((w) => set.has(w.id) && practiceable(w));
   }, [vocab, runId]);
+  const poolById = useMemo(() => { const m = {}; for (const w of pool) m[w.id] = w; return m; }, [pool]);
 
   // Show a single study tip at a natural pause, every N scored cards.
   const TIP_EVERY = { off: 0, occasional: 12, frequent: 6 };
@@ -127,28 +158,13 @@ export function Practice() {
     }, 200);
   }, []);
 
-  const pickNext = useCallback((excludeId) => {
-    if (!pool.length) { setCurrent(null); return; }
-    const newToday = meta.newToday || 0;
-    const capReached = newToday >= settings.newPerDay;
-    const hasReviews = pool.some((p) => stats[p.id] && stats[p.id].seen);
-    const recent = recentRef.current;
-    const weights = pool.map((w) => {
-      const st = stats[w.id];
-      const isNewW = !st || !st.seen;
-      let wt = weightForWord(st, { missWeight: settings.missWeight, masteryCorrect: settings.masteryCorrect });
-      if (isNewW && capReached && hasReviews) wt = 0;            // hold new words for tomorrow
-      if (recent.includes(w.id)) wt *= 0.0008;                   // spacing: avoid quick repeats
-      if (w.id === excludeId && pool.length > 1) wt *= 0.02;
-      return wt;
-    });
-    let total = weights.reduce((a, b) => a + b, 0);
-    if (total <= 0) { for (let i = 0; i < weights.length; i++) weights[i] = 1; total = weights.length; }
-    let r = Math.random() * total, idx = 0;
-    for (let i = 0; i < weights.length; i++) { r -= weights[i]; if (r <= 0) { idx = i; break; } }
-    const w = pool[idx];
+  const pickNext = useCallback(() => {
+    const st = runRef.current;
+    const id = st ? pick(st) : null;
+    const w = id ? poolById[id] : null;
+    if (!w) { setCurrent(null); return; }              // run complete (all mastered)
     setCurrent(w);
-    recentRef.current = [w.id, ...recent].slice(0, Math.max(1, settings.spacingGap));
+    shownAtRef.current = Date.now();
     setInput(""); setResult(null); setHintUsed(false); setPicked(null);
     // build multiple-choice options
     const nOpts = Math.max(2, Math.min(6, settings.choicesCount || 4));
@@ -163,7 +179,56 @@ export function Practice() {
     setChoices([w, ...distractors].sort(() => Math.random() - 0.5));
     setTimeout(() => inputRef.current && inputRef.current.focus(), 60);
     if (settings.autoAudio && hasTTS(srcKey)) setTimeout(() => speak(sideText(w, srcKey), srcKey), 130);
-  }, [pool, stats, tgtKey, srcKey, meta.newToday, settings.newPerDay, settings.missWeight, settings.masteryCorrect, settings.spacingGap, settings.choicesCount, settings.autoAudio]);
+  }, [pool, poolById, tgtKey, srcKey, settings.choicesCount, settings.autoAudio]);
+
+  // V8: record the current word's resolution into the runqueue; fire ONE FSRS
+  // grade at graduation. Memorize = pure exposition → seen, never graded.
+  const resolveWord = useCallback((rawCorrect, usedHint) => {
+    const st = runRef.current;
+    if (!st || !st.current) return;
+    const id = st.current;
+    const w = st.words[id];
+    if (w) w.mode = mode;
+    if (mode === "memorize") {
+      if (w) { w.attempts++; w.mastered = true; w.graded = true; }   // seen; no grade
+      st.lastId = id; st.current = null;
+      markDone(id);
+      return;
+    }
+    const elapsed = Date.now() - (shownAtRef.current || Date.now());
+    const { graduated } = record(st, { correct: !!rawCorrect, usedHint: !!usedHint, elapsedMs: elapsed });
+    if (graduated) {
+      markDone(id);
+      if (!gradedRef.current.has(id)) {
+        gradedRef.current.add(id);
+        st.words[id].graded = true;
+        store.gradeWord(id, outcomeOf(st.words[id]), mode, baseCardRef.current[id]);
+      }
+    }
+  }, [mode, markDone, store]);
+
+  // V8: session-end flush — grade started-but-ungraded words once. Fires on
+  // unmount, scope/pair change (via startRun), AND mobile backgrounding.
+  flushRef.current = () => {
+    const st = runRef.current;
+    if (!st) return;
+    for (const w of pendingGrades(st)) {
+      if (gradedRef.current.has(w.id)) continue;
+      gradedRef.current.add(w.id); w.graded = true;
+      store.gradeWord(w.id, outcomeOf(w), w.mode || mode, baseCardRef.current[w.id]);
+    }
+  };
+  useEffect(() => {
+    const onVis = () => { if (document.visibilityState === "hidden") flushRef.current(); };
+    const onHide = () => flushRef.current();
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVis);
+      flushRef.current();   // unmount = session end
+    };
+  }, []);
 
   // First card whenever the (frozen) pool appears, or self-heal if `current`
   // became stale (e.g. an async cloud sync swapped vocab under the initial
@@ -171,19 +236,21 @@ export function Practice() {
   // stays blank — on mount or on any pair/scope change.
   useEffect(() => {
     if (face === "back" || anim) return;        // never interrupt a result/flip
-    if (pool.length && (!current || !pool.some((w) => w.id === current.id))) pickNext(null);
-  }, [pool, current, pickNext, face, anim]);
+    const st = runRef.current; if (!st) return;
+    const stale = current && !poolById[current.id];
+    if ((!current || stale) && st.order.length > 0) pickNext();
+  }, [runId, current, poolById, pickNext, face, anim]);
 
-  const finish = useCallback((res) => {
+  const finish = useCallback((res, rawCorrect) => {
     const st = stats[current.id];
     const isNew = !st || !st.seen;
     setResult(res);
-    recordAttempt(current.id, res.score, res.verdict, isNew, res.errorType ?? null);
-    if (res.verdict === "correct") markDone(current.id);   // V5: "done" once correct
+    recordAttempt(current.id, res.score, res.verdict, isNew, res.errorType ?? null);  // legacy stats
+    resolveWord(rawCorrect, hintUsed);   // V8: runqueue + single FSRS grade at graduation
     setSession((s) => [...s, res.verdict].slice(-12));
     maybeTip();
     flip("back");
-  }, [current, recordAttempt, flip, stats, maybeTip, markDone]);
+  }, [current, recordAttempt, flip, stats, maybeTip, hintUsed, resolveWord]);
 
   const answerOpts = () => ({ lenientCase: settings.lenientCase, strictAccents: settings.strictAccents, articleMode: settings.articleMode, acceptPartial: settings.acceptPartial });
 
@@ -193,10 +260,11 @@ export function Practice() {
     let res = latinL3Answer
       ? scoreLatinForm(input, current.lernform || "", answerOpts())
       : scoreAnswer(input, scoreTarget(current, tgtKey), answerOpts());
+    const rawCorrect = res.verdict === "correct";    // V8: true correctness before hint downgrade
     if (hintUsed && res.verdict === "correct") {
       res = { ...res, verdict: "almost", score: Math.min(res.score, 0.85), note: "Correct — with a hint" };
     }
-    finish(res);
+    finish(res, rawCorrect);
   }, [current, face, anim, input, mode, tgtKey, hintUsed, finish, settings]);
 
   const choose = useCallback((opt) => {
@@ -207,29 +275,29 @@ export function Practice() {
     if (!correct) res = { ...res, score: 0, verdict: "wrong" };
     if (hintUsed && res.verdict === "correct")
       res = { ...res, verdict: "almost", score: 0.85, note: "Correct — with a hint" };
-    finish(res);
+    finish(res, correct);
   }, [current, face, anim, tgtKey, hintUsed, finish, settings]);
 
-  const next = useCallback(() => { flip("front", () => pickNext(current && current.id)); }, [pickNext, current, flip]);
+  const next = useCallback(() => { flip("front", () => pickNext()); }, [pickNext, flip]);
 
   // Recall / Memorize: reveal the answer without scoring yet
   const reveal = useCallback(() => {
     if (!current || face === "back" || anim) return;
-    if (mode === "memorize") markDone(current.id);   // V5: Memorize counts a card as "seen"
+    if (mode === "memorize") resolveWord(true, false);   // V5/V8: Memorize = seen, no grade
     flip("back");
-  }, [current, face, anim, flip, mode, markDone]);
+  }, [current, face, anim, flip, mode, resolveWord]);
 
   // Recall: self-graded (got it / missed it)
   const grade = useCallback((correct) => {
     if (!current || anim) return;
     const st = stats[current.id];
     const isNew = !st || !st.seen;
-    recordAttempt(current.id, correct ? 1 : 0, correct ? "correct" : "wrong", isNew);
-    if (correct) markDone(current.id);   // V5: Recall "Got it" counts as done
+    recordAttempt(current.id, correct ? 1 : 0, correct ? "correct" : "wrong", isNew);  // legacy
+    resolveWord(correct, false);   // V8: runqueue + grade at graduation
     setSession((s) => [...s, correct ? "correct" : "wrong"].slice(-12));
     maybeTip();
-    flip("front", () => pickNext(current.id));
-  }, [current, anim, stats, recordAttempt, flip, pickNext, maybeTip, markDone]);
+    flip("front", () => pickNext());
+  }, [current, anim, stats, recordAttempt, flip, pickNext, maybeTip, resolveWord]);
 
   const useHint = useCallback(() => {
     if (!current || face === "back" || anim) return;
@@ -328,7 +396,19 @@ export function Practice() {
       </div>
     );
   }
-  if (!current) return null;
+  if (!current) {
+    const done = !!(runRef.current && runRef.current.total > 0);
+    return (
+      <div className="practice-wrap">
+        {scopeBar}
+        <div className="empty">
+          <div className="big">{done ? "Geschafft — diese Runde sitzt" : "Bereit"}</div>
+          <div>{done ? "Alle Wörter dieser Auswahl gemeistert. Wähle oben eine andere Lektion oder einen Schnellzugriff — oder übe gleich nochmal." : "Einen Moment …"}</div>
+          {done && <button className="btn btn-primary" style={{ marginTop: 14 }} onClick={startRun}><Icon name="refresh" size={15} /> Nochmal üben</button>}
+        </div>
+      </div>
+    );
+  }
 
   const verdictMeta = {
     correct: { tone: "green", label: "Correct!", icon: "check" },
@@ -336,9 +416,9 @@ export function Practice() {
     wrong: { tone: "red", label: "Not quite", icon: "x" },
   };
 
-  // V5: run progress — distinct words "done" out of the frozen run snapshot.
-  const runTotal = runWordsRef.current.length;
-  const runDone = runWordsRef.current.filter((id) => doneIds.has(id)).length;
+  // V5/V8: run progress — distinct words mastered out of the frozen run.
+  const runTotal = runRef.current ? runRef.current.total : 0;
+  const runDone = doneIds.size;
 
   return (
     <div className={"practice-wrap" + (focus ? " focus-on" : "")}
@@ -495,7 +575,7 @@ export function Practice() {
                 <button className="btn btn-ghost btn-sm" onClick={useHint} disabled={hintUsed}>
                   <Icon name="hint" size={15} /> {hintUsed ? "Hint shown" : "Hint"}
                 </button>
-                <button className="btn btn-ghost btn-sm" onClick={() => finish(latinL3Answer ? scoreLatinForm("", current.lernform || "", answerOpts()) : scoreAnswer("", scoreTarget(current, tgtKey), answerOpts()))}>
+                <button className="btn btn-ghost btn-sm" onClick={() => finish(latinL3Answer ? scoreLatinForm("", current.lernform || "", answerOpts()) : scoreAnswer("", scoreTarget(current, tgtKey), answerOpts()), false)}>
                   Skip / I don't know
                 </button>
               </div>

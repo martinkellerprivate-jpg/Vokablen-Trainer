@@ -2,6 +2,7 @@
  * weighting. Pure logic — no React. */
 import type { Stat, Word } from "./types";
 import { practiceable } from "./pairs";
+import { isDueCard, retrievabilityOf } from "./fsrs";
 
 /* ---- classification & smart repetition --------------------------- */
 export const CATEGORY = {
@@ -41,6 +42,8 @@ export function weightForWord(stat: Stat | undefined, opts?: any) {
 
 /* Smart categories — auto-maintained virtual lists. */
 export function isDue(s: Stat | undefined, now: number) {
+  if (s && (s as any).fsrs) return isDueCard(s, now);   // V8: FSRS due date reached
+  // legacy Leitner fallback, until the word is lazy-migrated on its next review
   if (!s || !s.seen || !s.lastTs || (s.streak || 0) < 1) return false;
   const days = [1, 2, 4, 7, 14][Math.min(s.streak || 0, 4)] || 14;
   return (now - s.lastTs) >= days * 86400000;
@@ -104,9 +107,21 @@ export function resolveLesson(lesson: any, vocab: Word[]): Word[] {
   return [];
 }
 
-/* Resolve a built-in smart quick-access ("due" | "tricky") for one pair. */
-export function resolveSmart(key: string, pairVocab: Word[], stats: Record<string, Stat>, mc?: number): Word[] {
+/* Resolve a built-in smart quick-access ("due" | "tricky") for one pair.
+ * V8: "due" is ordered by retrievability (most fragile first) and capped to the
+ * daily target when opts are supplied (for the run; chip counts pass no opts). */
+export function resolveSmart(
+  key: string, pairVocab: Word[], stats: Record<string, Stat>, mc?: number,
+  opts?: { retention?: number; cap?: number },
+): Word[] {
   const sc = SMART[key]; if (!sc) return [];
   const now = Date.now();
-  return pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
+  let words = pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
+  if (key === "due") {
+    const retention = (opts && opts.retention) || 0.9;
+    words = words.slice().sort((a, b) =>
+      retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
+    if (opts && opts.cap && words.length > opts.cap) words = words.slice(0, opts.cap);
+  }
+  return words;
 }
