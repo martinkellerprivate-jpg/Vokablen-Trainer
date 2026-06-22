@@ -132,9 +132,10 @@ export function SettingsTab() {
           desc="Limiting how many brand-new words appear each day prevents overload — once reached, the day focuses on reviewing.">
           <SliderControl value={settings.newPerDay} min={3} max={30} step={1} onChange={(v) => set("newPerDay", v)} />
         </Field>
-        <Field title="Lernintensität" recLabel="Normal" atRec={settings.lernIntensity === "normal" || !settings.lernIntensity}
+        <Field title="Lernintensität" recLabel="Normal" atRec={(settings.targetRetention ?? 0.9) === 0.9}
           desc="Wie gut die App ein Wort im Gedächtnis halten will, bevor sie es zur Wiederholung bringt. Intensiver = häufigere Wiederholung, sicherer im Behalten. Alles Weitere regelt die App automatisch.">
-          <Seg value={settings.lernIntensity || "normal"} onChange={(v) => set("lernIntensity", v)}
+          <Seg value={(settings.targetRetention ?? 0.9) >= 0.95 ? "intensiv" : (settings.targetRetention ?? 0.9) <= 0.85 ? "locker" : "normal"}
+            onChange={(v) => setSettings({ lernIntensity: v, targetRetention: { locker: 0.85, normal: 0.9, intensiv: 0.95 }[v] })}
             options={[{ v: "locker", label: "Locker" }, { v: "normal", label: "Normal" }, { v: "intensiv", label: "Intensiv" }]} />
         </Field>
       </div>

@@ -18,8 +18,70 @@ export { Rating } from "ts-fsrs";
 
 export type Intensity = "locker" | "normal" | "intensiv";
 export const RETENTION: Record<Intensity, number> = { locker: 0.85, normal: 0.9, intensiv: 0.95 };
-export function retentionFor(intensity?: string): number {
-  return RETENTION[(intensity as Intensity)] ?? RETENTION.normal;
+export const DEFAULT_RETENTION = 0.9;
+
+/* Retention comes from ONE source: settings.targetRetention (the "Lernintensität"
+ * preset is just its UI shell). Accepts a Settings object (preferred) or a legacy
+ * intensity string for back-compat. */
+export function retentionFor(s?: any): number {
+  if (s && typeof s === "object") {
+    if (typeof s.targetRetention === "number") return s.targetRetention;
+    if (s.lernIntensity) return RETENTION[s.lernIntensity as Intensity] ?? RETENTION.normal;
+    return RETENTION.normal;
+  }
+  return RETENTION[(s as Intensity)] ?? RETENTION.normal;
+}
+/* V13/FIX 4: THE single effective-retention source. V13 baseline = the global
+ * target; V15 raises it per active lesson deadline (highest wins). Every derivation
+ * (card, stats, popup, today, due-list) must call this — never settings.targetRetention
+ * directly — so the same word shows identical due everywhere. */
+export function effectiveRetentionFor(_word: any, settings: any, _lessons?: any[], _now?: number): number {
+  return retentionFor(settings);   // V15 will override here
+}
+
+/* ---- V13: the four mastery levels (S-axis). The ONLY colour/label source. ---- */
+export const STUFE: Record<string, { key: string; label: string; tone: string }> = {
+  noch_nicht_geuebt: { key: "noch_nicht_geuebt", label: "noch nicht geübt", tone: "slate" },
+  sitzt_schlecht:    { key: "sitzt_schlecht",    label: "sitzt schlecht",   tone: "red" },
+  sitzt_fast:        { key: "sitzt_fast",        label: "sitzt fast",       tone: "amber" },
+  sitzt:             { key: "sitzt",             label: "sitzt",            tone: "green" },
+};
+/* V13 thresholds — named, in ONE place (Startwerte, an realen Daten justierbar). */
+export const S1 = 3;          // days: below → sitzt_schlecht (red)
+export const S2 = 14;         // days: at/above → sitzt (green); between → sitzt_fast
+export const PUFFER = 2;      // days: "bald fällig" window before due
+export const D_LEECH = 7;     // difficulty ≥ this …
+export const LAPSE_LEECH = 3; // … and lapses ≥ this → Leech (D-axis)
+const DAY = 86400000;
+
+export interface Profile {
+  stufe: string; tone: string;
+  istFaellig: boolean; baldFaellig: boolean;
+  R_now: number | null; interval: number | null; due: number | null;
+  haeltTage: number; istLeech: boolean;
+}
+/* deriveProfile — DIE einzige Ableitung. FIX 1: guard New/S<=0 BEFORE any R-formula. */
+export function deriveProfile(card: SerializedCard | undefined, effRetention: number, now: number = Date.now()): Profile {
+  const S = card ? card.stability : 0;
+  if (!card || card.state === 0 || !(S > 0)) {
+    return { stufe: "noch_nicht_geuebt", tone: STUFE.noch_nicht_geuebt.tone, istFaellig: false, baldFaellig: false, R_now: null, interval: null, due: null, haeltTage: 0, istLeech: false };
+  }
+  const last = card.last_review ?? now;
+  const interval = 9 * S * (1 / effRetention - 1);            // days
+  const due = last + interval * DAY;
+  const R_now = Math.pow(1 + ((now - last) / DAY) / (9 * S), -0.5);
+  const istFaellig = now >= due;
+  const baldFaellig = (now >= due - PUFFER * DAY) && !istFaellig;   // FIX 2: excludes due
+  const stufe = S < S1 ? "sitzt_schlecht" : S < S2 ? "sitzt_fast" : "sitzt";
+  const istLeech = card.difficulty >= D_LEECH && (card.lapses || 0) >= LAPSE_LEECH;
+  return { stufe, tone: STUFE[stufe].tone, istFaellig, baldFaellig, R_now, interval, due, haeltTage: S, istLeech };
+}
+/* Retrievability at a FUTURE moment (for V15 exam prognosis). New/S<=0 → null. */
+export function retrievabilityAt(card: SerializedCard | undefined, at: number): number | null {
+  const S = card ? card.stability : 0;
+  if (!card || card.state === 0 || !(S > 0)) return null;
+  const last = card.last_review ?? at;
+  return Math.pow(1 + (Math.max(0, at - last) / DAY) / (9 * S), -0.5);
 }
 
 /* scheduler is memoised per retention target */
@@ -32,13 +94,14 @@ function scheduler(retention: number): any {
 
 /* ---- serialization: ts-fsrs uses Date objects; we persist ms numbers ---- */
 export interface SerializedCard {
-  due: number; stability: number; difficulty: number;
+  due?: number;            // V13: NOT persisted — derived via deriveProfile (kept optional for old data)
+  stability: number; difficulty: number;
   elapsed_days: number; scheduled_days: number; reps: number; lapses: number;
   learning_steps?: number; state: number; last_review?: number;
 }
 function toCard(s: SerializedCard): any {
   return {
-    due: new Date(s.due),
+    due: new Date(s.due ?? s.last_review ?? Date.now()),   // placeholder; computations use last_review, not due
     stability: s.stability, difficulty: s.difficulty,
     elapsed_days: s.elapsed_days, scheduled_days: s.scheduled_days,
     reps: s.reps, lapses: s.lapses, learning_steps: s.learning_steps ?? 0,
@@ -48,7 +111,7 @@ function toCard(s: SerializedCard): any {
 }
 function fromCard(c: any): SerializedCard {
   return {
-    due: +new Date(c.due),
+    // V13: due deliberately NOT stored (derived); only raw FSRS values persist + sync
     stability: c.stability, difficulty: c.difficulty,
     elapsed_days: c.elapsed_days, scheduled_days: c.scheduled_days,
     reps: c.reps, lapses: c.lapses, learning_steps: c.learning_steps ?? 0,
@@ -132,9 +195,10 @@ export function retrievabilityOf(stat: Stat | undefined, retention: number, now:
   return typeof r === "number" ? r : parseFloat(r) / 100 || 0;
 }
 
-/* Due test — only graded cards (not fresh New) with a reached due date count. */
-export function isDueCard(stat: Stat | undefined, now: number = Date.now()): boolean {
+/* Due test via deriveProfile (V13). Retention defaults to the global target; pass
+ * the word's effectiveRetention for override-correct results. */
+export function isDueCard(stat: Stat | undefined, now: number = Date.now(), retention: number = DEFAULT_RETENTION): boolean {
   const c = stat && (stat as any).fsrs;
-  if (!c || c.state === 0) return false;   // New / never-graded → not "due for review"
-  return c.due <= now;
+  if (!c) return false;
+  return deriveProfile(c, retention, now).istFaellig;
 }

@@ -108,7 +108,8 @@ export interface Settings {
   autoAudio: boolean;
   dailyGoal: number;
   newPerDay: number;
-  lernIntensity?: "locker" | "normal" | "intensiv";   // V8 — maps to FSRS retention target
+  targetRetention?: number;                            // V13 — THE retention source (0.85/0.90/0.95)
+  lernIntensity?: "locker" | "normal" | "intensiv";   // V8 — UI shell that writes targetRetention
   missWeight?: number;       // V8: deprecated (FSRS internal), kept optional for old data
   spacingGap?: number;       // V8: deprecated
   masteryCorrect?: number;   // V8: deprecated

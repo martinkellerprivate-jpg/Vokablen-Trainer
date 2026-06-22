@@ -65,7 +65,7 @@ export function Practice() {
     if (effective.kind === "smart") {
       // V8: "Fällige Wörter" → fragile-first + daily cap; "tricky" → as-is
       const opts = effective.ref === "due"
-        ? { retention: retentionFor(settings.lernIntensity), cap: settings.dailyGoal }
+        ? { retention: retentionFor(settings), cap: settings.dailyGoal }
         : undefined;
       return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
     }
@@ -107,7 +107,7 @@ export function Practice() {
     flushRef.current();                 // grade unfinished words from the previous run first
     const ids = resolveScopeWords().map((w) => w.id);
     runWordsRef.current = ids;
-    const retention = retentionFor(settings.lernIntensity);
+    const retention = retentionFor(settings);
     const now = Date.now();
     const meta2 = {};
     const bases = {};
@@ -115,7 +115,7 @@ export function Practice() {
       const st = stats[id];
       const r = retrievabilityOf(st, retention, now);
       const hasCard = !!(st && st.fsrs);
-      meta2[id] = { retrievability: r, due: hasCard ? isDueCard(st, now) : true, solid: hasCard && r >= SOLID_R };
+      meta2[id] = { retrievability: r, due: hasCard ? isDueCard(st, now, retention) : true, solid: hasCard && r >= SOLID_R };
       bases[id] = initialCard(st);   // frozen pre-session FSRS baseline (FIX 1)
     }
     baseCardRef.current = bases;

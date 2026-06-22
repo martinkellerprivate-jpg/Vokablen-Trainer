@@ -41,8 +41,8 @@ export function weightForWord(stat: Stat | undefined, opts?: any) {
 }
 
 /* Smart categories — auto-maintained virtual lists. */
-export function isDue(s: Stat | undefined, now: number) {
-  if (s && (s as any).fsrs) return isDueCard(s, now);   // V8: FSRS due date reached
+export function isDue(s: Stat | undefined, now: number, retention?: number) {
+  if (s && (s as any).fsrs) return isDueCard(s, now, retention);   // V13: deriveProfile.istFaellig
   // legacy Leitner fallback, until the word is lazy-migrated on its next review
   if (!s || !s.seen || !s.lastTs || (s.streak || 0) < 1) return false;
   const days = [1, 2, 4, 7, 14][Math.min(s.streak || 0, 4)] || 14;
@@ -116,9 +116,12 @@ export function resolveSmart(
 ): Word[] {
   const sc = SMART[key]; if (!sc) return [];
   const now = Date.now();
-  let words = pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
+  const retention = (opts && opts.retention) || 0.9;
+  // V13: due filtered/ordered via deriveProfile retention (FIX 4 consistency)
+  let words = key === "due"
+    ? pairVocab.filter((w) => practiceable(w) && isDue(stats[w.id], now, retention))
+    : pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
   if (key === "due") {
-    const retention = (opts && opts.retention) || 0.9;
     words = words.slice().sort((a, b) =>
       retrievabilityOf(stats[a.id], retention, now) - retrievabilityOf(stats[b.id], retention, now));
     if (opts && opts.cap && words.length > opts.cap) words = words.slice(0, opts.cap);

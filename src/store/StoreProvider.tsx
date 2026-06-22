@@ -7,7 +7,7 @@ import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
 import { migrateTopics, lessonsForLists, swissifyVocab } from "../lib/migrate";
-import { deriveRating, gradeFromCard, initialCard, retentionFor } from "../lib/fsrs";
+import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION } from "../lib/fsrs";
 import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
 import type { Word, ListT } from "../lib/types";
 
@@ -52,10 +52,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }));
   const [settings, setSettings] = React.useState(() => {
     // Addendum §2: default direction is German → foreign (n2f).
-    const s = { direction: "n2f", pair: "en-de", selectedLists: [], statLists: [], practiceSel: "", ...RECOMMENDED, ...load(LS.settings, {}) };
+    const loaded = load(LS.settings, {});
+    const s = { direction: "n2f", pair: "en-de", selectedLists: [], statLists: [], practiceSel: "", ...RECOMMENDED, ...loaded };
     if (s.direction === "en2de") s.direction = "f2n";
     if (s.direction === "de2en") s.direction = "n2f";
     if (s.articleMode == null) s.articleMode = s.requireArticle ? "required-full" : "required-partial";
+    // V13: targetRetention is the source. Migrate an existing lernIntensity choice
+    // into it once (so a user on "intensiv" keeps 0.95, not the default 0.9).
+    if (loaded.targetRetention == null && loaded.lernIntensity) s.targetRetention = RETENTION[loaded.lernIntensity] ?? 0.9;
     return s;
   });
 
@@ -157,10 +161,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       // grade from the run-start baseline so exactly one increment happens per
       // session (FIX 1) — not from the live stat already mutated this session.
       const base = baseCard || initialCard(s);
-      const fsrsCard = gradeFromCard(base, rating as number, retentionFor(settings.lernIntensity));
+      const fsrsCard = gradeFromCard(base, rating as number, retentionFor(settings));
       return { ...prev, [wordId]: { ...s, fsrs: fsrsCard } };
     });
-  }, [settings.lernIntensity]);
+  }, [settings.targetRetention, settings.lernIntensity]);
 
   const api = {
     vocab, stats, meta, settings, lists, lessons,
