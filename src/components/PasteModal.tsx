@@ -45,14 +45,14 @@ function rawLines(text: string, isLat: boolean) {
     .map((l) => isLat ? { grundform: l } : { fgn: l });
 }
 
-export function PasteModal({ open, pair, onParsed, onClose }: { open: boolean; pair: string; onParsed: (rows: any[]) => void; onClose: () => void }) {
+export function PasteModal({ open, pair, onParsed, onClose, initialText, draftHint }: { open: boolean; pair: string; onParsed: (rows: any[]) => void; onClose: () => void; initialText?: string; draftHint?: boolean }) {
   const toast = useToast();
   const isLat = isLatinPair(pair);
   const P = PAIRS[pair] || PAIRS["en-de"];
   const [text, setText] = useState("");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => { if (open) { setText(""); setCopied(false); } }, [open]);
+  useEffect(() => { if (open) { setText(initialText || ""); setCopied(false); } }, [open, initialText]);
   if (!open) return null;
 
   const aiPrompt = isLat
@@ -80,6 +80,12 @@ export function PasteModal({ open, pair, onParsed, onClose }: { open: boolean; p
           <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={onClose}><Icon name="x" size={16} /></button>
         </div>
 
+        {draftHint && (
+          <div className="tips-intro" style={{ marginBottom: 10, background: "var(--amber-bg)", color: "var(--amber-deep)" }}>
+            <Icon name="camera" size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />
+            Foto-Text erkannt — <b>grober Entwurf</b>, bitte korrigieren. Tipp: „KI-Prompt kopieren", in dein KI-Chat geben, das Ergebnis hier wieder einfügen — dann „Weiter zum Prüfen".
+          </div>
+        )}
         <div className="tips-intro" style={{ marginBottom: 12 }}>
           Füge eine Wortliste ein — eine Zeile pro Wort, Spalten getrennt durch Tab, „|", „–" oder „:".
           {isLat ? " Latein: Grundform | Lernform | Wortart | Deutsch | Topic." : ` ${P.foreignLabel} | Deutsch | Topic.`}

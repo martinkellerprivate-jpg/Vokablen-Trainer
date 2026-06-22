@@ -35,7 +35,7 @@ async function structurePairs(rawText, P) {
   return heuristicPairs(rawText);
 }
 
-export function ScanModal({ open, onClose, onImport, pair }) {
+export function ScanModal({ open, onClose, onImport, onScanned, pair }) {
   const P = PAIRS[pair] || PAIRS["en-de"];
   const [stage, setStage] = useState("capture");
   const [progress, setProgress] = useState(0);
@@ -63,11 +63,16 @@ export function ScanModal({ open, onClose, onImport, pair }) {
       catch (e) { r = await Tesseract.recognize(file, P.ocr.split("+")[0], { logger }); }
       text = (r && r.data && r.data.text) || "";
     } catch (e) {
+      // OCR unavailable → open the paste flow empty so the user can paste/KI-route
+      if (onScanned) { onScanned(""); return; }
       onImport([{ fgn: "", de: "" }]); return;
     }
+    setProgress(1); setStatus("");
+    // V12: hand the raw OCR text to the paste / KI-prompt flow (one tap), labelled
+    // as a rough draft. Falls back to heuristic auto-parse if no onScanned handler.
+    if (onScanned) { onScanned(text); return; }
     setStatus("Sorting into word pairs…"); setProgress(0.82);
     const result = await structurePairs(text, P);
-    setProgress(1); setStatus("");
     onImport(result.length ? result : [{ fgn: "", de: "" }]);
   };
 

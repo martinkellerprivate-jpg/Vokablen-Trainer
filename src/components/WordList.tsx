@@ -53,6 +53,8 @@ export function WordList() {
   const [shareName, setShareName] = useState("");
   const [reviewRows, setReviewRows] = useState(null);   // P5: shared review screen
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteSeed, setPasteSeed] = useState("");   // V12: scan → paste seeded text
+  const [pasteDraft, setPasteDraft] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [lessonName, setLessonName] = useState("");
@@ -305,7 +307,7 @@ export function WordList() {
           <input className="field" placeholder="Search words…" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
         <button className="btn btn-sm btn-amber" onClick={() => setScanOpen(true)}><Icon name="camera" size={15} /> Scan photo</button>
-        <button className="btn btn-sm" onClick={() => setPasteOpen(true)}><Icon name="list" size={15} /> Einfügen</button>
+        <button className="btn btn-sm" onClick={() => { setPasteSeed(""); setPasteDraft(false); setPasteOpen(true); }}><Icon name="list" size={15} /> Einfügen</button>
         <button className="btn btn-sm" onClick={() => fileRef.current.click()} disabled={busy}><Icon name="upload" size={15} /> Import</button>
         <button className="btn btn-sm" onClick={downloadTemplate}><Icon name="download" size={15} /> Template</button>
         <button className="btn btn-sm" onClick={exportList}><Icon name="download" size={15} /> Export</button>
@@ -456,8 +458,10 @@ export function WordList() {
       </div>
 
       <ScanModal open={scanOpen} pair={pair} onClose={() => setScanOpen(false)}
+        onScanned={(raw) => { setScanOpen(false); setPasteSeed(raw); setPasteDraft(true); setPasteOpen(true); }}
         onImport={(pairs) => { setScanOpen(false); setReviewRows(pairs); }} />
-      <PasteModal open={pasteOpen} pair={pair} onClose={() => setPasteOpen(false)}
+      <PasteModal open={pasteOpen} pair={pair} initialText={pasteSeed} draftHint={pasteDraft}
+        onClose={() => setPasteOpen(false)}
         onParsed={(rows) => { setPasteOpen(false); setReviewRows(rows); }} />
       <ReviewModal open={!!reviewRows} rows={reviewRows} pair={pair}
         onClose={() => setReviewRows(null)}
