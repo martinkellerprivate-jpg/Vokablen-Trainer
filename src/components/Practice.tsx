@@ -60,11 +60,15 @@ export function Practice() {
   // also valid practice scopes (started via „üben") but have no chip here.
   const SMART_REFS = ["heute", "due", "wackeln", "baldfaellig", "leech", "frischfragil", "kurzvorsitzt"];
   const pairLessons = useMemo(() => lessons.filter((l) => l.pair === pair), [lessons, pair]);
+  const pairLists = useMemo(() => (store.lists || []).filter((l: any) => l.pair === pair), [store.lists, pair]);
+  const pairTopics = useMemo(() => Array.from(new Set(vocab.filter((w: any) => w.pair === pair).map((w: any) => w.topic).filter(Boolean))).sort() as string[], [vocab, pair]);
   const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
   const rawSel = parseSel(settings.practiceSel);
-  const selValid = rawSel.kind === "smart"
-    ? SMART_REFS.includes(rawSel.ref)
-    : rawSel.kind === "lesson" && pairLessons.some((l) => l.id === rawSel.ref);
+  const selValid = rawSel.kind === "smart" ? SMART_REFS.includes(rawSel.ref)
+    : rawSel.kind === "lesson" ? pairLessons.some((l) => l.id === rawSel.ref)
+    : rawSel.kind === "list" ? pairLists.some((l: any) => l.id === rawSel.ref)
+    : rawSel.kind === "topic" ? pairTopics.includes(rawSel.ref)
+    : false;
   // V17: default learning path = "Heute dran"
   const effective = selValid ? rawSel : { kind: "smart", ref: "heute" };
   const selKey = effective.kind + ":" + effective.ref;
@@ -80,6 +84,8 @@ export function Practice() {
       if (effective.ref === "due") opts.cap = settings.dailyGoal;
       return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
     }
+    if (effective.kind === "list") return pv.filter((w) => (w.lists || []).includes(effective.ref)).filter(practiceable);
+    if (effective.kind === "topic") return pv.filter((w) => w.topic === effective.ref).filter(practiceable);
     return resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab).filter(practiceable);
   };
 
@@ -95,6 +101,8 @@ export function Practice() {
   const [session, setSession] = useState([]); // recent verdicts
   const [tip, setTip] = useState(null);        // current study-tip popup (Phase 6)
   const [focus, setFocus] = useState(false);   // V2: zoom / focus card mode
+  const [topicsOpen, setTopicsOpen] = useState(false); // F-NAV: collapsible topics
+  const [outlookOpen, setOutlookOpen] = useState(false); // F-7TAGE: outlook popover
   const inputRef = useRef(null);
   const recentRef = useRef([]);                // recently shown ids (spacing)
   const answeredRef = useRef(0);               // scored answers this session (tip cadence)
@@ -409,43 +417,85 @@ export function Practice() {
   const lessonRetention = retentionFor(settings);
   const dotTone = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
   const lessonsSorted = [...pairLessons].sort((a, b) => (a.dueDate || Infinity) - (b.dueDate || Infinity) || (a.createdAt || 0) - (b.createdAt || 0));
-  const lessonSelectorEl = pairLessons.length > 0 ? (
-    <div className="lchips lesson-selector p-lessonsel">
-      <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
-      {lessonsSorted.map((l) => {
-        const tone = lessonProfile(l, vocab, stats, lessonRetention).tone;
-        const days = l.dueDate ? Math.ceil((l.dueDate - Date.now()) / 86400000) : null;
-        return (
-        <button key={l.id} className={"lchip" + (effective.kind === "lesson" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("lesson", l.id)}>
-          <span className="dot" style={{ width: 9, height: 9, borderRadius: "50%", background: dotTone(tone) }} />
-          {l.name} <span className="lchip-n">{lessonCountOf(l)}</span>
-          {days != null && <span className="lchip-due" style={{ color: days <= 3 ? "var(--red)" : "var(--ink-faint)" }}>{days < 0 ? "überfällig" : days === 0 ? "heute" : `${days}T`}</span>}
-        </button>
-        );
-      })}
-    </div>
-  ) : null;
-  // V17: 7-day outlook, shown under the chips when "Heute dran" is the scope.
-  const outlookEl = (effective.kind === "smart" && effective.ref === "heute") ? (() => {
-    const days = sevenDayOutlook(pairVocabAll, stats, lessons, retentionFor(settings));
-    const DN = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-    return (
-      <div className="outlook p-smart">
-        <span className="outlook-label"><Icon name="calendar" size={12} /> 7-Tage-Ausblick <span className="faint">· Schätzung</span></span>
-        <div className="outlook-days">
-          {days.map((d, i) => { const dt = new Date(d.day); const lbl = i === 0 ? "heute" : DN[dt.getDay()];
+  // F-NAV: one scope picker — Lektionen → Listen → (ausklappbar) Topics.
+  const listCountOf = (id: string) => pairVocabAll.filter((w: any) => (w.lists || []).includes(id)).length;
+  const topicCountOf = (t: string) => pairVocabAll.filter((w: any) => w.topic === t).length;
+  const lessonSelectorEl = (pairLessons.length || pairLists.length || pairTopics.length) ? (
+    <div className="scope-picker p-lessonsel">
+      {pairLessons.length > 0 && (
+        <div className="lchips lesson-selector">
+          <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
+          {lessonsSorted.map((l) => {
+            const tone = lessonProfile(l, vocab, stats, lessonRetention).tone;
+            const days = l.dueDate ? Math.ceil((l.dueDate - Date.now()) / 86400000) : null;
             return (
-              <div key={i} className={"outlook-day" + (d.deadlines.length ? " has-deadline" : "")} title={`${lbl}: ${d.count} fällig${d.deadlines.length ? " · Deadline: " + d.deadlines.join(", ") : ""}`}>
-                <span className="od-n">{d.count}</span>
-                <span className="od-d">{lbl}</span>
-                {d.deadlines.length > 0 && <span className="od-flag" />}
-              </div>
+            <button key={l.id} className={"lchip" + (effective.kind === "lesson" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("lesson", l.id)}>
+              <span className="dot" style={{ width: 9, height: 9, borderRadius: "50%", background: dotTone(tone) }} />
+              {l.name} <span className="lchip-n">{lessonCountOf(l)}</span>
+              {days != null && <span className="lchip-due" style={{ color: days <= 3 ? "var(--red)" : "var(--ink-faint)" }}>{days < 0 ? "überfällig" : days === 0 ? "heute" : `${days}T`}</span>}
+            </button>
             );
           })}
         </div>
+      )}
+      {pairLists.length > 0 && (
+        <div className="lchips lesson-selector">
+          <span className="lchips-label"><Icon name="list" size={13} /> Listen</span>
+          {pairLists.map((l: any) => (
+            <button key={l.id} className={"lchip" + (effective.kind === "list" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("list", l.id)}>
+              {l.name} <span className="lchip-n">{listCountOf(l.id)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {pairTopics.length > 0 && (
+        <div className="lchips lesson-selector lchips-topics">
+          <button className="lchips-label lchips-toggle" onClick={() => setTopicsOpen((o) => !o)}>
+            <span style={{ fontSize: 10 }}>{topicsOpen ? "▾" : "▸"}</span> <Icon name="filter" size={13} /> Themen ({pairTopics.length})
+          </button>
+          {topicsOpen && pairTopics.map((t) => (
+            <button key={t} className={"lchip lchip-topic" + (effective.kind === "topic" && effective.ref === t ? " on" : "")} onClick={() => pickScope("topic", t)}>
+              {t} <span className="lchip-n">{topicCountOf(t)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  ) : null;
+  // F-7TAGE: 7-day outlook moved into a popover (button toggles). Day boxes are
+  // clickable (start that day's words) and text-labelled, not colour-only.
+  const outlookEl = (() => {
+    const days = sevenDayOutlook(pairVocabAll, stats, lessons, retentionFor(settings));
+    const DN = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    const totalSoon = days.reduce((a, d) => a + d.count, 0);
+    return (
+      <div className="outlook-wrap p-smart">
+        <button className="btn btn-ghost btn-sm" onClick={() => setOutlookOpen((o) => !o)} title="Was in den nächsten 7 Tagen fällig wird">
+          <Icon name="calendar" size={14} /> 7-Tage-Ausblick <span className="lchip-n">{totalSoon}</span>
+        </button>
+        {outlookOpen && (
+          <div className="outlook outlook-pop">
+            <div className="outlook-label"><Icon name="calendar" size={12} /> Fällige &amp; geplante Wörter je Tag <span className="faint">· Schätzung</span></div>
+            <div className="outlook-days">
+              {days.map((d, i) => { const dt = new Date(d.day); const lbl = i === 0 ? "heute" : DN[dt.getDay()];
+                const sel = i === 0 ? "heute" : "baldfaellig";
+                return (
+                  <button key={i} className={"outlook-day" + (d.deadlines.length ? " has-deadline" : "")}
+                    title={`${lbl}: ${d.count} fällig${d.deadlines.length ? " · Prüfung: " + d.deadlines.join(", ") : ""} — tippen zum Üben`}
+                    onClick={() => { pickScope("smart", sel); setOutlookOpen(false); }}>
+                    <span className="od-n">{d.count}</span>
+                    <span className="od-d">{lbl}</span>
+                    {d.deadlines.length > 0 && <span className="od-flag" title="Prüfung">!</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="faint" style={{ fontSize: 11, marginTop: 6 }}>„!" = Prüfungstermin einer Lektion an dem Tag.</div>
+          </div>
+        )}
       </div>
     );
-  })() : null;
+  })();
   const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);
 
   if (!pool.length) {

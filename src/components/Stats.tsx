@@ -52,7 +52,7 @@ export function Stats() {
   const [resetOpen, setResetOpen] = useState(false);
 
   const ret = retentionFor(settings);
-  const rows = useMemo(() => wordsForSelection(vocab.filter((w) => w.pair === pair), stats, settings.statLists, settings.masteryCorrect).map((w) => {
+  const rows = useMemo(() => wordsForSelection(vocab.filter((w) => w.pair === pair), stats, settings.statLists, settings.masteryCorrect, lessons).map((w) => {
     const s = stats[w.id];
     const seen = s ? s.seen : 0;
     const acc = s && seen ? s.scoreSum / seen : 0;
@@ -61,7 +61,7 @@ export function Stats() {
     const history = s ? s.history : [];
     const priority = stufe === "sitzt_schlecht" ? 0 : stufe === "noch_nicht_geuebt" ? 1 : stufe === "sitzt_fast" ? 2 : 3;
     return { w, seen, acc, stufe, prof, history, priority };
-  }), [vocab, stats, settings.statLists, ret, pair]);
+  }), [vocab, stats, settings.statLists, ret, pair, lessons]);
 
   const counts = useMemo(() => {
     const c: any = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, neu: 0, noch_nicht_geuebt: 0 };
@@ -179,8 +179,8 @@ export function Stats() {
           sub={`${pct(totals.total ? totals.mastered / totals.total : 0)}% of your words`} color="var(--green)" />
         <StatCard icon="target" k="Overall accuracy" v={`${pct(totals.overallAcc)}%`}
           sub={`across ${totals.reviews} answers`} color="var(--amber-deep)" />
-        <StatCard icon="flame" k="Day streak" v={meta.streak || 0}
-          sub={meta.streak ? "keep it going!" : "practise today to start"} color="var(--red)" />
+        <StatCard icon="flame" k="Tage in Folge" v={meta.streak || 0}
+          sub={meta.streak ? "dranbleiben!" : "heute üben startet die Serie"} color="var(--red)" />
         <div className="stat-card">
           <div className="k"><Icon name="target" size={15} /> Today's goal</div>
           <div className="row" style={{ gap: 12, marginTop: 8, alignItems: "center" }}>

@@ -9,12 +9,14 @@ import { SMART, smartCount } from "../lib/engine";
  * =================================================================== */
 
 export function ListSelector({ selected, onChange, smart = ["tricky"], pair, mc }) {
-  const { lists, vocab, stats } = useStore();
+  const { lists, lessons, vocab, stats } = useStore();
   const pairLists = pair ? lists.filter((l) => l.pair === pair) : lists;
+  const pairLessons = (pair ? (lessons || []).filter((l: any) => l.pair === pair) : (lessons || []));
   const pairVocab = pair ? vocab.filter((w) => w.pair === pair) : vocab;
   const sel = selected || [];
   const isAll = sel.length === 0;
   const countFor = (id) => pairVocab.filter((w) => (w.lists || []).includes(id)).length;
+  const lessonCount = (l: any) => (l.members || []).length;
   const topics: any[] = Array.from(new Set(pairVocab.map((w: any) => w.topic).filter(Boolean))).sort();
   const topicCount = (t) => pairVocab.filter((w) => w.topic === t).length;
 
@@ -25,9 +27,19 @@ export function ListSelector({ selected, onChange, smart = ["tricky"], pair, mc 
 
   return (
     <div className="lchips-wrap">
+      {pairLessons.length > 0 && (
+        <div className="lchips">
+          <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
+          {pairLessons.map((l: any) => (
+            <button key={l.id} className={"lchip" + (sel.includes("lesson:" + l.id) ? " on" : "")} onClick={() => toggle("lesson:" + l.id)}>
+              {l.name} <span className="lchip-n">{lessonCount(l)}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="lchips">
         <button className={"lchip" + (isAll ? " on" : "")} onClick={() => onChange([])}>
-          <Icon name="cards" size={14} /> All lists
+          <Icon name="cards" size={14} /> Alle Wörter
         </button>
         {pairLists.map((l) => (
           <button key={l.id} className={"lchip" + (sel.includes(l.id) ? " on" : "")} onClick={() => toggle(l.id)}>

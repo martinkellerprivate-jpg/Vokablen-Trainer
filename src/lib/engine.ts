@@ -74,15 +74,19 @@ export function smartCount(vocab: Word[], stats: Record<string, Stat>, key: stri
 }
 
 /* Resolve a selection (array of list ids; [] = everything) into words. */
-export function wordsForSelection(vocab: Word[], stats: Record<string, Stat>, selected: string[], mc?: number) {
+export function wordsForSelection(vocab: Word[], stats: Record<string, Stat>, selected: string[], mc?: number, lessons?: any[]) {
   if (!selected || !selected.length) return vocab;
   const set = new Set(selected);
   const smartActive = SMART_KEYS.filter((k) => set.has(SMART[k].id));
+  // F-NAV: lesson membership for any "lesson:<id>" selections
+  const lessonMembers = new Set<string>();
+  for (const l of (lessons || [])) { if (set.has("lesson:" + l.id)) for (const id of (l.members || [])) lessonMembers.add(id); }
   const now = Date.now();
   const out: Word[] = [];
   for (const w of vocab) {
     let inc = (w.lists || []).some((l) => set.has(l));
     if (!inc && w.topic && set.has("t:" + w.topic)) inc = true;
+    if (!inc && lessonMembers.has(w.id)) inc = true;
     if (!inc) { for (const k of smartActive) { if (SMART[k].test(w, stats[w.id], mc, now)) { inc = true; break; } } }
     if (inc) out.push(w);
   }

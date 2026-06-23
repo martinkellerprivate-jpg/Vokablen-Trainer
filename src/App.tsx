@@ -54,10 +54,7 @@ function Header() {
       )}
       <LearnTips />
       <HelpGuide />
-      <div className="metric" title="Days practised in a row">
-        <span className="ic" style={{ color: "var(--red)" }}><Icon name="flame" size={19} /></span>
-        <div><b>{meta.streak || 0}</b><small>day streak</small></div>
-      </div>
+      {/* F-7TAGE/STREAK: Tage-in-Folge wandert in die Statistik; Kopf zeigt nur das Tagesziel. */}
       <div className="metric" title="Cards practised today">
         <span className="ic"><Ring value={goalP} size={26} stroke={4} /></span>
         <div><b>{meta.todayCount || 0}/{settings.dailyGoal || 20}</b><small>today's goal</small></div>
