@@ -19,8 +19,17 @@ const STUFE_META: Record<string, any> = {
   noch_nicht_geuebt: { label: "Noch nicht geübt", tone: "slate", blurb: "Noch nicht geübt." },
 };
 const STUFE_KEYS = STUFE_ORDER;
-const haeltText = (p: any) => p.haeltTage ? `hält ~${Math.round(p.haeltTage)} T` : "";
-const faelligText = (p: any, now = Date.now()) => p.due == null ? "" : p.istFaellig ? "fällig" : `fällig in ${Math.max(0, Math.ceil((p.due - now) / 86400000))} T`;
+// F-WORTLISTE: "Hält" as a circle — full ring = one month (~30 days).
+function haeltCircle(p: any) {
+  if (p.haeltTage == null || p.haeltTage <= 0) return <span className="faint">—</span>;
+  const d = Math.round(p.haeltTage);
+  return (
+    <div className="haelt-cell" title={`hält etwa ${d} Tage`}>
+      <Ring value={Math.min(1, p.haeltTage / 30)} size={30} stroke={4} />
+      <span className="haelt-d">{d} T</span>
+    </div>
+  );
+}
 
 /* ===================================================================
  * stats.jsx — detailed scoring: overall + category + word-by-word.
@@ -204,9 +213,9 @@ export function Stats() {
               <th className="sortable" onClick={() => setSortKey("word")}>Word</th>
               <th>Translation</th>
               <th>Status</th>
-              <th className="sortable" onClick={() => setSortKey("acc")} style={{ width: 150 }}>Accuracy</th>
-              <th className="sortable" onClick={() => setSortKey("seen")} style={{ width: 80 }}>Seen</th>
-              <th style={{ width: 130 }}>Recent</th>
+              <th style={{ width: 90 }}>Hält</th>
+              <th className="sortable" onClick={() => setSortKey("acc")} style={{ width: 140 }}>Treffer</th>
+              <th className="sortable" onClick={() => setSortKey("seen")} style={{ width: 70 }}>Geübt</th>
             </tr>
           </thead>
           <tbody>
@@ -216,9 +225,9 @@ export function Stats() {
                 <td className="cell-de">{r.w[NATIVE]}</td>
                 <td>
                   <span className={"badge " + STUFE_META[r.stufe].tone}><span className="dot" />{STUFE_META[r.stufe].label}</span>
-                  {r.prof.istLeech && <span className="badge red" style={{ marginLeft: 5 }}><Icon name="flame" size={11} /> Leech</span>}
-                  {(haeltText(r.prof) || faelligText(r.prof)) && <div className="faint" style={{ fontSize: 11, marginTop: 3 }}>{[haeltText(r.prof), faelligText(r.prof)].filter(Boolean).join(" · ")}</div>}
+                  {r.prof.istLeech && <span className="badge red" style={{ marginLeft: 5 }}><Icon name="flame" size={11} /> Hartnäckig</span>}
                 </td>
+                <td>{haeltCircle(r.prof)}</td>
                 <td>
                   {r.seen ? (
                     <div className="acc">
@@ -228,14 +237,6 @@ export function Stats() {
                   ) : <span className="faint">—</span>}
                 </td>
                 <td><span style={{ fontWeight: 600 }}>{r.seen || <span className="faint">0</span>}</span></td>
-                <td>
-                  <span className="spark">
-                    {r.history.slice(-8).map((h, i) => (
-                      <i key={i} className={h.verdict === "correct" ? "c" : h.verdict === "almost" ? "a" : "w"} />
-                    ))}
-                    {!r.history.length && <span className="faint" style={{ fontSize: 12 }}>not seen</span>}
-                  </span>
-                </td>
               </tr>
             ))}
           </tbody>

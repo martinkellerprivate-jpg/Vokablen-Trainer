@@ -389,11 +389,10 @@ export function WordList() {
         <table className="vt">
           <thead>
             <tr>
-              <th style={{ width: "24%" }}>{P.foreignLabel}</th>
-              <th style={{ width: "24%" }}>Deutsch</th>
-              <th style={{ width: "22%" }}>Lists</th>
-              <th style={{ width: "18%" }}>Status</th>
-              <th style={{ width: "12%" }}></th>
+              <th style={{ width: "28%" }}>{P.foreignLabel}</th>
+              <th style={{ width: "28%" }}>Deutsch</th>
+              <th style={{ width: "30%" }}>Lists</th>
+              <th style={{ width: "14%" }}></th>
             </tr>
           </thead>
           <tbody>
@@ -429,8 +428,10 @@ export function WordList() {
                 </td>
               </tr>
             ) : (
-              <tr key={w.id} className={selectMode && selectedIds.includes(w.id) ? "row-sel" : ""} onClick={selectMode ? () => toggleSel(w.id) : undefined} style={selectMode ? { cursor: "pointer" } : undefined}>
-                <td className="cell-en" onClick={!selectMode ? () => setDetailWord(w) : undefined} style={!selectMode ? { cursor: "pointer" } : undefined} title={!selectMode ? "Details" : undefined}>
+              <tr key={w.id} className={(selectMode && selectedIds.includes(w.id) ? "row-sel" : "") + " row-click"}
+                onClick={() => selectMode ? toggleSel(w.id) : setDetailWord(w)} style={{ cursor: "pointer" }}
+                title={!selectMode ? "FSRS-Details ansehen" : undefined}>
+                <td className="cell-en">
                   {selectMode && <input type="checkbox" checked={selectedIds.includes(w.id)} readOnly style={{ marginRight: 8, accentColor: "var(--amber-deep)" }} />}
                   {fgnOf(w) || <span className="faint">—</span>}
                   {isLat && w.lernform && <div className="faint" style={{ fontSize: 12, fontStyle: "italic" }}>{w.lernform}</div>}
@@ -443,10 +444,9 @@ export function WordList() {
                     {(w.lists || []).length ? (w.lists || []).map((lid) => <span key={lid} className="mini-chip">{listNameOf(lid)}</span>) : <span className="faint">—</span>}
                   </div>
                 </td>
-                <td>{catBadge(w)}</td>
                 <td>
                   {!selectMode && (
-                  <div className="row-actions">
+                  <div className="row-actions" onClick={(e) => e.stopPropagation()}>
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Hear" onClick={() => speak(w.de, "de")}><Icon name="volume" size={15} /></button>
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Edit" onClick={() => startEdit(w)}><Icon name="edit" size={15} /></button>
                     <button className="icon-btn" style={{ width: 32, height: 32 }} title="Delete" onClick={() => store.deleteWord(w.id)}><Icon name="trash" size={15} /></button>
