@@ -13,5 +13,5 @@ export function Ring({ value = 0, size = 30, stroke = 4, color = "var(--amber)",
   );
 }
 
-export const toneColor = (tone: string) => (({ green: "var(--green)", amber: "var(--amber)", red: "var(--red)", slate: "var(--ink-faint)" } as any)[tone] || "var(--ink)");
+export const toneColor = (tone: string) => (({ green: "var(--green)", amber: "var(--amber)", red: "var(--red)", blue: "var(--blue)", slate: "var(--ink-faint)" } as any)[tone] || "var(--ink)");
 export const pct = (n: number) => Math.round(n * 100);
