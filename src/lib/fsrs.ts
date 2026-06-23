@@ -67,17 +67,20 @@ export const STUFE_ORDER = ["sitzt", "sitzt_fast", "sitzt_schlecht", "neu", "noc
 /* ---- F-SETTINGS-ADVANCED: thresholds/params have ONE source. DEFAULTS = named
  * constants; configure(settings) overrides per user; deriveProfile / effective-
  * RetentionFor / the grade path read CFG → effective value, instantly. ---- */
-export const DEFAULTS = { S1: 3, S2: 14, MIN_REPS: 2, PUFFER: 2, D_LEECH: 7, LAPSE_LEECH: 3, examRetention: 0.95, examWindowDays: 3, learningSpeed: 1.0 };
+export const DEFAULTS = {
+  S1: 3, S2: 14, MIN_REPS: 2, PUFFER: 2, D_LEECH: 7, LAPSE_LEECH: 3,
+  examRetention: 0.95, examWindowDays: 3, learningSpeed: 1.0,
+  // PLANUNGS-RUNDE 2 — V-ENGINE: pot weights, round goals, session limits.
+  W_ROT: 5, W_FAELLIG: 5, W_GRAU: 3, W_BLAU: 3, W_ORANGE: 2,
+  ZIEL_WACKELT: 3, ZIEL_NEU: 2, ZIEL_NEU_NIE: 2, ZIEL_FAST: 1, ZIEL_FAELLIG: 1,
+  STALE_MIN: 45, GENUG_KARTEN: 40,
+};
 let CFG = { ...DEFAULTS };
 export function configure(settings: any) {
   const n = (v: any, d: number) => (typeof v === "number" && isFinite(v) ? v : d);
-  CFG = {
-    S1: n(settings?.S1, DEFAULTS.S1), S2: n(settings?.S2, DEFAULTS.S2),
-    MIN_REPS: n(settings?.MIN_REPS, DEFAULTS.MIN_REPS), PUFFER: n(settings?.PUFFER, DEFAULTS.PUFFER),
-    D_LEECH: n(settings?.D_LEECH, DEFAULTS.D_LEECH), LAPSE_LEECH: n(settings?.LAPSE_LEECH, DEFAULTS.LAPSE_LEECH),
-    examRetention: n(settings?.examRetention, DEFAULTS.examRetention), examWindowDays: n(settings?.examWindowDays, DEFAULTS.examWindowDays),
-    learningSpeed: n(settings?.learningSpeed, DEFAULTS.learningSpeed),
-  };
+  const next: any = {};
+  for (const k of Object.keys(DEFAULTS)) next[k] = n(settings?.[k], (DEFAULTS as any)[k]);
+  CFG = next;
 }
 export function getCfg() { return CFG; }
 // back-compat exports (read the live CFG)

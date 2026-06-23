@@ -6,8 +6,8 @@ import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday, sevenDayOutlook } from "../lib/engine";
-import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
-import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard } from "../lib/fsrs";
+import { buildQueue, pick, record, outcomeOf, pendingGrades, progress, remaining } from "../lib/runqueue";
+import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard, getCfg } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
 import { TipPopup } from "./TipPopup";
@@ -107,11 +107,9 @@ export function Practice() {
   const recentRef = useRef([]);                // recently shown ids (spacing)
   const answeredRef = useRef(0);               // scored answers this session (tip cadence)
 
-  const scopeMode = effective.kind === "smart" ? "review" : "mastery";   // V8
-
-  // ---- run snapshot (V5/V6/V8): freeze the word set when scope/pair changes,
-  // then build a runqueue (shuffle-bag + mastery loop) over the frozen ids. Each
-  // word is FSRS-graded exactly once per session (at graduation / first review).
+  // ---- run snapshot (V5/V6/V8 + V-ENGINE): freeze the word set when scope/pair
+  // changes, then build ONE weighted-pool queue over the frozen ids. Each word is
+  // FSRS-graded exactly once per session (at graduation / session-end flush).
   const runWordsRef = useRef([]);
   const runRef = useRef(null);          // V8 RunState
   const gradedRef = useRef(new Set());  // V8 ids already FSRS-graded this run (once-only)
@@ -123,7 +121,7 @@ export function Practice() {
   const markDone = useCallback((id) => setDoneIds((prev) => prev.has(id) ? prev : new Set(prev).add(id)), []);
   const [runId, setRunId] = useState(0);
 
-  const beginRun = (ids, modeOverride?) => {
+  const beginRun = (ids) => {
     flushRef.current();                 // grade unfinished words from the previous run first
     runWordsRef.current = ids;
     const retention = retentionFor(settings);
@@ -134,23 +132,24 @@ export function Practice() {
       const st = stats[id];
       const r = retrievabilityOf(st, retention, now);
       const hasCard = !!(st && st.fsrs);
-      meta2[id] = { retrievability: r, due: hasCard ? isDueCard(st, now, retention) : true, solid: hasCard && r >= SOLID_R };
+      // V-ENGINE: pool/goal come from the stufe (one source) + due (auffrisch-topf).
+      meta2[id] = { stufe: deriveProfile(st?.fsrs, retention, now).stufe, retrievability: r, due: hasCard ? isDueCard(st, now, retention) : true };
       bases[id] = initialCard(st);   // frozen pre-session FSRS baseline (FIX 1)
     }
     baseCardRef.current = bases;
     growthRef.current = [];
-    runRef.current = buildRun(ids, meta2, modeOverride || scopeMode);
+    runRef.current = buildQueue(ids, meta2, getCfg());
     gradedRef.current = new Set();
     setDoneIds(new Set());
     setRunId((n) => n + 1);
     setCurrent(null); setFace("front"); setAnim(""); setResult(null); setSession([]); setTip(null);
   };
   const startRun = () => beginRun(resolveScopeWords().map((w) => w.id));
-  // V10: re-drill only the words that were wrong/needed a hint this round (mastery).
+  // V10: re-drill only the words that were wrong/needed a hint this round.
   const startRoundRetry = () => {
     const st = runRef.current; if (!st) return;
     const failed = Object.values(st.words).filter((w: any) => w.failedOnce || w.usedHint).map((w: any) => w.id);
-    if (failed.length) beginRun(failed, "mastery");
+    if (failed.length) beginRun(failed);
   };
   useEffect(() => { startRun(); }, [pair, selKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -190,7 +189,7 @@ export function Practice() {
 
   const pickNext = useCallback(() => {
     const st = runRef.current;
-    const id = st ? pick(st) : null;
+    const id = st ? pick(st, getCfg()) : null;
     const w = id ? poolById[id] : null;
     if (!w) { setCurrent(null); return; }              // run complete (all mastered)
     setCurrent(w);
@@ -276,7 +275,7 @@ export function Practice() {
     if (face === "back" || anim) return;        // never interrupt a result/flip
     const st = runRef.current; if (!st) return;
     const stale = current && !poolById[current.id];
-    if ((!current || stale) && st.order.length > 0) pickNext();
+    if ((!current || stale) && remaining(st) > 0) pickNext();
   }, [runId, current, poolById, pickNext, face, anim]);
 
   const finish = useCallback((res, rawCorrect) => {
@@ -512,9 +511,9 @@ export function Practice() {
   if (!current) {
     // B3: three distinct reasons there's no current card.
     const st = runRef.current;
-    const remaining = st ? st.order.length : 0;
+    const remainingN = st ? remaining(st) : 0;
     const total = st ? st.total : 0;
-    if (remaining > 0) {   // transient: first card about to be picked
+    if (remainingN > 0) {   // transient: first card about to be picked
       return <div className="practice-wrap">{scopeBar}<div className="empty"><div className="big">Bereit</div><div>Einen Moment …</div></div></div>;
     }
     if (total === 0) {     // nothing was due / everything already sits
