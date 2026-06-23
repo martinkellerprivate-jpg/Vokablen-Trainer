@@ -7,6 +7,7 @@ export const LS = {
   settings: "vt_v1_settings",
   lists: "vt_v1_lists",
   lessons: "vt_v1_lessons",
+  reviews: "vt_v1_reviews",   // F-SETTINGS-ADVANCED: append-only FSRS review log (for a future fit)
 };
 
 export const load = (key: string, fallback: any) => {

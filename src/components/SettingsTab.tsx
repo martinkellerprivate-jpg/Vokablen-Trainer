@@ -7,6 +7,9 @@ import { useAuth } from "../sync/auth";
 import { exportAllData, deleteLocalData } from "../lib/accountData";
 import { deleteCloudAccount } from "../sync/share";
 import { STARTERS, activateStarter, isStarterActivated } from "../data/starter";
+import { DEFAULTS, previewStabilityGood, retentionFor } from "../lib/fsrs";
+import { fitStatus } from "../lib/reviewlog";
+import { FsrsValuesModal } from "./FsrsValuesModal";
 
 /* ===================================================================
  * settingsTab.jsx — adjustable engine parameters with research-backed
@@ -84,6 +87,25 @@ export function SettingsTab() {
   };
   const atR = (k) => settings[k] === R[k];
   const onOff = (b) => (b ? "On" : "Off");
+
+  // F-SETTINGS-ADVANCED
+  const [advOpen, setAdvOpen] = useState(false);
+  const [fsrsOpen, setFsrsOpen] = useState(false);
+  const cfgVal = (k: string) => (typeof settings[k] === "number" && isFinite(settings[k]) ? settings[k] : (DEFAULTS as any)[k]);
+  const resetCfg = (k: string) => set(k, (DEFAULTS as any)[k]);
+  const advRet = retentionFor(settings);
+  const speed = cfgVal("learningSpeed");
+  const haeltAtSpeed = previewStabilityGood(speed, advRet, 3);
+  const haeltBase = previewStabilityGood(1, advRet, 3);
+  const reviewStatus = fitStatus(store.reviews || {}, !!settings.autoFit, false);
+  const advParam = (k: string, title: string, desc: string, min: number, max: number, step: number, fmt?: any) => (
+    <Field title={title} desc={desc} recLabel={fmt ? fmt((DEFAULTS as any)[k]) : (DEFAULTS as any)[k]} atRec={cfgVal(k) === (DEFAULTS as any)[k]}>
+      <div className="col" style={{ gap: 6, width: "100%" }}>
+        <SliderControl value={cfgVal(k)} min={min} max={max} step={step} onChange={(v: number) => set(k, v)} fmt={fmt} />
+        {cfgVal(k) !== (DEFAULTS as any)[k] && <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-end" }} onClick={() => resetCfg(k)}><Icon name="refresh" size={13} /> Auf Standard</button>}
+      </div>
+    </Field>
+  );
 
   return (
     <div className="settings">
@@ -234,6 +256,52 @@ export function SettingsTab() {
           );
         })}
       </div>
+
+      {/* F-SETTINGS-ADVANCED: collapsible expert section */}
+      <div className="set-section">
+        <button className="set-section-h set-section-toggle" onClick={() => setAdvOpen((o) => !o)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer" }}>
+          <Icon name="gear" size={16} /> Erweiterte Einstellungen
+          <span className="grow" />
+          <span className="faint" style={{ fontSize: 12 }}>{advOpen ? "einklappen ▾" : "ausklappen ▸"}</span>
+        </button>
+        {advOpen && (
+          <>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 12, maxWidth: 560 }}>
+              Für Neugierige. Die App funktioniert mit den Standardwerten optimal — alles hier ist optional und jederzeit zurücksetzbar.
+            </div>
+
+            <Field title="Lerntempo" atRec={cfgVal("learningSpeed") === DEFAULTS.learningSpeed}
+              recLabel="1,0× (normal)"
+              desc="Wie schnell ein Wort an Festigkeit gewinnt, wenn du es richtig hast. Höher = die App nimmt schnellere Fortschritte an und fragt seltener nach (riskanter); niedriger = vorsichtiger, häufiger.">
+              <div className="col" style={{ gap: 6, width: "100%" }}>
+                <SliderControl value={speed} min={0.6} max={1.6} step={0.05} onChange={(v: number) => set("learningSpeed", v)} fmt={(v: number) => v.toFixed(2) + "×"} />
+                <div className="set-rec" style={{ fontSize: 12.5 }}>Beispiel: 3× richtig hintereinander → hält <b>~{Math.round(haeltAtSpeed)} statt ~{Math.round(haeltBase)} Tage</b>.</div>
+                {speed !== DEFAULTS.learningSpeed && <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-end" }} onClick={() => resetCfg("learningSpeed")}><Icon name="refresh" size={13} /> Auf Standard</button>}
+              </div>
+            </Field>
+
+            {advParam("S2", "Schwelle „sitzt“ (Tage)", "Ab wie vielen Tagen erwarteter Haltbarkeit ein Wort als „sitzt“ (grün) gilt.", 7, 30, 1, (v: number) => `${v} T`)}
+            {advParam("S1", "Schwelle „sitzt fast“ (Tage)", "Ab wie vielen Tagen Haltbarkeit ein Wort von „wackelt noch“ (rot) auf „sitzt fast“ (orange) wechselt.", 1, 10, 1, (v: number) => `${v} T`)}
+            {advParam("MIN_REPS", "Wiederholungen bis „nicht mehr neu“", "Wie oft ein neues Wort richtig sein muss, bevor es aus der Stufe „neu / frisch“ herauswächst.", 1, 5, 1)}
+            {advParam("PUFFER", "Vorlauf „bald fällig“ (Tage)", "Wie viele Tage vor dem eigentlichen Fälligkeitstag ein Wort schon als „bald fällig“ markiert wird.", 0, 7, 1, (v: number) => `${v} T`)}
+            {advParam("D_LEECH", "Schwelle „hartnäckig“ (Zähigkeit)", "Ab welcher Schwierigkeit (0–10) ein oft vergessenes Wort als „hartnäckig“ gilt — zusammen mit der Fehleranzahl.", 4, 10, 1)}
+            {advParam("LAPSE_LEECH", "Hartnäckig ab Fehlern", "Wie viele Rückfälle ein Wort braucht, um zusätzlich als „hartnäckig“ zu zählen.", 1, 8, 1)}
+            {advParam("examWindowDays", "Prüfungs-Fenster (Tage)", "Wie viele Tage vor einem Prüfungstermin die App dichter wiederholt (Prüfungs-Modus).", 1, 7, 1, (v: number) => `${v} T`)}
+            {advParam("examRetention", "Prüfungs-Sicherheit", "Wie sicher Wörter kurz vor der Prüfung sitzen sollen — höher = häufigere Wiederholung im Prüfungs-Fenster.", 0.9, 0.99, 0.01, (v: number) => `${Math.round(v * 100)} %`)}
+
+            <Field title="Auto-Anpassung" atRec={!settings.autoFit} recLabel="Aus"
+              desc="Lässt die App das Gedächtnis-Modell langfristig an deine Antworten anpassen. Sammelt ab sofort einen Lern-Verlauf; die eigentliche Feinjustierung folgt in einem späteren Update. Standard: aus.">
+              <div className="col" style={{ gap: 6, width: "100%", alignItems: "flex-end" }}>
+                <Toggle value={!!settings.autoFit} onChange={(v: boolean) => set("autoFit", v)} />
+                <div className="set-rec" style={{ fontSize: 12.5 }}>{reviewStatus.text}</div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setFsrsOpen(true)}><Icon name="chart" size={13} /> FSRS-Werte ansehen</button>
+              </div>
+            </Field>
+          </>
+        )}
+      </div>
+
+      <FsrsValuesModal open={fsrsOpen} onClose={() => setFsrsOpen(false)} settings={settings} reviews={store.reviews} />
 
       {/* Konto & Daten */}
       <div className="set-section">

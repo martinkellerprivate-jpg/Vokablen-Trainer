@@ -9,6 +9,7 @@ import { DEFAULT_VOCAB } from "../data/seed";
 import { migrateTopics, lessonsForLists, swissifyVocab, migrateLessonsStatic } from "../lib/migrate";
 import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION, configure } from "../lib/fsrs";
 import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
+import { appendReviews, type ReviewEntry } from "../lib/reviewlog";
 import type { Word, ListT } from "../lib/types";
 
 function seedVocab(): Word[] {
@@ -47,6 +48,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [lists, setListsState] = React.useState(initRef.current.lists);
   const [lessons, setLessonsState] = React.useState(() => load(LS.lessons, []));
   const [stats, setStats] = React.useState(() => load(LS.stats, {}));
+  const [reviews, setReviews] = React.useState(() => load(LS.reviews, {})); // F-SETTINGS-ADVANCED: review log
   const [meta, setMeta] = React.useState(() => load(LS.meta, {
     lastDate: null, streak: 0, todayCount: 0, dailyGoal: 20, totalReviews: 0,
   }));
@@ -70,7 +72,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const remoteKeys = React.useRef<Set<string>>(new Set());
   const onLocalChange = React.useRef<((key: string) => void) | null>(null);
   const setterFor: Record<string, (v: any) => void> = {
-    vocab: setVocabState, lists: setListsState, lessons: setLessonsState, stats: setStats, meta: setMeta, settings: setSettings,
+    vocab: setVocabState, lists: setListsState, lessons: setLessonsState, stats: setStats, meta: setMeta, settings: setSettings, reviews: setReviews,
   };
   const applyRemote = React.useCallback((key: string, data: any) => {
     remoteKeys.current.add(key);
@@ -87,6 +89,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => persist("lists", LS.lists, lists), [lists]);
   React.useEffect(() => persist("lessons", LS.lessons, lessons), [lessons]);
   React.useEffect(() => persist("stats", LS.stats, stats), [stats]);
+  React.useEffect(() => persist("reviews", LS.reviews, reviews), [reviews]);
   React.useEffect(() => persist("meta", LS.meta, meta), [meta]);
   React.useEffect(() => persist("settings", LS.settings, settings), [settings]);
   React.useEffect(() => { configure(settings); }, [settings]);   // FSRS thresholds follow settings live
@@ -158,22 +161,41 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // V8 — fire exactly ONE FSRS grade per word per session (at graduation / first
   // resolution). recordAttempt keeps the legacy per-attempt fields; this only
   // touches stat.fsrs. Memorize → deriveRating returns "no-grade" → no-op.
+  // F-SETTINGS-ADVANCED (FIX A): review entries buffer here and flush BATCHED
+  // (debounced), never one localStorage/sync write per answer.
+  const reviewBuf = React.useRef<ReviewEntry[]>([]);
+  const reviewTimer = React.useRef<any>(null);
+  const flushReviews = React.useCallback(() => {
+    if (reviewTimer.current) { clearTimeout(reviewTimer.current); reviewTimer.current = null; }
+    const batch = reviewBuf.current;
+    if (!batch.length) return;
+    reviewBuf.current = [];
+    setReviews((prev: any) => appendReviews(prev, batch));
+  }, []);
   const gradeWord = React.useCallback((wordId: string, outcome: SessionOutcome, mode: string, baseCard?: SerializedCard) => {
     const rating = deriveRating(outcome, mode);
     if (rating === "no-grade") return;
+    let base: any = baseCard;
     setStats((prev: any) => {
       const s = prev[wordId];
       if (!s) return prev;   // recordAttempt runs first, so a legacy stat exists
       // grade from the run-start baseline so exactly one increment happens per
       // session (FIX 1) — not from the live stat already mutated this session.
-      const base = baseCard || initialCard(s);
+      base = baseCard || initialCard(s);
       const fsrsCard = gradeFromCard(base, rating as number, retentionFor(settings));
       return { ...prev, [wordId]: { ...s, fsrs: fsrsCard } };
     });
-  }, [settings.targetRetention, settings.lernIntensity]);
+    // append-only log of the BEFORE-state (for a future fit); batched flush.
+    if (base) {
+      reviewBuf.current.push({ w: wordId, t: Date.now(), g: rating as number, s: base.stability || 0, st: base.state || 0, d: base.difficulty || 0 });
+      if (reviewTimer.current) clearTimeout(reviewTimer.current);
+      reviewTimer.current = setTimeout(flushReviews, 1500);
+    }
+  }, [settings.targetRetention, settings.lernIntensity, flushReviews]);
 
   const api = {
-    vocab, stats, meta, settings, lists, lessons,
+    vocab, stats, meta, settings, lists, lessons, reviews,
+    flushReviews,
     setVocab: setVocabState,
     setSettings: (patch: any) => setSettings((p: any) => ({ ...p, ...patch })),
     setMeta: (patch: any) => setMeta((p: any) => ({ ...p, ...patch })),
@@ -184,8 +206,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateWord: (id: string, patch: any) => setVocabState((v: any) => v.map((w: any) => (w.id === id ? { ...w, ...patch } : w))),
     deleteWord: (id: string) => setVocabState((v: any) => v.filter((w: any) => w.id !== id)),
     replaceVocab: (list: any[]) => setVocabState(list.map((w) => ({ id: w.id || newId(), review: false, source: "import", pair: "en-de", lists: [], ...w }))),
-    resetStats: () => { setStats({}); setMeta({ lastDate: null, streak: 0, todayCount: 0, newToday: 0, totalReviews: 0 }); },
-    resetStatsForWords: (ids: string[]) => setStats((prev: any) => { const next = { ...prev }; ids.forEach((id) => { delete next[id]; }); return next; }),
+    resetStats: () => { setStats({}); setReviews({}); reviewBuf.current = []; setMeta({ lastDate: null, streak: 0, todayCount: 0, newToday: 0, totalReviews: 0 }); },
+    resetStatsForWords: (ids: string[]) => { setStats((prev: any) => { const next = { ...prev }; ids.forEach((id) => { delete next[id]; }); return next; }); setReviews((prev: any) => { const next = { ...prev }; ids.forEach((id) => { delete next[id]; }); return next; }); },
     resetSettings: () => setSettings((p: any) => ({ ...p, ...RECOMMENDED })),
     // ---- lists (each new list gets a paired dynamic "whole list" lesson) ----
     // V9: lists and lessons are decoupled — adding a list no longer creates a lesson.

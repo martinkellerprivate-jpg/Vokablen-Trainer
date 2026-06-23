@@ -234,6 +234,25 @@ export function gradeFromCard(base: SerializedCard, rating: number, retention: n
   return next;
 }
 
+/* F-SETTINGS-ADVANCED (FIX C): preview the stability after `steps` successful
+ * (Good) reviews at a given learningSpeed, using the SAME scheduler + the SAME
+ * applyLearningSpeed scaling as the real grade path — one calculation source, no
+ * separate estimate. Returns the resulting stability (≈ "hält ~X Tage"). */
+export function previewStabilityGood(speed: number, retention: number, steps = 3, now = 0): number {
+  let base = emptyCard(now);
+  let when = now;
+  for (let i = 0; i < steps; i++) {
+    const next = fromCard(scheduler(retention).next(toCard(base), new Date(when), Rating.Good).card);
+    next.stability = applyLearningSpeed(base.stability || 0, next.stability, speed);
+    base = next;
+    when = (base.last_review || when) + Math.max(1, Math.round(next.stability)) * DAY;
+  }
+  return base.stability;
+}
+
+/* The literature default FSRS weights w[0..18] (read-only reference for the modal). */
+export function defaultWeights(): number[] { return generatorParameters().w.slice(); }
+
 /* Retrievability 0..1 — lower = more fragile (used for ordering). */
 export function retrievabilityOf(stat: Stat | undefined, retention: number, now: number = Date.now()): number {
   const r = scheduler(retention).get_retrievability(toCard(initialCard(stat)), new Date(now), false);
