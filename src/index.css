@@ -259,6 +259,13 @@ input, button, textarea, select { font-family: inherit; }
 .haelt-cell { display: flex; align-items: center; gap: 8px; }
 .haelt-cell .haelt-d { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
 table.vt tr.row-click:hover td { background: var(--bg-2); }
+/* F-STATS-STRUKTUR: Verteilungs-Legende */
+.stufe-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.leg-item { display: inline-flex; align-items: center; gap: 7px; background: none; border: 1px solid transparent; border-radius: 9px; padding: 4px 9px; cursor: pointer; font: inherit; }
+.leg-item:hover { background: var(--bg-2); }
+.leg-item[aria-pressed="true"] { border-color: var(--line); background: var(--bg-2); }
+.leg-item .leg-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.leg-item .leg-n { font-size: 12.5px; color: var(--ink-soft); font-family: var(--mono); }
 /* V10: round end-card */
 .round-done .round-tally { font-size: 14.5px; color: var(--ink); margin-top: 6px; }
 .round-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }

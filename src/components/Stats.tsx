@@ -37,8 +37,9 @@ function haeltCircle(p: any) {
 export function Stats() {
   const store = useStore();
   const toast = useToast();
-  const { vocab, stats, meta, settings } = store;
+  const { vocab, stats, meta, settings, lessons } = store;
   const pair = settings.pair;
+  const goPractice = (sel: string) => { store.setSettings({ practiceSel: sel }); window.dispatchEvent(new CustomEvent("vt-tab", { detail: "practice" })); };
   const P = PAIRS[pair] || PAIRS["en-de"];
   const foreign = P.foreign;
   const srcKey = foreign;            // word column = foreign; translation = native
@@ -99,8 +100,41 @@ export function Stats() {
   const goalP = Math.min(1, (meta.todayCount || 0) / (settings.dailyGoal || 20));
   const setSortKey = (key) => setSort((s) => s.key === key ? { key, dir: -s.dir } : { key, dir: key === "word" ? 1 : -1 });
 
-  // rule-based insights (Phase 6) — respects the statLists selection
-  const insights = useMemo(() => buildInsights(rows.map((r) => r.w), stats, pair, settings.masteryCorrect), [rows, stats, pair, settings.masteryCorrect]);
+  // F-STATS-INSIGHTS: FSRS-driven strengths & next steps (real numbers + actions).
+  const fgnOfId = (id: string) => { const w = vocab.find((x: any) => x.id === id); return w ? fgnOf(w) : ""; };
+  const insights = useMemo(() => {
+    const steps: any[] = [];
+    // strength: topic with the highest mean stability among words that sit
+    const byTopic: Record<string, { s: number; n: number }> = {};
+    for (const r of rows) { if (r.stufe === "sitzt" && r.w.topic) { const t = byTopic[r.w.topic] || (byTopic[r.w.topic] = { s: 0, n: 0 }); t.s += r.prof.haeltTage; t.n++; } }
+    let strength: any = null;
+    for (const [t, v] of Object.entries(byTopic)) { if (v.n >= 2 && (!strength || v.s / v.n > strength.avg)) strength = { topic: t, n: v.n, avg: v.s / v.n }; }
+    // next steps (each only if it applies)
+    const bald = rows.filter((r) => r.prof.baldFaellig);
+    if (bald.length) steps.push({ tone: "amber", text: `${bald.length} ${bald.length === 1 ? "Wort wird" : "Wörter werden"} bald fällig — heute auffrischen.`, action: { label: "Üben", sel: "smart:baldfaellig" } });
+    const leech = rows.filter((r) => r.prof.istLeech);
+    if (leech.length) steps.push({ tone: "red", text: `${leech.length} hartnäckig (z. B. ${fgnOfId(leech[0].w.id)}) — eine Eselsbrücke hilft.`, action: { label: "Üben", sel: "smart:leech" } });
+    const c = retentionFor(settings);
+    const kvs = rows.filter((r) => { const s = stats[r.w.id]?.fsrs?.stability || 0; return s >= 14 * 0.7 && s < 14; });
+    if (kvs.length) steps.push({ tone: "green", text: `${kvs.length} kurz vor „sitzt" — ein Durchgang reicht.`, action: { label: "Üben", sel: "smart:kurzvorsitzt" } });
+    for (const l of (lessons || [])) {
+      if (l.pair !== pair || !l.dueDate) continue;
+      const days = Math.ceil((l.dueDate - Date.now()) / 86400000);
+      if (days < 0 || days > 14) continue;
+      const risk = (l.members || []).filter((id: string) => { const st = deriveProfile(stats[id]?.fsrs, c).stufe; return st === "sitzt_schlecht" || st === "neu" || st === "noch_nicht_geuebt"; }).length;
+      if (risk > 0) { steps.push({ tone: "red", text: `Prüfung „${l.name}" in ${days} T — ${risk} noch wackelig.`, action: { label: "Gefährdete üben", sel: "lesson:" + l.id } }); break; }
+    }
+    return { strength, steps, enough: !!strength || steps.length > 0 };
+  }, [rows, stats, lessons, pair, settings, vocab]);
+
+  // F-STATS-STRUKTUR: percentages that sum to exactly 100 (largest remainder).
+  const pctMap: Record<string, number> = useMemo(() => {
+    const total = rows.length; if (!total) return {};
+    const parts = STUFE_KEYS.map((k) => { const exact = counts[k] / total * 100; return { k, f: Math.floor(exact), rem: exact - Math.floor(exact) }; });
+    let left = 100 - parts.reduce((a, b) => a + b.f, 0);
+    parts.slice().sort((a, b) => b.rem - a.rem).forEach((p) => { if (left > 0) { p.f++; left--; } });
+    const m: Record<string, number> = {}; parts.forEach((p) => { m[p.k] = p.f; }); return m;
+  }, [counts, rows.length]);
 
   const resetAll = () => { store.resetStats(); setResetOpen(false); toast("All progress reset", "refresh"); };
   const resetSelected = () => { const ids = rows.map((r) => r.w.id); store.resetStatsForWords(ids); setResetOpen(false); toast(`Progress reset for ${ids.length} word${ids.length === 1 ? "" : "s"}`, "refresh"); };
@@ -117,25 +151,27 @@ export function Stats() {
     <div>
       <ListSelector selected={settings.statLists} onChange={(s) => store.setSettings({ statLists: s })} pair={pair} mc={settings.masteryCorrect} smart={[]} />
 
-      {/* insights (Phase 6) */}
-      <div className="panel" style={{ padding: "16px 18px", marginBottom: 22 }}>
-        <div className="section-title" style={{ marginBottom: insights.enoughData ? 12 : 6 }}>Deine Stärken & nächste Schritte</div>
-        {!insights.enoughData ? (
-          <div className="muted" style={{ fontSize: 13.5 }}>{insights.items[0].text}</div>
-        ) : (
+      {/* F-STATS-INSIGHTS: Stärken & nächste Schritte (versteckt wenn nichts Substanzielles) */}
+      {insights.enough && (
+        <div className="panel" style={{ padding: "16px 18px", marginBottom: 22 }}>
+          <div className="section-title" style={{ marginBottom: 12 }}>Deine Stärken & nächste Schritte</div>
           <div className="col" style={{ gap: 10 }}>
-            {insights.items.map((it, i) => (
-              <div key={i} className="row" style={{ gap: 10, alignItems: "flex-start" }}>
-                <span className="badge" style={{ flex: "0 0 auto", marginTop: 1, background: `var(--${it.tone}-bg)`, color: toneColor(it.tone) }}>
-                  <span className="dot" style={{ background: toneColor(it.tone) }} />
-                  {it.kind === "strength" ? "Stärke" : it.kind === "focus" ? "Übungstipp" : "Nächster Schritt"}
-                </span>
-                <span style={{ fontSize: 14, lineHeight: 1.45 }}>{it.text}</span>
+            {insights.strength && (
+              <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+                <span className="badge green" style={{ flex: "0 0 auto", marginTop: 1 }}><span className="dot" />Stärke</span>
+                <span style={{ fontSize: 14, lineHeight: 1.45 }}>Stark in <b>{insights.strength.topic}</b> — {insights.strength.n} {insights.strength.n === 1 ? "Wort sitzt" : "Wörter sitzen"}, halten ~{Math.round(insights.strength.avg)} Tage.</span>
+              </div>
+            )}
+            {insights.steps.map((it: any, i: number) => (
+              <div key={i} className="row" style={{ gap: 10, alignItems: "center" }}>
+                <span className="badge" style={{ flex: "0 0 auto", background: `var(--${it.tone}-bg)`, color: toneColor(it.tone) }}><span className="dot" style={{ background: toneColor(it.tone) }} />Schritt</span>
+                <span className="grow" style={{ fontSize: 14, lineHeight: 1.45 }}>{it.text}</span>
+                {it.action && <button className="btn btn-sm" onClick={() => goPractice(it.action.sel)}>{it.action.label}</button>}
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* overall */}
       <div className="stat-grid">
@@ -157,36 +193,40 @@ export function Stats() {
         </div>
       </div>
 
-      {/* V14: FSRS insight lists — tappable, „üben" startet den Scope im Üben-Tab */}
+      {/* F-STATS-STRUKTUR: Stufen = EINE Verteilungslinie + Legende (eine Achse) */}
+      <div className="section-title" style={{ marginBottom: 10 }}>Wie deine Wörter sitzen</div>
+      <div className="panel" style={{ padding: "14px 16px", marginBottom: 22 }}>
+        {rows.length ? (
+          <>
+            <div className="stufe-band" style={{ height: 16, marginBottom: 12 }}>
+              {STUFE_KEYS.map((k) => counts[k] ? <i key={k} style={{ flex: counts[k], background: toneColor(STUFE_META[k].tone) }} title={`${STUFE_META[k].label}: ${counts[k]}`} /> : null)}
+            </div>
+            <div className="stufe-legend">
+              {STUFE_KEYS.map((k) => (
+                <button key={k} className="leg-item" aria-pressed={filter === k} title={STUFE_META[k].blurb}
+                  onClick={() => setFilter(filter === k ? "all" : k)}>
+                  <span className="dot" style={{ background: toneColor(STUFE_META[k].tone) }} />
+                  <span className="leg-label">{STUFE_META[k].label}</span>
+                  <span className="leg-n">{counts[k]} · {pctMap[k] || 0}%</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : <div className="muted" style={{ fontSize: 13.5 }}>Noch keine Wörter in dieser Auswahl.</div>}
+      </div>
+
+      {/* F-STATS-STRUKTUR: smarte Listen = optionale Fokus-Filter, quer zu den Stufen */}
+      <div className="section-title" style={{ marginBottom: 4 }}>Worauf du dich konzentrieren kannst</div>
+      <div className="muted" style={{ fontSize: 12.5, marginBottom: 10 }}>Optionale Fokus-Listen — quer zu den Stufen. Tippen startet sofort das Üben.</div>
       <div className="lchips" style={{ justifyContent: "flex-start", marginBottom: 18 }}>
-        {[{ k: "leech", label: "Leeches", tone: "red", help: "Dauer-Problemwörter (oft vergessen)" },
+        {[{ k: "leech", label: "Hartnäckig", tone: "red", help: "Oft vergessen trotz Übung — brauchen eine Eselsbrücke" },
           { k: "frischfragil", label: "Frisch & fragil", tone: "amber", help: "Gerade gelernt, noch wackelig" },
           { k: "kurzvorsitzt", label: "Kurz vor „sitzt\"", tone: "green", help: "Fast dauerhaft — ein Schubs reicht" }].map((c) => {
           const n = resolveSmart(c.k, vocab.filter((w) => w.pair === pair), stats, settings.masteryCorrect, { retention: ret }).filter(practiceable).length;
           return (
             <button key={c.k} className={"lchip lchip-smart tone-" + c.tone} title={c.help} disabled={!n}
-              onClick={() => { store.setSettings({ practiceSel: "smart:" + c.k }); window.dispatchEvent(new CustomEvent("vt-tab", { detail: "practice" })); }}>
+              onClick={() => goPractice("smart:" + c.k)}>
               <Icon name="target" size={13} /> {c.label} <span className="lchip-n">{n}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* categories (V14: the four FSRS levels) */}
-      <div className="section-title" style={{ marginBottom: 12 }}>Wie deine Wörter sitzen</div>
-      <div className="cat-grid">
-        {STUFE_KEYS.map((key) => {
-          const c = STUFE_META[key];
-          const n = counts[key];
-          return (
-            <button key={key} className="cat-card" aria-pressed={filter === key}
-              onClick={() => setFilter(filter === key ? "all" : key)}>
-              <div className="top">
-                <span className="nm" style={{ color: toneColor(c.tone) }}>{c.label}</span>
-                <span className="num">{n}</span>
-              </div>
-              <div className="bl">{c.blurb}</div>
-              <div className="meter"><i style={{ width: (rows.length ? (n / rows.length) * 100 : 0) + "%", background: toneColor(c.tone) }} /></div>
             </button>
           );
         })}
