@@ -7,7 +7,7 @@ import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday, sevenDayOutlook } from "../lib/engine";
 import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
-import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE } from "../lib/fsrs";
+import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, deriveRating, gradeFromCard } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
 import { TipPopup } from "./TipPopup";
@@ -109,6 +109,7 @@ export function Practice() {
   const runRef = useRef(null);          // V8 RunState
   const gradedRef = useRef(new Set());  // V8 ids already FSRS-graded this run (once-only)
   const baseCardRef = useRef({});       // V8 pre-session FSRS baseline per word (grade from this)
+  const growthRef = useRef([]);         // V14 stability jumps this run (ephemeral, for the end-card)
   const shownAtRef = useRef(0);         // V8 when the current card was shown
   const flushRef = useRef(() => {});    // V8 latest session-end flush
   const [doneIds, setDoneIds] = useState(() => new Set()); // V5: mastered ids this run
@@ -130,6 +131,7 @@ export function Practice() {
       bases[id] = initialCard(st);   // frozen pre-session FSRS baseline (FIX 1)
     }
     baseCardRef.current = bases;
+    growthRef.current = [];
     runRef.current = buildRun(ids, meta2, modeOverride || scopeMode);
     gradedRef.current = new Set();
     setDoneIds(new Set());
@@ -223,7 +225,15 @@ export function Practice() {
       if (!gradedRef.current.has(id)) {
         gradedRef.current.add(id);
         st.words[id].graded = true;
-        store.gradeWord(id, outcomeOf(st.words[id]), mode, baseCardRef.current[id]);
+        const outcome = outcomeOf(st.words[id]);
+        store.gradeWord(id, outcome, mode, baseCardRef.current[id]);
+        // V14: collect the stability jump for the bundled end-card nugget (ephemeral).
+        const base = baseCardRef.current[id];
+        const rating = deriveRating(outcome, mode);
+        if (rating !== "no-grade" && base) {
+          const after = gradeFromCard(base, rating as number, retentionFor(settings));
+          if ((after.stability || 0) > (base.stability || 0) + 0.1) growthRef.current.push({ id, before: base.stability || 0, after: after.stability || 0 });
+        }
       }
     }
   }, [mode, markDone, store]);
@@ -474,12 +484,24 @@ export function Practice() {
     const sitNow = (st ? Object.keys(st.words) : []).filter((id) => deriveProfile(stats[id]?.fsrs, ret).stufe === "sitzt").length;
     const back = total - sitNow;
     const failedCount = st ? Object.values(st.words).filter((w: any) => w.failedOnce || w.usedHint).length : 0;
+    // V14 nugget (bundled): words that gained stability this round (ephemeral).
+    const grown = growthRef.current.filter((g: any) => g.after > g.before + 0.1);
+    const topGrow = [...grown].sort((a: any, b: any) => (b.after - b.before) - (a.after - a.before)).slice(0, 2);
+    const wlbl = (id: string) => { const w = vocab.find((x: any) => x.id === id); return w ? (isLat ? latinHeadword(w) : (w[foreign] || w.de)) : ""; };
     return (
       <div className="practice-wrap">
         {scopeBar}
         <div className="empty round-done">
           <div className="big">Runde geschafft</div>
           <div className="round-tally">{sitNow} {sitNow === 1 ? "Wort sitzt" : "Wörter sitzen"} dauerhaft{back > 0 ? ` · ${back} ${back === 1 ? "kommt" : "kommen"} zur Wiederholung zurück` : ""}.</div>
+          {grown.length > 0 && (
+            <div className="round-grow">
+              <div style={{ fontWeight: 600 }}>{grown.length} {grown.length === 1 ? "Wort ist" : "Wörter sind"} heute stärker geworden.</div>
+              {topGrow.map((g: any, i: number) => { const y = Math.round(g.after), z = Math.round(g.before); return (
+                <div key={i} className="faint" style={{ fontSize: 12.5, marginTop: 2 }}>{wlbl(g.id)} hält jetzt ~{y} {z >= 1 ? `statt ${z} ` : ""}Tage{z >= 1 ? "n" : ""}.</div>
+              ); })}
+            </div>
+          )}
           <div className="round-actions">
             <button className="btn btn-primary" onClick={() => store.setSettings({ practiceSel: "smart:due" })}>Fertig</button>
             {failedCount > 0 && <button className="btn btn-amber" onClick={startRoundRetry}><Icon name="flame" size={15} /> Wackler nochmal ({failedCount})</button>}
