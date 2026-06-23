@@ -7,7 +7,7 @@ import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday, sevenDayOutlook } from "../lib/engine";
 import { buildRun, pick, record, outcomeOf, pendingGrades, SOLID_R } from "../lib/runqueue";
-import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, deriveRating, gradeFromCard } from "../lib/fsrs";
+import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
 import { TipPopup } from "./TipPopup";
@@ -16,8 +16,7 @@ import { LERN_TIPPS } from "./LearnTips";
 /* ===================================================================
  * practice.jsx — the flashcard trainer.
  * =================================================================== */
-const STUFE_ORDER = ["sitzt", "sitzt_fast", "sitzt_schlecht", "noch_nicht_geuebt"];
-const toneVarP = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
+const toneVarP = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : t === "blue" ? "var(--blue)" : "var(--ink-faint)";
 
 export function Practice() {
   const store = useStore();

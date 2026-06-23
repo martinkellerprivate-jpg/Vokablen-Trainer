@@ -7,7 +7,7 @@ import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
 import { migrateTopics, lessonsForLists, swissifyVocab, migrateLessonsStatic } from "../lib/migrate";
-import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION } from "../lib/fsrs";
+import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION, configure } from "../lib/fsrs";
 import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
 import type { Word, ListT } from "../lib/types";
 
@@ -60,6 +60,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // V13: targetRetention is the source. Migrate an existing lernIntensity choice
     // into it once (so a user on "intensiv" keeps 0.95, not the default 0.9).
     if (loaded.targetRetention == null && loaded.lernIntensity) s.targetRetention = RETENTION[loaded.lernIntensity] ?? 0.9;
+    configure(s);   // F-SETTINGS-ADVANCED: seed FSRS thresholds from settings at startup
     return s;
   });
 
@@ -88,6 +89,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => persist("stats", LS.stats, stats), [stats]);
   React.useEffect(() => persist("meta", LS.meta, meta), [meta]);
   React.useEffect(() => persist("settings", LS.settings, settings), [settings]);
+  React.useEffect(() => { configure(settings); }, [settings]);   // FSRS thresholds follow settings live
 
   // One-time, versioned data migrations (recorded in meta.migrations).
   const migratedRef = React.useRef(false);

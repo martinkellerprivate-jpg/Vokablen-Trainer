@@ -35,37 +35,61 @@ export function retentionFor(s?: any): number {
  * target; V15 raises it per active lesson deadline (highest wins). Every derivation
  * (card, stats, popup, today, due-list) must call this — never settings.targetRetention
  * directly — so the same word shows identical due everywhere. */
-export const EXAM_WINDOW_DAYS = 10;   // densify within this many days before a deadline
-export const EXAM_RETENTION = 0.95;   // raised retention target while a deadline is near
 export function effectiveRetentionFor(word: any, settings: any, lessons?: any[], now: number = Date.now()): number {
   const base = retentionFor(settings);
   if (!word || !lessons || !lessons.length) return base;
   // V15 auto-densification: a word in a lesson whose deadline is within the window
   // gets a higher target → shorter intervals / earlier due. Highest wins; after the
-  // deadline the override is gone (snap-back). Pure derivation, no stored state.
+  // deadline the override is gone (snap-back). Window/target read from CFG (settings).
   let target = base;
   for (const l of lessons) {
     if (!l.dueDate || !(l.members || []).includes(word.id)) continue;
     const daysLeft = (l.dueDate - now) / 86400000;
-    if (daysLeft >= 0 && daysLeft <= EXAM_WINDOW_DAYS) target = Math.max(target, EXAM_RETENTION);
+    if (daysLeft >= 0 && daysLeft <= CFG.examWindowDays) target = Math.max(target, CFG.examRetention);
   }
   return target;
 }
 
-/* ---- V13: the four mastery levels (S-axis). The ONLY colour/label source. ---- */
+/* ---- V13/F-V13: the FIVE mastery levels (S-axis). The ONLY colour/label source.
+ * 'neu' (blue) is a distinct neutral level for freshly-learned words so that a
+ * first-correct word is NOT shown red. 'noch_nicht_geuebt' (grey, never practised)
+ * and 'neu' are two different things. ---- */
 export const STUFE: Record<string, { key: string; label: string; tone: string }> = {
-  noch_nicht_geuebt: { key: "noch_nicht_geuebt", label: "noch nicht geübt", tone: "slate" },
-  sitzt_schlecht:    { key: "sitzt_schlecht",    label: "sitzt schlecht",   tone: "red" },
-  sitzt_fast:        { key: "sitzt_fast",        label: "sitzt fast",       tone: "amber" },
   sitzt:             { key: "sitzt",             label: "sitzt",            tone: "green" },
+  sitzt_fast:        { key: "sitzt_fast",        label: "sitzt fast",       tone: "amber" },
+  sitzt_schlecht:    { key: "sitzt_schlecht",    label: "wackelt noch",     tone: "red" },
+  neu:               { key: "neu",               label: "neu / frisch",     tone: "blue" },
+  noch_nicht_geuebt: { key: "noch_nicht_geuebt", label: "noch nicht geübt", tone: "slate" },
 };
-/* V13 thresholds — named, in ONE place (Startwerte, an realen Daten justierbar). */
-export const S1 = 3;          // days: below → sitzt_schlecht (red)
-export const S2 = 14;         // days: at/above → sitzt (green); between → sitzt_fast
-export const PUFFER = 2;      // days: "bald fällig" window before due
-export const D_LEECH = 7;     // difficulty ≥ this …
-export const LAPSE_LEECH = 3; // … and lapses ≥ this → Leech (D-axis)
+/* The ONE canonical order for every distribution/legend/band (FIX B: 5 disjoint). */
+export const STUFE_ORDER = ["sitzt", "sitzt_fast", "sitzt_schlecht", "neu", "noch_nicht_geuebt"];
+
+/* ---- F-SETTINGS-ADVANCED: thresholds/params have ONE source. DEFAULTS = named
+ * constants; configure(settings) overrides per user; deriveProfile / effective-
+ * RetentionFor / the grade path read CFG → effective value, instantly. ---- */
+export const DEFAULTS = { S1: 3, S2: 14, MIN_REPS: 2, PUFFER: 2, D_LEECH: 7, LAPSE_LEECH: 3, examRetention: 0.95, examWindowDays: 3, learningSpeed: 1.0 };
+let CFG = { ...DEFAULTS };
+export function configure(settings: any) {
+  const n = (v: any, d: number) => (typeof v === "number" && isFinite(v) ? v : d);
+  CFG = {
+    S1: n(settings?.S1, DEFAULTS.S1), S2: n(settings?.S2, DEFAULTS.S2),
+    MIN_REPS: n(settings?.MIN_REPS, DEFAULTS.MIN_REPS), PUFFER: n(settings?.PUFFER, DEFAULTS.PUFFER),
+    D_LEECH: n(settings?.D_LEECH, DEFAULTS.D_LEECH), LAPSE_LEECH: n(settings?.LAPSE_LEECH, DEFAULTS.LAPSE_LEECH),
+    examRetention: n(settings?.examRetention, DEFAULTS.examRetention), examWindowDays: n(settings?.examWindowDays, DEFAULTS.examWindowDays),
+    learningSpeed: n(settings?.learningSpeed, DEFAULTS.learningSpeed),
+  };
+}
+export function getCfg() { return CFG; }
+// back-compat exports (read the live CFG)
+export const S1 = DEFAULTS.S1, S2 = DEFAULTS.S2, PUFFER = DEFAULTS.PUFFER, D_LEECH = DEFAULTS.D_LEECH, LAPSE_LEECH = DEFAULTS.LAPSE_LEECH;
 const DAY = 86400000;
+
+/* FIX C: ONE scaling source for learningSpeed — used by both the real grade path
+ * and the settings live-preview. speed 1.0 = exact FSRS. */
+export function applyLearningSpeed(sOld: number, sFsrs: number, speed: number): number {
+  if (!(speed > 0) || speed === 1) return sFsrs;
+  return Math.max(0.1, sOld + (sFsrs - sOld) * speed);
+}
 
 export interface Profile {
   stufe: string; tone: string;
@@ -84,9 +108,11 @@ export function deriveProfile(card: SerializedCard | undefined, effRetention: nu
   const due = last + interval * DAY;
   const R_now = Math.pow(1 + ((now - last) / DAY) / (9 * S), -0.5);
   const istFaellig = now >= due;
-  const baldFaellig = (now >= due - PUFFER * DAY) && !istFaellig;   // FIX 2: excludes due
-  const stufe = S < S1 ? "sitzt_schlecht" : S < S2 ? "sitzt_fast" : "sitzt";
-  const istLeech = card.difficulty >= D_LEECH && (card.lapses || 0) >= LAPSE_LEECH;
+  const baldFaellig = (now >= due - CFG.PUFFER * DAY) && !istFaellig;   // FIX 2: excludes due
+  // F-V13: freshly learned (few reps, never lapsed) → neutral 'neu', not red.
+  const stufe = ((card.reps || 0) < CFG.MIN_REPS && (card.lapses || 0) === 0) ? "neu"
+    : S < CFG.S1 ? "sitzt_schlecht" : S < CFG.S2 ? "sitzt_fast" : "sitzt";
+  const istLeech = card.difficulty >= CFG.D_LEECH && (card.lapses || 0) >= CFG.LAPSE_LEECH;
   return { stufe, tone: STUFE[stufe].tone, istFaellig, baldFaellig, R_now, interval, due, haeltTage: S, istLeech };
 }
 /* Retrievability at a FUTURE moment (for V15 exam prognosis). New/S<=0 → null. */
@@ -197,9 +223,15 @@ export function initialCard(stat: Stat | undefined): SerializedCard {
   return (stat && stat.seen > 0) ? warmStart(stat) : emptyCard();
 }
 
-/* Grade from an explicit baseline card → next serialized card. */
+/* Grade from an explicit baseline card → next serialized card. F-SETTINGS-ADVANCED:
+ * on a successful review (not Again) the stability gain is scaled by learningSpeed
+ * (one source: applyLearningSpeed). Lapse handling untouched, w[] untouched. */
 export function gradeFromCard(base: SerializedCard, rating: number, retention: number, now: number = Date.now()): SerializedCard {
-  return fromCard(scheduler(retention).next(toCard(base), new Date(now), rating).card);
+  const next = fromCard(scheduler(retention).next(toCard(base), new Date(now), rating).card);
+  if (rating !== Rating.Again && CFG.learningSpeed !== 1) {
+    next.stability = applyLearningSpeed(base.stability || 0, next.stability, CFG.learningSpeed);
+  }
+  return next;
 }
 
 /* Retrievability 0..1 — lower = more fragile (used for ordering). */

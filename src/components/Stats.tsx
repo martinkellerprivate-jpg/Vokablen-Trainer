@@ -4,7 +4,7 @@ import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/Icon";
 import { Ring, toneColor, pct } from "../ui/Ring";
 import { wordsForSelection, resolveSmart } from "../lib/engine";
-import { deriveProfile, retentionFor } from "../lib/fsrs";
+import { deriveProfile, retentionFor, STUFE_ORDER } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { buildInsights } from "../lib/insights";
@@ -15,9 +15,10 @@ const STUFE_META: Record<string, any> = {
   sitzt:             { label: "Sitzt",           tone: "green", blurb: "Sitzt sicher — hält lange." },
   sitzt_fast:        { label: "Sitzt fast",      tone: "amber", blurb: "Fast da — noch ein paar Wiederholungen." },
   sitzt_schlecht:    { label: "Wackelt noch",    tone: "red",   blurb: "Wackelt noch — kommt öfter zurück." },
+  neu:               { label: "Neu / frisch",   tone: "blue",  blurb: "Frisch gelernt — noch jung." },
   noch_nicht_geuebt: { label: "Noch nicht geübt", tone: "slate", blurb: "Noch nicht geübt." },
 };
-const STUFE_KEYS = ["sitzt", "sitzt_fast", "sitzt_schlecht", "noch_nicht_geuebt"];
+const STUFE_KEYS = STUFE_ORDER;
 const haeltText = (p: any) => p.haeltTage ? `hält ~${Math.round(p.haeltTage)} T` : "";
 const faelligText = (p: any, now = Date.now()) => p.due == null ? "" : p.istFaellig ? "fällig" : `fällig in ${Math.max(0, Math.ceil((p.due - now) / 86400000))} T`;
 
@@ -53,7 +54,7 @@ export function Stats() {
   }), [vocab, stats, settings.statLists, ret, pair]);
 
   const counts = useMemo(() => {
-    const c: any = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, noch_nicht_geuebt: 0 };
+    const c: any = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, neu: 0, noch_nicht_geuebt: 0 };
     rows.forEach((r) => c[r.stufe]++);
     return c;
   }, [rows]);

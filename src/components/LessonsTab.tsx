@@ -8,12 +8,11 @@ import { Icon } from "../ui/Icon";
 import { PAIRS, fk, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { resolveLesson, lessonProfile, snapshotMembers, examPrognosis } from "../lib/engine";
-import { STUFE, retentionFor, deriveProfile } from "../lib/fsrs";
+import { STUFE, STUFE_ORDER, retentionFor, deriveProfile } from "../lib/fsrs";
 import { LessonBuilder } from "./LessonBuilder";
 
 const DAY = 86400000;
-const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--bg-2)";
-const STUFE_ORDER = ["sitzt", "sitzt_fast", "sitzt_schlecht", "noch_nicht_geuebt"];
+const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : t === "blue" ? "var(--blue)" : "var(--bg-2)";
 
 function deadlineText(due?: number, now = Date.now()) {
   if (!due) return null;

@@ -2,7 +2,7 @@
  * weighting. Pure logic — no React. */
 import type { Stat, Word } from "./types";
 import { practiceable } from "./pairs";
-import { isDueCard, retrievabilityOf, deriveProfile, retrievabilityAt, effectiveRetentionFor } from "./fsrs";
+import { isDueCard, retrievabilityOf, deriveProfile, retrievabilityAt, effectiveRetentionFor, getCfg } from "./fsrs";
 
 /* ---- classification & smart repetition --------------------------- */
 export const CATEGORY = {
@@ -221,8 +221,8 @@ export function resolveSmart(
   if (key === "wackeln") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).stufe === "sitzt_schlecht");
   if (key === "baldfaellig") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).baldFaellig);
   if (key === "leech") return pairVocab.filter((w) => practiceable(w) && profOf(w.id).istLeech);
-  if (key === "frischfragil") return pairVocab.filter((w) => { const f = stats[w.id]?.fsrs; return practiceable(w) && f && f.state !== 0 && f.stability < 3; });
-  if (key === "kurzvorsitzt") return pairVocab.filter((w) => { const s = stats[w.id]?.fsrs?.stability || 0; return practiceable(w) && s >= 14 * 0.7 && s < 14; });
+  if (key === "frischfragil") { const c = getCfg(); return pairVocab.filter((w) => { const f = stats[w.id]?.fsrs; return practiceable(w) && f && f.state !== 0 && f.stability < c.S1; }); }
+  if (key === "kurzvorsitzt") { const c = getCfg(); return pairVocab.filter((w) => { const s = stats[w.id]?.fsrs?.stability || 0; return practiceable(w) && s >= c.S2 * 0.7 && s < c.S2; }); }
   const sc = SMART[key]; if (!sc) return [];
   return pairVocab.filter((w) => sc.test(w, stats[w.id], mc, now));
 }

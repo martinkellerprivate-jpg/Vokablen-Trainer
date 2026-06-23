@@ -9,7 +9,7 @@ import { latinHeadword } from "../lib/latin";
 import { deriveProfile, retentionFor, effectiveRetentionFor, STUFE } from "../lib/fsrs";
 
 const DAY = 86400000;
-const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
+const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : t === "blue" ? "var(--blue)" : "var(--ink-faint)";
 const STATE_NAME = ["New", "Learning", "Review", "Relearning"];
 const fmtDate = (ms?: number) => ms ? new Date(ms).toLocaleDateString() : "—";
 

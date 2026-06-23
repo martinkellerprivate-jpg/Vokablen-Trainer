@@ -261,7 +261,7 @@ export function WordList() {
     toast("Exported your word list", "download");
   };
 
-  const WL_STUFE: any = { sitzt: ["green", "Sitzt"], sitzt_fast: ["amber", "Sitzt fast"], sitzt_schlecht: ["red", "Wackelt noch"], noch_nicht_geuebt: ["slate", "Noch nicht geübt"] };
+  const WL_STUFE: any = { sitzt: ["green", "Sitzt"], sitzt_fast: ["amber", "Sitzt fast"], sitzt_schlecht: ["red", "Wackelt noch"], neu: ["blue", "Neu"], noch_nicht_geuebt: ["slate", "Noch nicht geübt"] };
   const catBadge = (w) => {
     if (!practiceable(w)) return <span className="badge red"><span className="dot" />Needs translation</span>;
     const [tone, label] = WL_STUFE[deriveProfile(stats[w.id]?.fsrs, retentionFor(settings)).stufe];   // V14: one source
