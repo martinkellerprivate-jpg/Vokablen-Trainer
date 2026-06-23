@@ -62,6 +62,10 @@ export function Practice() {
   const pairLessons = useMemo(() => lessons.filter((l) => l.pair === pair), [lessons, pair]);
   const pairLists = useMemo(() => (store.lists || []).filter((l: any) => l.pair === pair), [store.lists, pair]);
   const pairTopics = useMemo(() => Array.from(new Set(vocab.filter((w: any) => w.pair === pair).map((w: any) => w.topic).filter(Boolean))).sort() as string[], [vocab, pair]);
+  // F-NAV-2: multiselect is EPHEMERAL UI state — NOT persisted, NOT synced (FIX C:
+  // practiceSel stays a single token; 2+ scopes drive a deduped union at runtime only).
+  const [multiSel, setMultiSel] = useState<string[]>([]);
+  useEffect(() => { setMultiSel([]); }, [pair]);   // pair switch resets a pair-foreign multiselect
   const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
   const rawSel = parseSel(settings.practiceSel);
   const selValid = rawSel.kind === "smart" ? SMART_REFS.includes(rawSel.ref)
@@ -71,22 +75,39 @@ export function Practice() {
     : false;
   // V17: default learning path = "Heute dran"
   const effective = selValid ? rawSel : { kind: "smart", ref: "heute" };
-  const selKey = effective.kind + ":" + effective.ref;
-  const pickScope = (kind, ref) => store.setSettings({ practiceSel: kind + ":" + ref });
-  // live resolution of the chosen scope (for chip counts + to seed a run)
-  const resolveScopeWords = () => {
+  const tokValid = (tok: string) => { const i = tok.indexOf(":"); const k = tok.slice(0, i), r = tok.slice(i + 1); return k === "lesson" ? pairLessons.some((l) => l.id === r) : k === "list" ? pairLists.some((l: any) => l.id === r) : k === "topic" ? pairTopics.includes(r) : false; };
+  const validMulti = multiSel.filter(tokValid);
+  const scopeTokens = validMulti.length ? validMulti : [effective.kind + ":" + effective.ref];
+  const selKey = scopeTokens.join("|");
+  // single pick: clear any multiselect + persist the single token (synced, backward-compatible)
+  const pickScope = (kind, ref) => { setMultiSel([]); store.setSettings({ practiceSel: kind + ":" + ref }); };
+  // multiselect toggle: a single remaining token mirrors to practiceSel (persistence);
+  // 2+ stay ephemeral (not synced).
+  const toggleScope = (tok: string) => {
+    const next = multiSel.includes(tok) ? multiSel.filter((x) => x !== tok) : [...multiSel, tok];
+    setMultiSel(next);
+    if (next.length === 1) store.setSettings({ practiceSel: next[0] });   // mirror single (persist); never in a render-phase updater
+  };
+  const isActiveTok = (tok: string) => validMulti.length ? validMulti.includes(tok) : (effective.kind + ":" + effective.ref === tok);
+  const wordsForToken = (tok: string): any[] => {
+    const i = tok.indexOf(":"); const kind = tok.slice(0, i), ref = tok.slice(i + 1);
     const pv = vocab.filter((w) => w.pair === pair);
-    if (effective.kind === "smart") {
+    if (kind === "smart") {
       const ret = retentionFor(settings);
-      if (effective.ref === "heute") return resolveToday(pv, stats, lessons, ret, settings.dailyGoal, settings.newPerDay);   // V17
-      // V13/V14: all smart scopes use effectiveRetention; "Fällige" also daily-capped.
+      if (ref === "heute") return resolveToday(pv, stats, lessons, ret, settings.dailyGoal, settings.newPerDay);   // V17
       const opts: any = { retention: ret };
-      if (effective.ref === "due") opts.cap = settings.dailyGoal;
-      return resolveSmart(effective.ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
+      if (ref === "due") opts.cap = settings.dailyGoal;
+      return resolveSmart(ref, pv, stats, settings.masteryCorrect, opts).filter(practiceable);
     }
-    if (effective.kind === "list") return pv.filter((w) => (w.lists || []).includes(effective.ref)).filter(practiceable);
-    if (effective.kind === "topic") return pv.filter((w) => w.topic === effective.ref).filter(practiceable);
-    return resolveLesson(pairLessons.find((l) => l.id === effective.ref), vocab).filter(practiceable);
+    if (kind === "list") return pv.filter((w) => (w.lists || []).includes(ref)).filter(practiceable);
+    if (kind === "topic") return pv.filter((w) => w.topic === ref).filter(practiceable);
+    return resolveLesson(pairLessons.find((l) => l.id === ref), vocab).filter(practiceable);
+  };
+  // live resolution of the chosen scope(s) — deduped union over scopeTokens (one pair).
+  const resolveScopeWords = () => {
+    const seen = new Set<string>(); const out: any[] = [];
+    for (const tok of scopeTokens) for (const w of wordsForToken(tok)) if (!seen.has(w.id)) { seen.add(w.id); out.push(w); }
+    return out;
   };
 
   const [current, setCurrent] = useState(null);
@@ -101,6 +122,8 @@ export function Practice() {
   const [session, setSession] = useState([]); // recent verdicts
   const [tip, setTip] = useState(null);        // current study-tip popup (Phase 6)
   const [focus, setFocus] = useState(false);   // V2: zoom / focus card mode
+  const [lessonsOpen, setLessonsOpen] = useState(true);  // F-NAV-2: Practice default = Lektionen offen
+  const [listsOpen, setListsOpen] = useState(false);
   const [topicsOpen, setTopicsOpen] = useState(false); // F-NAV: collapsible topics
   const [outlookOpen, setOutlookOpen] = useState(false); // F-7TAGE: outlook popover
   const [enoughAck, setEnoughAck] = useState(false);   // F-CARD-UI: "genug für heute" dismissed
@@ -420,7 +443,7 @@ export function Practice() {
     <div className="lchips smart-chips p-smart">
       {SMART_ACCESS.map((s) => (
         <button key={s.ref} title="Schnellzugriff"
-          className={"lchip lchip-smart tone-" + s.tone + (effective.kind === "smart" && effective.ref === s.ref ? " on" : "")}
+          className={"lchip lchip-smart tone-" + s.tone + (validMulti.length === 0 && effective.kind === "smart" && effective.ref === s.ref ? " on" : "")}
           onClick={() => pickScope("smart", s.ref)}>
           <Icon name={s.icon} size={14} /> {s.label} <span className="lchip-n">{smartCountOf(s.ref)}</span>
         </button>
@@ -431,19 +454,37 @@ export function Practice() {
   const lessonRetention = retentionFor(settings);
   const dotTone = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
   const lessonsSorted = [...pairLessons].sort((a, b) => (a.dueDate || Infinity) - (b.dueDate || Infinity) || (a.createdAt || 0) - (b.createdAt || 0));
-  // F-NAV: one scope picker — Lektionen → Listen → (ausklappbar) Topics.
+  // F-NAV-2: one scope picker — three collapsible groups (Lektionen offen, Listen/
+  // Themen zu). Chips multi-toggle (ephemeral union); "Alle" per Gruppe.
   const listCountOf = (id: string) => pairVocabAll.filter((w: any) => (w.lists || []).includes(id)).length;
   const topicCountOf = (t: string) => pairVocabAll.filter((w: any) => w.topic === t).length;
+  const toggleAll = (toks: string[]) => {
+    const on = toks.length > 0 && toks.every((t) => multiSel.includes(t));
+    const next = on ? multiSel.filter((t) => !toks.includes(t)) : Array.from(new Set([...multiSel, ...toks]));
+    setMultiSel(next);
+    if (next.length === 1) store.setSettings({ practiceSel: next[0] });
+  };
+  const groupHead = (open: boolean, set: any, icon: string, label: string, n: number, toks: string[]) => (
+    <div className="scope-group-head">
+      <button className="lchips-label lchips-toggle" onClick={() => set((o: boolean) => !o)}>
+        <span style={{ fontSize: 10 }}>{open ? "▾" : "▸"}</span> <Icon name={icon as any} size={13} /> {label} ({n})
+      </button>
+      {open && n > 0 && <button className="scope-all" onClick={() => toggleAll(toks)}>{toks.every((t) => validMulti.includes(t)) && toks.length ? "keine" : "alle"}</button>}
+    </div>
+  );
+  const lessonToks = lessonsSorted.map((l) => "lesson:" + l.id);
+  const listToks = pairLists.map((l: any) => "list:" + l.id);
+  const topicToks = pairTopics.map((t) => "topic:" + t);
   const lessonSelectorEl = (pairLessons.length || pairLists.length || pairTopics.length) ? (
     <div className="scope-picker p-lessonsel">
       {pairLessons.length > 0 && (
-        <div className="lchips lesson-selector">
-          <span className="lchips-label"><Icon name="cards" size={13} /> Lektionen</span>
-          {lessonsSorted.map((l) => {
+        <div className="lchips lesson-selector lchips-topics">
+          {groupHead(lessonsOpen, setLessonsOpen, "cards", "Lektionen", pairLessons.length, lessonToks)}
+          {lessonsOpen && lessonsSorted.map((l) => {
             const tone = lessonProfile(l, vocab, stats, lessonRetention).tone;
             const days = l.dueDate ? Math.ceil((l.dueDate - Date.now()) / 86400000) : null;
             return (
-            <button key={l.id} className={"lchip" + (effective.kind === "lesson" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("lesson", l.id)}>
+            <button key={l.id} className={"lchip" + (isActiveTok("lesson:" + l.id) ? " on" : "")} onClick={() => toggleScope("lesson:" + l.id)}>
               <span className="dot" style={{ width: 9, height: 9, borderRadius: "50%", background: dotTone(tone) }} />
               {l.name} <span className="lchip-n">{lessonCountOf(l)}</span>
               {days != null && <span className="lchip-due" style={{ color: days <= 3 ? "var(--red)" : "var(--ink-faint)" }}>{days < 0 ? "überfällig" : days === 0 ? "heute" : `${days}T`}</span>}
@@ -453,10 +494,10 @@ export function Practice() {
         </div>
       )}
       {pairLists.length > 0 && (
-        <div className="lchips lesson-selector">
-          <span className="lchips-label"><Icon name="list" size={13} /> Listen</span>
-          {pairLists.map((l: any) => (
-            <button key={l.id} className={"lchip" + (effective.kind === "list" && effective.ref === l.id ? " on" : "")} onClick={() => pickScope("list", l.id)}>
+        <div className="lchips lesson-selector lchips-topics">
+          {groupHead(listsOpen, setListsOpen, "list", "Listen", pairLists.length, listToks)}
+          {listsOpen && pairLists.map((l: any) => (
+            <button key={l.id} className={"lchip" + (isActiveTok("list:" + l.id) ? " on" : "")} onClick={() => toggleScope("list:" + l.id)}>
               {l.name} <span className="lchip-n">{listCountOf(l.id)}</span>
             </button>
           ))}
@@ -464,11 +505,9 @@ export function Practice() {
       )}
       {pairTopics.length > 0 && (
         <div className="lchips lesson-selector lchips-topics">
-          <button className="lchips-label lchips-toggle" onClick={() => setTopicsOpen((o) => !o)}>
-            <span style={{ fontSize: 10 }}>{topicsOpen ? "▾" : "▸"}</span> <Icon name="filter" size={13} /> Themen ({pairTopics.length})
-          </button>
+          {groupHead(topicsOpen, setTopicsOpen, "filter", "Themen", pairTopics.length, topicToks)}
           {topicsOpen && pairTopics.map((t) => (
-            <button key={t} className={"lchip lchip-topic" + (effective.kind === "topic" && effective.ref === t ? " on" : "")} onClick={() => pickScope("topic", t)}>
+            <button key={t} className={"lchip lchip-topic" + (isActiveTok("topic:" + t) ? " on" : "")} onClick={() => toggleScope("topic:" + t)}>
               {t} <span className="lchip-n">{topicCountOf(t)}</span>
             </button>
           ))}
