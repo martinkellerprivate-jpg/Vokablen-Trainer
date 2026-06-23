@@ -518,27 +518,30 @@ export function Practice() {
     wrong: { tone: "red", label: "Not quite", icon: "x" },
   };
 
-  // V11: progress = GLOBAL mastery over the frozen scope (deriveProfile), not the
-  // run series. Bar (below) + per-word dots (above), four colours from STUFE.
+  // F-V11: progress = GLOBAL mastery over the frozen scope (deriveProfile), 5 levels.
+  // Both indicators sit ON the card (dots header, bar footer). Dots are static.
   const masteryRetention = retentionFor(settings);
   const scopeIds = runWordsRef.current;
   const scopeTotal = scopeIds.length;
   const scopeStufe: Record<string, string> = {};
-  const scopeDist: Record<string, number> = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, noch_nicht_geuebt: 0 };
+  const scopeDist: Record<string, number> = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, neu: 0, noch_nicht_geuebt: 0 };
   for (const id of scopeIds) { const s = deriveProfile(stats[id]?.fsrs, masteryRetention).stufe; scopeStufe[id] = s; scopeDist[s] = (scopeDist[s] || 0) + 1; }
   const sits = scopeDist.sitzt;
   const DOTS_MAX = 80;
   const masteryBar = scopeTotal > 0 ? (
-    <div className="mastery-strip p-session">
-      <div className="mastery-head">{sits} von {scopeTotal} sitzen</div>
+    <div className="mastery-strip card-foot">
+      <div className="mastery-head">{sits} von {scopeTotal} {scopeTotal === 1 ? "Wort sitzt" : "Wörtern sitzen"}</div>
       <div className="stufe-band">
         {STUFE_ORDER.map((k) => scopeDist[k] ? <i key={k} style={{ flex: scopeDist[k], background: toneVarP(STUFE[k].tone) }} /> : null)}
       </div>
     </div>
   ) : null;
   const wordDots = (scopeTotal > 0 && scopeTotal <= DOTS_MAX) ? (
-    <div className="word-dots p-smart">
+    <div className="word-dots card-head">
+      <div className="word-dots-label">Beherrschung je Wort</div>
+      <div className="word-dots-row">
       {scopeIds.map((id) => <i key={id} className="wdot" style={{ background: toneVarP(STUFE[scopeStufe[id]].tone) }} />)}
+      </div>
     </div>
   ) : null;
 
@@ -575,11 +578,10 @@ export function Practice() {
         </div>
       </div>
 
-      {/* V11: per-word mastery dots (global stufe), above the card */}
-      {wordDots}
-
-      {/* card */}
+      {/* card (F-V11: dots header + bar footer both ON the card) */}
       <div className="card-scene p-card">
+        {wordDots}
+        <div className="card-frame">
         <button className="card-expand" title={focus ? "Fokus verlassen (Esc)" : "Karte vergrössern"}
           onClick={() => setFocus((f) => !f)}>
           <Icon name={focus ? "x" : "expand"} size={16} />
@@ -666,6 +668,8 @@ export function Practice() {
           </div>
           )}
         </div>
+        </div>
+        {masteryBar}
       </div>
 
       {/* answer zone */}
@@ -763,9 +767,6 @@ export function Practice() {
           </>
         )}
       </div>
-
-      {/* V11: global mastery bar (replaces the old run series) */}
-      {masteryBar}
 
       {/* sporadic study tip at a natural pause (Phase 6) */}
       <TipPopup tip={tip} onClose={() => setTip(null)} />

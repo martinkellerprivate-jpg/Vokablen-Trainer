@@ -213,7 +213,8 @@ input, button, textarea, select { font-family: inherit; }
 .card-progress > i { display: block; height: 100%; border-radius: 999px; background: var(--amber); transition: width .45s cubic-bezier(.2,.7,.2,1); }
 
 /* V2: expand-to-focus control + focus/zoom mode */
-.card-scene { position: relative; }
+.card-scene { display: flex; flex-direction: column; }
+.card-frame { position: relative; width: 100%; }
 .card-expand { position: absolute; top: 8px; right: 8px; z-index: 5; width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); display: grid; place-items: center; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .14s ease, color .14s ease, border-color .14s ease; }
 .card-expand:hover { color: var(--amber-deep); border-color: var(--amber); transform: scale(1.06); }
 /* B2: audio button fixed at the card's top-left, identical across all modes/faces */
@@ -247,9 +248,12 @@ input, button, textarea, select { font-family: inherit; }
 .stufe-band > i { display: block; min-width: 2px; transition: flex .3s ease; }
 .lchip-due { font-size: 10.5px; font-weight: 700; margin-left: 2px; }
 /* V11: per-word mastery dots + global mastery bar */
-.word-dots { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; width: min(560px, 100%); margin: 0 auto 10px; }
+/* F-V11: dots header + bar footer, both ON the card (inside card-scene) */
+.word-dots { margin-bottom: 8px; }
+.word-dots-label { font-size: 10.5px; font-weight: 700; color: var(--ink-faint); text-align: center; margin-bottom: 4px; letter-spacing: .02em; }
+.word-dots-row { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .wdot { width: 9px; height: 9px; border-radius: 50%; }
-.mastery-strip { width: min(560px, 100%); margin: 14px auto 0; }
+.mastery-strip { margin-top: 12px; }
 .mastery-head { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; text-align: center; }
 /* V10: round end-card */
 .round-done .round-tally { font-size: 14.5px; color: var(--ink); margin-top: 6px; }
