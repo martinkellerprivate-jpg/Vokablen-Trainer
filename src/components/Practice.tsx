@@ -279,6 +279,7 @@ export function Practice() {
   }, [runId, current, poolById, pickNext, face, anim]);
 
   const finish = useCallback((res, rawCorrect) => {
+    if (mode === "memorize") return;   // F-MEMORIZE: browse-only never scores/mutates
     const st = stats[current.id];
     const isNew = !st || !st.seen;
     setResult(res);
@@ -287,7 +288,7 @@ export function Practice() {
     setSession((s) => [...s, res.verdict].slice(-12));
     maybeTip();
     flip("back");
-  }, [current, recordAttempt, flip, stats, maybeTip, hintUsed, resolveWord]);
+  }, [current, recordAttempt, flip, stats, maybeTip, hintUsed, resolveWord, mode]);
 
   const answerOpts = () => ({ lenientCase: settings.lenientCase, strictAccents: settings.strictAccents, articleMode: settings.articleMode, acceptPartial: settings.acceptPartial });
 
