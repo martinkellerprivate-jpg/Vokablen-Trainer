@@ -5,7 +5,7 @@ import { Icon } from "../ui/Icon";
 import { toneColor, pct } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
-import { resolveLesson, resolveSmart, lessonProfile, resolveToday, sevenDayOutlook } from "../lib/engine";
+import { resolveLesson, resolveSmart, lessonProfile, resolveToday } from "../lib/engine";
 import { buildQueue, pick, record, outcomeOf, pendingGrades, progress, remaining } from "../lib/runqueue";
 import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard, getCfg } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
@@ -66,6 +66,16 @@ export function Practice() {
   // practiceSel stays a single token; 2+ scopes drive a deduped union at runtime only).
   const [multiSel, setMultiSel] = useState<string[]>([]);
   useEffect(() => { setMultiSel([]); }, [pair]);   // pair switch resets a pair-foreign multiselect
+  // V-PLAN: the Übungsplan dispatches a scope to practise (1 token → single+synced; 2+ → ephemeral union).
+  useEffect(() => {
+    const h = (e: any) => {
+      const toks: string[] = e.detail || [];
+      if (toks.length === 1) { setMultiSel([]); store.setSettings({ practiceSel: toks[0] }); }
+      else if (toks.length > 1) setMultiSel(toks);
+    };
+    window.addEventListener("vt-practice-scope", h);
+    return () => window.removeEventListener("vt-practice-scope", h);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const parseSel = (sel) => { const i = (sel || "").indexOf(":"); return i < 0 ? { kind: "", ref: "" } : { kind: sel.slice(0, i), ref: sel.slice(i + 1) }; };
   const rawSel = parseSel(settings.practiceSel);
   const selValid = rawSel.kind === "smart" ? SMART_REFS.includes(rawSel.ref)
@@ -125,7 +135,6 @@ export function Practice() {
   const [lessonsOpen, setLessonsOpen] = useState(true);  // F-NAV-2: Practice default = Lektionen offen
   const [listsOpen, setListsOpen] = useState(false);
   const [topicsOpen, setTopicsOpen] = useState(false); // F-NAV: collapsible topics
-  const [outlookOpen, setOutlookOpen] = useState(false); // F-7TAGE: outlook popover
   const [enoughAck, setEnoughAck] = useState(false);   // F-CARD-UI: "genug für heute" dismissed
   const hiddenAtRef = useRef(0);                        // F-CARD-UI: stale-session detection
   const inputRef = useRef(null);
@@ -515,40 +524,7 @@ export function Practice() {
       )}
     </div>
   ) : null;
-  // F-7TAGE: 7-day outlook moved into a popover (button toggles). Day boxes are
-  // clickable (start that day's words) and text-labelled, not colour-only.
-  const outlookEl = (() => {
-    const days = sevenDayOutlook(pairVocabAll, stats, lessons, retentionFor(settings));
-    const DN = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-    const totalSoon = days.reduce((a, d) => a + d.count, 0);
-    return (
-      <div className="outlook-wrap p-smart">
-        <button className="btn btn-ghost btn-sm" onClick={() => setOutlookOpen((o) => !o)} title="Was in den nächsten 7 Tagen fällig wird">
-          <Icon name="calendar" size={14} /> 7-Tage-Ausblick <span className="lchip-n">{totalSoon}</span>
-        </button>
-        {outlookOpen && (
-          <div className="outlook outlook-pop">
-            <div className="outlook-label"><Icon name="calendar" size={12} /> Fällige &amp; geplante Wörter je Tag <span className="faint">· Schätzung</span></div>
-            <div className="outlook-days">
-              {days.map((d, i) => { const dt = new Date(d.day); const lbl = i === 0 ? "heute" : DN[dt.getDay()];
-                const sel = i === 0 ? "heute" : "baldfaellig";
-                return (
-                  <button key={i} className={"outlook-day" + (d.deadlines.length ? " has-deadline" : "")}
-                    title={`${lbl}: ${d.count} fällig${d.deadlines.length ? " · Prüfung: " + d.deadlines.join(", ") : ""} — tippen zum Üben`}
-                    onClick={() => { pickScope("smart", sel); setOutlookOpen(false); }}>
-                    <span className="od-n">{d.count}</span>
-                    <span className="od-d">{lbl}</span>
-                    {d.deadlines.length > 0 && <span className="od-flag" title="Prüfung">!</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="faint" style={{ fontSize: 11, marginTop: 6 }}>„!" = Prüfungstermin einer Lektion an dem Tag.</div>
-          </div>
-        )}
-      </div>
-    );
-  })();
+  // V-PLAN: the 7-day outlook is gone — replaced by the "Übungsplan" panel (header).
   const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);
 
   if (!pool.length) {
@@ -670,7 +646,6 @@ export function Practice() {
       onClick={focus ? (e) => { if (e.target === e.currentTarget) setFocus(false); } : undefined}>
       {focus && <div className="focus-rotate-hint">Drehe dein Gerät quer für mehr Platz</div>}
       {smartChipsEl}
-      {outlookEl}
       {lessonSelectorEl}
       {/* controls */}
       <div className="practice-controls p-controls">

@@ -14,6 +14,7 @@ import { ImportContext } from "./components/importContext";
 import { OnboardingModal } from "./components/OnboardingModal";
 import { LearnTips } from "./components/LearnTips";
 import { HelpGuide } from "./components/HelpGuide";
+import { PlanModal } from "./components/PlanModal";
 import { Practice } from "./components/Practice";
 import { LessonsTab } from "./components/LessonsTab";
 import { WordList } from "./components/WordList";
@@ -29,6 +30,7 @@ function Header() {
   const auth = useAuth();
   const { status } = useSync();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const pair = settings.pair;
   const p = PAIRS[pair] || PAIRS["en-de"];
   const nWords = vocab.filter((w: any) => w.pair === pair).length;
@@ -52,6 +54,10 @@ function Header() {
           <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
         </>
       )}
+      <button className="tipbtn" title="Übungsplan" onClick={() => setPlanOpen(true)} style={{ gap: 7 }}>
+        <Icon name="calendar" size={16} /> Übungsplan
+      </button>
+      <PlanModal open={planOpen} onClose={() => setPlanOpen(false)} />
       <LearnTips />
       <HelpGuide />
       {/* F-7TAGE/STREAK: Tage-in-Folge wandert in die Statistik; Kopf zeigt nur das Tagesziel. */}
