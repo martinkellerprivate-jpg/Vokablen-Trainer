@@ -103,6 +103,8 @@ export function Practice() {
   const [focus, setFocus] = useState(false);   // V2: zoom / focus card mode
   const [topicsOpen, setTopicsOpen] = useState(false); // F-NAV: collapsible topics
   const [outlookOpen, setOutlookOpen] = useState(false); // F-7TAGE: outlook popover
+  const [enoughAck, setEnoughAck] = useState(false);   // F-CARD-UI: "genug für heute" dismissed
+  const hiddenAtRef = useRef(0);                        // F-CARD-UI: stale-session detection
   const inputRef = useRef(null);
   const recentRef = useRef([]);                // recently shown ids (spacing)
   const answeredRef = useRef(0);               // scored answers this session (tip cadence)
@@ -121,7 +123,7 @@ export function Practice() {
   const markDone = useCallback((id) => setDoneIds((prev) => prev.has(id) ? prev : new Set(prev).add(id)), []);
   const [runId, setRunId] = useState(0);
 
-  const beginRun = (ids) => {
+  const beginRun = (ids, forceAll = false) => {
     flushRef.current();                 // grade unfinished words from the previous run first
     runWordsRef.current = ids;
     const retention = retentionFor(settings);
@@ -138,13 +140,16 @@ export function Practice() {
     }
     baseCardRef.current = bases;
     growthRef.current = [];
-    runRef.current = buildQueue(ids, meta2, getCfg());
+    runRef.current = buildQueue(ids, meta2, getCfg(), Math.random, forceAll);
     gradedRef.current = new Set();
     setDoneIds(new Set());
+    setEnoughAck(false);
     setRunId((n) => n + 1);
     setCurrent(null); setFace("front"); setAnim(""); setResult(null); setSession([]); setTip(null);
   };
   const startRun = () => beginRun(resolveScopeWords().map((w) => w.id));
+  // F-CARD-UI: leave the round any time — no dialog (FSRS is saved after each answer).
+  const leaveRun = () => { flushRef.current(); store.setSettings({ practiceSel: "smart:heute" }); };
   // V10: re-drill only the words that were wrong/needed a hint this round.
   const startRoundRetry = () => {
     const st = runRef.current; if (!st) return;
@@ -256,8 +261,17 @@ export function Practice() {
     }
   };
   useEffect(() => {
-    const onVis = () => { if (document.visibilityState === "hidden") flushRef.current(); };
-    const onHide = () => flushRef.current();
+    const onVis = () => {
+      if (document.visibilityState === "hidden") { flushRef.current(); hiddenAtRef.current = Date.now(); }
+      else if (document.visibilityState === "visible" && hiddenAtRef.current) {
+        // F-CARD-UI: stale session → rebuild the pool fresh (no dialog, nothing lost;
+        // FSRS was already flushed on hide).
+        const staleMs = (getCfg().STALE_MIN || 45) * 60000;
+        if (Date.now() - hiddenAtRef.current > staleMs) startRun();
+        hiddenAtRef.current = 0;
+      }
+    };
+    const onHide = () => { flushRef.current(); hiddenAtRef.current = Date.now(); };
     window.addEventListener("pagehide", onHide);
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -528,6 +542,22 @@ export function Practice() {
         </div>
       );
     }
+    // F-MEMORIZE: browse-only has no round/FSRS balance — neutral end-card.
+    if (mode === "memorize") {
+      return (
+        <div className="practice-wrap">
+          {scopeBar}
+          <div className="empty round-done">
+            <div className="big">Durchgeblättert</div>
+            <div className="round-tally">Du hast alle Karten dieser Auswahl angesehen. Memorize ändert deinen Lernstand nicht.</div>
+            <div className="round-actions">
+              <button className="btn btn-primary" onClick={leaveRun}>Fertig</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => beginRun(runWordsRef.current, true)}><Icon name="refresh" size={14} /> Nochmal durchblättern</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     // V10: round finished → end-card with honest tally + targeted re-drill.
     const ret = retentionFor(settings);
     const sitNow = (st ? Object.keys(st.words) : []).filter((id) => deriveProfile(stats[id]?.fsrs, ret).stufe === "sitzt").length;
@@ -552,9 +582,9 @@ export function Practice() {
             </div>
           )}
           <div className="round-actions">
-            <button className="btn btn-primary" onClick={() => store.setSettings({ practiceSel: "smart:due" })}>Fertig</button>
+            <button className="btn btn-primary" onClick={leaveRun}>Fertig</button>
             {failedCount > 0 && <button className="btn btn-amber" onClick={startRoundRetry}><Icon name="flame" size={15} /> Wackler nochmal ({failedCount})</button>}
-            <button className="btn btn-ghost btn-sm" onClick={startRun}><Icon name="refresh" size={14} /> Ganze Lektion nochmal</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => beginRun(runWordsRef.current, true)}><Icon name="refresh" size={14} /> Ganze Lektion nochmal</button>
           </div>
           <div className="faint" style={{ fontSize: 12.5, marginTop: 10 }}>Am besten morgen wieder — dann sitzt's dauerhaft.</div>
         </div>
@@ -568,29 +598,30 @@ export function Practice() {
     wrong: { tone: "red", label: "Not quite", icon: "x" },
   };
 
-  // F-V11: progress = GLOBAL mastery over the frozen scope (deriveProfile), 5 levels.
-  // Both indicators sit ON the card (dots header, bar footer). Dots are static.
+  // F-CARD-UI: TWO separate indicators.
+  // (1) Rundenfortschritt-% (top, ephemeral/RAM): denominator = sum of round goals
+  //     fixed at start (FIX A); rises on a counting recall, drops on a lapse of an
+  //     in-progress word (FIX B). NOT persisted.
+  // (2) Wasserstand-Balken (bottom): GLOBAL 5-stufen distribution over ALL scope
+  //     words (deriveProfile, one source). No second line.
   const masteryRetention = retentionFor(settings);
   const scopeIds = runWordsRef.current;
   const scopeTotal = scopeIds.length;
-  const scopeStufe: Record<string, string> = {};
   const scopeDist: Record<string, number> = { sitzt: 0, sitzt_fast: 0, sitzt_schlecht: 0, neu: 0, noch_nicht_geuebt: 0 };
-  for (const id of scopeIds) { const s = deriveProfile(stats[id]?.fsrs, masteryRetention).stufe; scopeStufe[id] = s; scopeDist[s] = (scopeDist[s] || 0) + 1; }
+  for (const id of scopeIds) { const s = deriveProfile(stats[id]?.fsrs, masteryRetention).stufe; scopeDist[s] = (scopeDist[s] || 0) + 1; }
   const sits = scopeDist.sitzt;
-  const DOTS_MAX = 80;
+  const roundProg = runRef.current ? progress(runRef.current) : null;
+  const roundProgressEl = (roundProg && roundProg.total > 0) ? (
+    <div className="round-progress card-head">
+      <div className="round-progress-head"><span>Runde</span><span>{roundProg.pct} %</span></div>
+      <div className="round-progress-track"><i style={{ width: roundProg.pct + "%" }} /></div>
+    </div>
+  ) : null;
   const masteryBar = scopeTotal > 0 ? (
     <div className="mastery-strip card-foot">
       <div className="mastery-head">{sits} von {scopeTotal} {scopeTotal === 1 ? "Wort sitzt" : "Wörtern sitzen"}</div>
       <div className="stufe-band">
         {STUFE_ORDER.map((k) => scopeDist[k] ? <i key={k} style={{ flex: scopeDist[k], background: toneVarP(STUFE[k].tone) }} /> : null)}
-      </div>
-    </div>
-  ) : null;
-  const wordDots = (scopeTotal > 0 && scopeTotal <= DOTS_MAX) ? (
-    <div className="word-dots card-head">
-      <div className="word-dots-label">Beherrschung je Wort</div>
-      <div className="word-dots-row">
-      {scopeIds.map((id) => <i key={id} className="wdot" style={{ background: toneVarP(STUFE[scopeStufe[id]].tone) }} />)}
       </div>
     </div>
   ) : null;
@@ -628,9 +659,20 @@ export function Practice() {
         </div>
       </div>
 
-      {/* card (F-V11: dots header + bar footer both ON the card) */}
+      {/* F-CARD-UI: leave any time (no dialog) + non-blocking "genug für heute" hint */}
+      <div className="run-bar p-controls">
+        {runRef.current && runRef.current.cards >= (getCfg().GENUG_KARTEN || 40) && !enoughAck && (
+          <div className="enough-hint">
+            <span>Genug für heute? Du hast schon {runRef.current.cards} Karten geübt.</span>
+            <button className="btn btn-ghost btn-sm" onClick={() => setEnoughAck(true)}>Weiter</button>
+          </div>
+        )}
+        <button className="btn btn-ghost btn-sm run-leave" onClick={leaveRun}><Icon name="x" size={13} /> Lektion verlassen</button>
+      </div>
+
+      {/* card (F-CARD-UI: round-progress header + Wasserstand footer ON the card) */}
       <div className="card-scene p-card">
-        {wordDots}
+        {roundProgressEl}
         <div className="card-frame">
         <button className="card-expand" title={focus ? "Fokus verlassen (Esc)" : "Karte vergrössern"}
           onClick={() => setFocus((f) => !f)}>

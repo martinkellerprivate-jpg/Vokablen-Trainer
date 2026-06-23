@@ -289,6 +289,20 @@ export function SettingsTab() {
             {advParam("examWindowDays", "Prüfungs-Fenster (Tage)", "Wie viele Tage vor einem Prüfungstermin die App dichter wiederholt (Prüfungs-Modus).", 1, 7, 1, (v: number) => `${v} T`)}
             {advParam("examRetention", "Prüfungs-Sicherheit", "Wie sicher Wörter kurz vor der Prüfung sitzen sollen — höher = häufigere Wiederholung im Prüfungs-Fenster.", 0.9, 0.99, 0.01, (v: number) => `${Math.round(v * 100)} %`)}
 
+            <div className="set-subhead">Übungsrunde — wie oft welche Wörter drankommen</div>
+            {advParam("W_ROT", "Gewicht: wackelnde Wörter", "Wie oft rote (wackelnde) Wörter in einer Runde drankommen. Höher = häufiger. Sollten zusammen mit fälligen am meisten geübt werden.", 1, 10, 1)}
+            {advParam("W_FAELLIG", "Gewicht: fällige Wörter", "Wie oft fällige (zur Auffrischung anstehende) Wörter drankommen.", 1, 10, 1)}
+            {advParam("W_GRAU", "Gewicht: noch nie geübt", "Wie oft ganz neue, noch nie geübte Wörter drankommen.", 1, 10, 1)}
+            {advParam("W_BLAU", "Gewicht: frisch gelernt", "Wie oft frisch gelernte Wörter drankommen.", 1, 10, 1)}
+            {advParam("W_ORANGE", "Gewicht: sitzt fast", "Wie oft fast sitzende Wörter drankommen — die brauchen am wenigsten.", 1, 10, 1)}
+            {advParam("ZIEL_WACKELT", "Runden-Ziel: wackelnde Wörter", "Wie oft du ein wackelndes Wort in einer Runde richtig haben musst (mit Abstand), bis es als „für heute erledigt“ gilt.", 1, 5, 1, (v: number) => `${v}×`)}
+            {advParam("ZIEL_NEU", "Runden-Ziel: frisch gelernt", "Wie oft ein frisch gelerntes Wort in einer Runde richtig sein muss.", 1, 5, 1, (v: number) => `${v}×`)}
+            {advParam("ZIEL_NEU_NIE", "Runden-Ziel: noch nie geübt", "Wie oft ein ganz neues Wort in einer Runde richtig sein muss.", 1, 5, 1, (v: number) => `${v}×`)}
+            {advParam("ZIEL_FAST", "Runden-Ziel: sitzt fast", "Wie oft ein fast sitzendes Wort in einer Runde richtig sein muss.", 1, 5, 1, (v: number) => `${v}×`)}
+            {advParam("ZIEL_FAELLIG", "Runden-Ziel: fällige Wörter", "Wie oft ein fälliges Wort zur Auffrischung richtig sein muss.", 1, 5, 1, (v: number) => `${v}×`)}
+            {advParam("STALE_MIN", "Pause bis Neustart (Minuten)", "Nach so vielen Minuten Pause beginnt die App die Übungsrunde frisch, damit sie zum aktuellen Stand passt.", 10, 120, 5, (v: number) => `${v} min`)}
+            {advParam("GENUG_KARTEN", "Hinweis „Genug für heute“ ab", "Ab so vielen Karten in einer Runde schlägt die App eine Pause vor — ganz ohne Zwang.", 10, 100, 5)}
+
             <Field title="Auto-Anpassung" atRec={!settings.autoFit} recLabel="Aus"
               desc="Lässt die App das Gedächtnis-Modell langfristig an deine Antworten anpassen. Sammelt ab sofort einen Lern-Verlauf; die eigentliche Feinjustierung folgt in einem späteren Update. Standard: aus.">
               <div className="col" style={{ gap: 6, width: "100%", alignItems: "flex-end" }}>

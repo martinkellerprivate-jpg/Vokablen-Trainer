@@ -101,13 +101,14 @@ function weightOf(pot: Pot, cfg: QueueCfg): number {
 }
 
 /* Build the round from a frozen id snapshot + per-word meta (stufe/retr/due). */
-export function buildQueue(ids: string[], meta: Record<string, WordMeta>, cfg: QueueCfg, rng: Rng = Math.random): RunState {
+export function buildQueue(ids: string[], meta: Record<string, WordMeta>, cfg: QueueCfg, rng: Rng = Math.random, forceAll = false): RunState {
   const words: Record<string, RunWord> = {};
   let goalTotal = 0;
   for (const id of ids) {
     if (words[id]) continue;                  // dedup (multiselect unions may repeat ids)
     const m = meta[id] || { stufe: "noch_nicht_geuebt", retrievability: 0, due: true };
-    const pot = potOf(m.stufe, m.due);
+    let pot = potOf(m.stufe, m.due);
+    if (!pot && forceAll) pot = "faellig";    // explicit "drill the whole lesson" override
     if (!pot) continue;                       // green & not due → excluded
     const goal = Math.max(1, Math.round(goalFor(pot, cfg)));
     words[id] = { id, pot, goal, done: 0, correct: 0, attempts: 0, usedHint: false, failedOnce: false,
