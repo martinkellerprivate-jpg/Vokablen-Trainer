@@ -56,7 +56,8 @@ const SECTIONS: Section[] = [
     body: (
       <>
         <p>Lektion (oder einen Schnellzugriff) wählen → <b>Modus</b>: <b>Type</b> (Tippen) / <b>Choose</b> (Auswählen) / <b>Recall</b> (Aufdecken) / <b>Memorize</b> (Merken) → <b>Richtung</b> umschalten (z. B. Deutsch → English) → antworten, <b>„Check"</b>, bei Bedarf <b>„Hint"</b>.</p>
-        <p>Der <b>Fortschrittsbalken</b> unten in der Karte zeigt, wie weit du in der Lektion bist (Wiederholungen zählen dabei nicht). Mit dem <b>Vergrössern-Symbol</b> oben rechts an der Karte gehst du in den Fokus-Modus — die Karte wird gross, der Rest tritt zurück. Verlassen mit dem Schliessen-Symbol, <b>Esc</b> oder Tippen daneben.</p>
+        <p><b>Auswahl:</b> oben wählst du <b>Lektionen</b>, <b>Listen</b> oder (ausklappbar) <b>Themen</b> — oder einen Schnellzugriff (<b>Heute dran</b>, <b>Fällige</b>, <b>Wackeln noch</b>, <b>Bald fällig</b>). <b>Heute dran</b> ist der empfohlene Startpunkt: die App stellt jeden Tag frisch zusammen, was heute am wichtigsten ist. Über den Knopf <b>7-Tage-Ausblick</b> siehst du, wie viel an den nächsten Tagen ansteht.</p>
+        <p>Auf der Karte zeigen die <b>Punkte oben</b> („Beherrschung je Wort“) für jedes Wort der Auswahl eine Farbe (siehe Stufen unten), der <b>Balken unten</b> fasst zusammen, wie viele schon <b>sitzen</b>. Mit dem <b>Vergrössern-Symbol</b> oben rechts gehst du in den Fokus-Modus — Verlassen mit dem Schliessen-Symbol, <b>Esc</b> oder Tippen daneben.</p>
       </>
     ),
   },
@@ -73,7 +74,9 @@ const SECTIONS: Section[] = [
     title: "6. Fortschritt, Statistik & Ziel",
     body: (
       <>
-        <p>Oben siehst du <b>Streak</b> (Tages-Serie) und <b>Tagesziel</b>. Der <b>Statistik</b>-Tab zeigt deinen Verlauf. Die Smart-Kategorien (Fällig, Schwierig, Neu, In Arbeit) folgen automatisch deinem Lernstand — du musst nichts manuell pflegen.</p>
+        <p>Oben im Kopf siehst du dein <b>Tagesziel</b>. Die <b>Tage in Folge</b> (deine Serie) findest du im <b>Statistik</b>-Tab.</p>
+        <p>Die Statistik zeigt eine <b>Verteilungslinie</b>, wie deine Wörter sitzen, plus optionale Fokus-Listen („Worauf du dich konzentrieren kannst“). In der Wort-Tabelle steht je Wort die <b>Stufe</b>, ein <b>Hält-Kreis</b> (voll ≈ ein Monat) und deine Trefferquote. <b>Tippe eine Zeile</b> an für das Detail-Popup mit allen Gedächtnis-Werten des Worts.</p>
+        <p><b>Die fünf Stufen:</b> <b>neu / frisch</b> (blau, gerade gelernt) · <b>wackelt noch</b> (rot, kommt bald zurück) · <b>sitzt fast</b> (orange) · <b>sitzt</b> (grün, hält lange) · <b>noch nicht geübt</b> (grau). Zusätzlich <b>hartnäckig</b>: oft vergessen trotz Übung — da hilft eine Eselsbrücke.</p>
       </>
     ),
   },
@@ -82,6 +85,7 @@ const SECTIONS: Section[] = [
     body: (
       <>
         <p>Unter <b>Einstellungen</b>: Skin (Papier / Dunkel / Frisch), Kartenstil und Kartenschrift, Tagesziel und wie oft <b>Lerntipps</b> erscheinen.</p>
+        <p>Ganz unten gibt es <b>„Erweiterte Einstellungen“</b> (eingeklappt, optional): Lerntempo und alle Schwellen mit Erklärung und „Auf Standard“-Knopf, dazu die <b>Auto-Anpassung</b> (sammelt einen Lern-Verlauf für eine spätere Feinjustierung; standardmässig aus) und ein <b>FSRS-Werte</b>-Fenster zum Nachsehen. Für normales Lernen brauchst du nichts davon.</p>
       </>
     ),
   },
@@ -104,6 +108,21 @@ const SECTIONS: Section[] = [
           <li><b>Mischen (Interleaving):</b> Innerhalb einer Übung werden Wörter und Themen gemischt statt blockweise abgefragt. Das fühlt sich etwas schwerer an, festigt aber spürbar besser.</li>
         </ul>
         <p>Dazu der wichtigste Hebel, den <i>du</i> in der Hand hast: <b>erst selbst abrufen, dann nachsehen</b>. Genau dieses Anstrengen beim Erinnern (Modus <b>Type</b> oder <b>Recall</b>) verankert ein Wort fester als blosses Wiederlesen.</p>
+      </>
+    ),
+  },
+  {
+    title: "10. Das Gedächtnis-Modell (FSRS) — kurz erklärt",
+    body: (
+      <>
+        <p>Im Hintergrund rechnet die App mit einem bewährten Gedächtnis-Modell namens <b>FSRS</b>. Du musst es nicht verstehen — aber falls dich interessiert, <i>warum</i> ein Wort wann zurückkommt:</p>
+        <p>Stell dir vor, jedes gelernte Wort verblasst langsam wie Schrift, die in der Sonne ausbleicht — das ist die <b>Vergessenskurve</b>. Jede richtige Wiederholung „malt es nach“, und danach hält es <b>länger</b> als vorher. Das Modell schätzt für jedes Wort drei Dinge:</p>
+        <ul>
+          <li><b>Wie lange es hält</b> (Stabilität): die Zahl im <b>Hält-Kreis</b> — z. B. „hält ~14 Tage“. Je öfter richtig, desto grösser.</li>
+          <li><b>Wie zäh es ist</b> (Schwierigkeit): manche Wörter sind einfach störrisch — die werden bei Bedarf <b>hartnäckig</b> markiert.</li>
+          <li><b>Wie sicher du es jetzt noch abrufen kannst</b> — sinkt das unter dein Ziel, wird das Wort <b>fällig</b> und kommt zurück.</li>
+        </ul>
+        <p>Daraus ergeben sich die <b>fünf Farben/Stufen</b> (Abschnitt 6), die <b>Fälligen</b>, der <b>7-Tage-Ausblick</b>, <b>Heute dran</b>, der <b>Hält-Kreis</b> und das <b>Wort-Popup</b>. Wer ganz genau hinschauen will, findet die Modell-Werte unter <b>Einstellungen → Erweitert → FSRS-Werte</b>.</p>
       </>
     ),
   },

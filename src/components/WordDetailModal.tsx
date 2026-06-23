@@ -52,10 +52,11 @@ export function WordDetailModal({ open, word, onClose, onEdit }: { open: boolean
           <div className="row" style={{ gap: 9, alignItems: "center", marginBottom: 8 }}>
             <span className="dot" style={{ width: 12, height: 12, borderRadius: "50%", background: toneVar(prof.tone) }} />
             <span style={{ fontWeight: 700 }}>{STUFE[prof.stufe].label}</span>
-            {prof.istLeech && <span className="badge red"><Icon name="flame" size={11} /> Leech</span>}
+            {prof.istLeech && <span className="badge red" title="Oft vergessen trotz Übung — eine Eselsbrücke hilft."><Icon name="flame" size={11} /> Hartnäckig</span>}
             {prof.istFaellig && <span className="badge amber"><span className="dot" />fällig</span>}
             {prof.baldFaellig && <span className="badge slate"><span className="dot" />bald fällig</span>}
           </div>
+          {prof.istLeech && <div className="faint" style={{ fontSize: 12, marginBottom: 6 }}>Hartnäckig = oft vergessen trotz Übung. Eine Eselsbrücke (Bild, Reim, Beispielsatz) hilft mehr als reines Wiederholen.</div>}
           {card ? (
             <>
               <Row k="hält etwa" v={`${Math.round(prof.haeltTage)} Tage`} />

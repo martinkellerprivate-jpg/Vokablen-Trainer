@@ -98,6 +98,9 @@ export function ScanModal({ open, onClose, onImport, onScanned, pair }) {
             <div className="faint" style={{ fontSize: 12, marginTop: 12, display: "flex", gap: 7, alignItems: "center", justifyContent: "center" }}>
               <Icon name="sparkle" size={13} /> Text recognition runs privately on your device. You'll review everything before it's added.
             </div>
+            <div className="faint" style={{ fontSize: 12, marginTop: 8, textAlign: "center", maxWidth: 380, marginInline: "auto" }}>
+              <Icon name="list" size={12} style={{ verticalAlign: "-2px" }} /> Mehrspaltige Tabellen werden beim Scannen oft durcheinandergebracht — kopierst du sie als Text in den KI-Prompt („Einfügen“), kommt die Zuordnung sauberer heraus.
+            </div>
           </div>
         )}
 

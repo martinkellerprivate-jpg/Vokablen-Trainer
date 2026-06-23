@@ -156,9 +156,9 @@ export function LessonsTab() {
                     </div>
                     {pg.need > 0 && pg.daysLeft >= 0 && (
                       <div className="row" style={{ justifyContent: "space-between", marginTop: 7, gap: 8, flexWrap: "wrap" }}>
-                        <span className="faint" style={{ fontSize: 12 }}>üb die {pg.need} · ~{pg.perDay}/Tag{pg.unreachable > 0 ? ` · ${pg.unreachable} kaum noch auf grün` : ""}</span>
+                        <span className="faint" style={{ fontSize: 12 }}>Übe alle {pg.need} Wörter · Empfehlung: {pg.perDay}/Tag{pg.unreachable > 0 ? ` · ${pg.unreachable} kaum noch auf grün` : ""}</span>
                         <button className="btn btn-sm btn-amber" onClick={() => { store.setSettings({ practiceSel: "lesson:" + l.id }); window.dispatchEvent(new CustomEvent("vt-tab", { detail: "practice" })); }}>
-                          <Icon name="flame" size={13} /> Risiko üben ({pg.need})
+                          <Icon name="flame" size={13} /> Gefährdete üben ({pg.need})
                         </button>
                       </div>
                     )}
