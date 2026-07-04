@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStore } from "../store/StoreProvider";
 import { useToast } from "../ui/Toast";
 import { Icon } from "../ui/Icon";
-import { toneColor, pct } from "../ui/Ring";
+import { toneColor } from "../ui/Ring";
 import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday } from "../lib/engine";
@@ -629,7 +629,7 @@ export function Practice() {
   const roundProg = runRef.current ? progress(runRef.current) : null;
   const roundProgressEl = (roundProg && roundProg.total > 0) ? (
     <div className="round-progress card-head">
-      <div className="round-progress-head"><span>Runde</span><span>{roundProg.pct} %</span></div>
+      <div className="round-progress-head"><span>Übungsfortschritt</span><span>{roundProg.pct} %</span></div>
       <div className="round-progress-track"><i style={{ width: roundProg.pct + "%" }} /></div>
     </div>
   ) : null;
@@ -832,7 +832,6 @@ export function Practice() {
           )
         ) : result ? (
           <>
-            <div className="score-bar"><i style={{ width: pct(result.score) + "%", background: toneColor(verdictMeta[result.verdict].tone) }} /></div>
             <div className="answer-row" style={{ justifyContent: "center" }}>
               <button className="btn btn-amber" style={{ flex: 1, justifyContent: "center" }} onClick={next} autoFocus>
                 Next card <Icon name="arrowRight" size={16} />

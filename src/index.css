@@ -374,8 +374,6 @@ table.vt tr.row-click:hover td { background: var(--bg-2); }
 .ch.extra { color: var(--red); text-decoration: line-through; opacity: .7; }
 .note-pill { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 999px; text-align: center; }
 
-.score-bar { height: 7px; border-radius: 999px; background: var(--bg-2); overflow: hidden; }
-.score-bar > i { display: block; height: 100%; border-radius: 999px; transition: width .5s cubic-bezier(.2,.7,.2,1); }
 
 /* progress strip */
 .session-strip { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--ink-soft); }
