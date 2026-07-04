@@ -10,9 +10,11 @@ permissions:
   pages: write
   id-token: write
 
+# Don't cancel an in-progress Pages deployment — cancelling one mid-flight makes
+# actions/deploy-pages fail and can wedge the Pages environment. Queue instead.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
