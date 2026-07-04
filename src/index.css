@@ -258,6 +258,24 @@ input, button, textarea, select { font-family: inherit; }
 .run-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
 .run-bar .enough-hint { display: flex; align-items: center; gap: 10px; margin-right: auto; font-size: 12.5px; color: var(--ink-soft); background: var(--amber-bg); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; }
 .run-leave { color: var(--ink-faint); }
+/* FR3-2: shared MasteryBar (card + Stats) */
+.mbar-total { font-size: 13px; font-weight: 700; color: var(--ink-soft); text-align: center; margin-bottom: 7px; }
+.mbar-body { position: relative; }
+.mbar-band { display: flex; height: 16px; border-radius: 999px; overflow: hidden; gap: 2px; }
+.mbar-band > i { display: block; min-width: 3px; }
+.mbar-band > i.clickable { cursor: pointer; }
+.mbar-nums { position: relative; margin-top: 3px; }
+.mbar-num { position: absolute; top: 1px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; font-size: 12.5px; font-weight: 800; line-height: 1; }
+.mbar-num.tier2 { top: 0; }
+.mbar-conn { width: 1px; height: 15px; background: currentColor; opacity: .5; margin-bottom: 2px; }
+.mbar-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: center; margin-top: 9px; font-size: 12px; color: var(--ink-soft); }
+.mbar-leg { display: inline-flex; align-items: center; gap: 6px; }
+/* FR3-2: Stats trend */
+.mtrend { margin-top: 14px; }
+.mtrend-head { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+.mtrend-cols { display: flex; align-items: flex-end; gap: 3px; height: 46px; }
+.mtrend-col { flex: 1; min-width: 4px; height: 100%; display: flex; flex-direction: column-reverse; border-radius: 3px; overflow: hidden; background: var(--bg-2); }
+.mtrend-col > i { display: block; width: 100%; }
 .set-subhead { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); padding: 12px 18px 2px; }
 /* V-PLAN: Übungsplan-Modal */
 .plan-exam { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card-2); }

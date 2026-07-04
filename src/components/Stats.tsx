@@ -8,6 +8,7 @@ import { deriveProfile, retentionFor, STUFE_ORDER } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { buildInsights } from "../lib/insights";
+import { MasteryBar, MasteryTrend } from "../ui/MasteryBar";
 import { ListSelector } from "./ListSelector";
 
 // V14: the four FSRS levels (one source). Tone/labels match V13 STUFE.
@@ -136,6 +137,9 @@ export function Stats() {
     const m: Record<string, number> = {}; parts.forEach((p) => { m[p.k] = p.f; }); return m;
   }, [counts, rows.length]);
 
+  // FR3-2: daily distribution snapshots for this pair → trend
+  const trendDays = useMemo(() => { const t = (meta.trends && meta.trends[pair]) || {}; return Object.keys(t).sort().map((d) => ({ d, c: t[d].c || [] })); }, [meta.trends, pair]);
+
   const resetAll = () => { store.resetStats(); setResetOpen(false); toast("All progress reset", "refresh"); };
   const resetSelected = () => { const ids = rows.map((r) => r.w.id); store.resetStatsForWords(ids); setResetOpen(false); toast(`Progress reset for ${ids.length} word${ids.length === 1 ? "" : "s"}`, "refresh"); };
 
@@ -193,24 +197,13 @@ export function Stats() {
         </div>
       </div>
 
-      {/* F-STATS-STRUKTUR: Stufen = EINE Verteilungslinie + Legende (eine Achse) */}
+      {/* FR3-2: Stufen-Verteilung = geteilte MasteryBar-Komponente (identisch zur Karte) + Trend */}
       <div className="section-title" style={{ marginBottom: 10 }}>Wie deine Wörter sitzen</div>
       <div className="panel" style={{ padding: "14px 16px", marginBottom: 22 }}>
         {rows.length ? (
           <>
-            <div className="stufe-band" style={{ height: 16, marginBottom: 12 }}>
-              {STUFE_KEYS.map((k) => counts[k] ? <i key={k} style={{ flex: counts[k], background: toneColor(STUFE_META[k].tone) }} title={`${STUFE_META[k].label}: ${counts[k]}`} /> : null)}
-            </div>
-            <div className="stufe-legend">
-              {STUFE_KEYS.map((k) => (
-                <button key={k} className="leg-item" aria-pressed={filter === k} title={STUFE_META[k].blurb}
-                  onClick={() => setFilter(filter === k ? "all" : k)}>
-                  <span className="dot" style={{ background: toneColor(STUFE_META[k].tone) }} />
-                  <span className="leg-label">{STUFE_META[k].label}</span>
-                  <span className="leg-n">{counts[k]} · {pctMap[k] || 0}%</span>
-                </button>
-              ))}
-            </div>
+            <MasteryBar dist={counts} total={rows.length} onSegment={(k) => setFilter(filter === k ? "all" : k)} activeFilter={filter !== "all" ? filter : undefined} />
+            <MasteryTrend days={trendDays} />
           </>
         ) : <div className="muted" style={{ fontSize: 13.5 }}>Noch keine Wörter in dieser Auswahl.</div>}
       </div>

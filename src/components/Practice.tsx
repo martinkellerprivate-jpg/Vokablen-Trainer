@@ -7,6 +7,7 @@ import { speak } from "../ui/speak";
 import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday } from "../lib/engine";
 import { buildQueue, pick, record, outcomeOf, pendingGrades, progress, remaining } from "../lib/runqueue";
+import { MasteryBar } from "../ui/MasteryBar";
 import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard, getCfg } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
@@ -633,12 +634,7 @@ export function Practice() {
     </div>
   ) : null;
   const masteryBar = scopeTotal > 0 ? (
-    <div className="mastery-strip card-foot">
-      <div className="mastery-head">{sits} von {scopeTotal} {scopeTotal === 1 ? "Wort sitzt" : "Wörtern sitzen"}</div>
-      <div className="stufe-band">
-        {STUFE_ORDER.map((k) => scopeDist[k] ? <i key={k} style={{ flex: scopeDist[k], background: toneVarP(STUFE[k].tone) }} /> : null)}
-      </div>
-    </div>
+    <div className="mastery-strip card-foot"><MasteryBar dist={scopeDist} total={scopeTotal} /></div>
   ) : null;
 
   return (

@@ -7,7 +7,7 @@ import { newId } from "../lib/ids";
 import { RECOMMENDED } from "../lib/defaults";
 import { DEFAULT_VOCAB } from "../data/seed";
 import { migrateTopics, lessonsForLists, swissifyVocab, migrateLessonsStatic } from "../lib/migrate";
-import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION, configure } from "../lib/fsrs";
+import { deriveRating, gradeFromCard, initialCard, retentionFor, RETENTION, configure, deriveProfile, STUFE_ORDER } from "../lib/fsrs";
 import type { SessionOutcome, SerializedCard } from "../lib/fsrs";
 import { appendReviews, type ReviewEntry } from "../lib/reviewlog";
 import type { Word, ListT } from "../lib/types";
@@ -116,6 +116,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setMeta((prev: any) => ({ ...prev, migrations: { ...(prev.migrations || {}), ...applied } }));
     }
   }, []);
+
+  // FR3-2: one daily distribution snapshot per pair (first app contact of the day).
+  // PFLICHT 1: merge trends[pair][today] only — NEVER replace the whole trends object
+  // (else LWW-sync would wipe the history, not just one day). Cap 180 days per pair.
+  const trendRef = React.useRef(false);
+  React.useEffect(() => {
+    if (trendRef.current) return; trendRef.current = true;
+    const today = new Date().toISOString().slice(0, 10);
+    const ret = retentionFor(settings);
+    const pairs = Array.from(new Set(vocab.map((w: any) => w.pair || "en-de"))) as string[];
+    setMeta((prev: any) => {
+      const trends = prev.trends || {};
+      let changed = false;
+      const next: any = { ...trends };
+      for (const p of pairs) {
+        const existing = next[p] || {};
+        if (existing[today]) continue;                       // already snapshotted today
+        const c = [0, 0, 0, 0, 0];
+        for (const w of vocab) {
+          if ((w.pair || "en-de") !== p) continue;
+          const idx = STUFE_ORDER.indexOf(deriveProfile(stats[w.id]?.fsrs, ret).stufe);
+          if (idx >= 0) c[idx]++;
+        }
+        const merged: any = { ...existing, [today]: { c } };  // only add today's key
+        const keys = Object.keys(merged).sort();
+        if (keys.length > 180) for (const d of keys.slice(0, keys.length - 180)) delete merged[d];
+        next[p] = merged; changed = true;
+      }
+      return changed ? { ...prev, trends: next } : prev;
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const recordAttempt = React.useCallback((wordId: string, score: number, verdict: string, isNew: boolean, errorType: any = null) => {
     setStats((prev: any) => {
