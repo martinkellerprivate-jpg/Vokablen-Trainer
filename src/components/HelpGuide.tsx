@@ -29,6 +29,7 @@ const SECTIONS: Section[] = [
           <li><b>CSV / Datei:</b> eine CSV oder Datei hochladen → gleicher Überprüfen-Dialog.</li>
           <li><b>Scannen (Foto):</b> eine Vokabelliste aus dem Lehrbuch abfotografieren → die Texterkennung liest sie aus → Überprüfen-Dialog.</li>
           <li><b>Grundwortschatz aktivieren:</b> mitgelieferte Starterlisten (English, Français, Latein — nach Themen geordnet) mit einem Tap hinzufügen.</li>
+          <li><b>Geteilte Liste importieren:</b> eine Liste übernehmen, die dir jemand geteilt hat (über einen Code/Link). Das ist etwas anderes als der <b>Datei-Import</b> (CSV/Text vom eigenen Gerät).</li>
         </ul>
         <p className="help-callout"><b>Was bedeutet „KI-Prompt kopieren"?</b> (Das wird oft missverstanden.) Die App übersetzt oder strukturiert <b>nicht selbst</b> mit KI. Der Button kopiert dir einen <b>fertigen Prompt</b>, passend zum gewählten Sprachpaar und zum Importformat der App. Diesen Prompt fügst du in <b>dein eigenes KI-Chat</b> ein (z. B. ChatGPT oder Claude) — entweder um deine Wörter übersetzen zu lassen oder um eine Wortliste zu einem Thema generieren zu lassen, genau im Format, das die App importieren kann. Die Antwort der KI kopierst du dann <b>zurück ins Einfügen-Feld</b> → Überprüfen → speichern. Kurz: der Button ist die Brücke zu deiner KI, das Ergebnis kommt import-fertig zurück.</p>
         <p>Im <b>Überprüfen</b>-Dialog (Einfügen, CSV und Scan): Zeilen prüfen und korrigieren, deutsche Nomen mit Artikel (der/die/das), dann speichern. Beim Abfragen wird die Schweizer Schreibweise (ss) immer akzeptiert.</p>
@@ -39,15 +40,15 @@ const SECTIONS: Section[] = [
     title: "3. Lektionen — was du übst",
     body: (
       <>
-        <p>Eine <b>Lektion</b> ist die Übungseinheit. Während Listen die Bibliothek sind, ist eine Lektion eine gezielte Auswahl daraus. Im <b>Üben</b>-Tab wählst du eine Lektion und übst sie.</p>
-        <p>Eine Lektion erstellst du im <b>Lektionen</b>-Tab (oder direkt aus einer Liste / einem Thema) auf drei Arten:</p>
+        <p>Eine <b>Lektion</b> ist die Übungseinheit — eine feste Auswahl von Wörtern (Momentaufnahme). Im <b>Üben</b>-Tab wählst du eine Lektion und übst sie.</p>
+        <p><b>Neue Lektion:</b> im <b>Lektionen</b>-Tab oben einen <b>Namen</b> eingeben und <b>„Erstellen"</b>. Jede Lektion hat zwei Knöpfe: <b>Bearbeiten</b> (Stift) und <b>Löschen</b> (Papierkorb).</p>
+        <p>Nach <b>„Bearbeiten"</b> kannst du den <b>Namen direkt ändern</b>, einen <b>Prüfungstermin</b> setzen und Wörter auf <b>drei Arten</b> hinzufügen:</p>
         <ul>
-          <li><b>Ganze Liste</b> als Lektion — ein Tap. Sie <b>wächst automatisch mit</b>: fügst du der Liste später Wörter hinzu, sind sie auch in der Lektion.</li>
-          <li><b>Thema</b> als Lektion — z. B. nur „Tiere" oder „Farben".</li>
-          <li><b>Handauswahl</b> — im <b>Wörter</b>-Tab auf „Auswählen" tippen, einzelne Wörter ankreuzen → „Neue Lektion" oder „Zu Lektion". Diese Auswahl bleibt <b>fest</b>.</li>
+          <li><b>Aus Listen auswählen</b> — öffnet einen Zwei-Spalten-Blick: links die Lektion, rechts deine Listen. Tippe rechts ein Wort an → es wandert nach links (am Computer geht auch Ziehen). Enthaltene Wörter haben ein ✓.</li>
+          <li><b>Ganze Liste / Thema übernehmen</b> — schnappt alle Wörter einer Liste oder eines Themas als feste Momentaufnahme in die Lektion.</li>
+          <li><b>Eigenes Wort tippen</b> — Fremdwort + Deutsch eingeben. Es landet automatisch in der Sammelliste <b>„Wörter ohne Liste"</b> (bleibt in deiner Bibliothek, im Wörter-Tab sichtbar) und zugleich in der Lektion.</li>
         </ul>
-        <p>Die ersten beiden Arten sind <b>dynamisch</b> (wachsen mit), die Handauswahl ist <b>fest</b>.</p>
-        <p className="help-callout"><b>Schnellzugriffe „Fällige Wörter" und „Schwierige Wörter":</b> Das sind <b>keine</b> Lektionen, sondern dauerhafte Chips oben im <b>Üben</b>-Tab. „Fällige Wörter" sammelt, was heute zur Wiederholung ansteht; „Schwierige Wörter" sammelt, womit du dich schwertust. Beide aktualisieren sich automatisch — du musst sie nicht anlegen oder pflegen.</p>
+        <p className="help-callout"><b>Schnellzugriffe „Fällige Wörter" und „Schwierige Wörter":</b> Das sind <b>keine</b> Lektionen, sondern dauerhafte Chips oben im <b>Üben</b>-Tab. Der runde <b>„?"</b> erklärt alle vier Schnellzugriffe.</p>
       </>
     ),
   },
@@ -56,8 +57,8 @@ const SECTIONS: Section[] = [
     body: (
       <>
         <p>Lektion (oder einen Schnellzugriff) wählen → <b>Modus</b>: <b>Type</b> (Tippen) / <b>Choose</b> (Auswählen) / <b>Recall</b> (Aufdecken) / <b>Memorize</b> (Merken) → <b>Richtung</b> umschalten (z. B. Deutsch → English) → antworten, <b>„Check"</b>, bei Bedarf <b>„Hint"</b>.</p>
-        <p><b>Auswahl:</b> oben wählst du <b>Lektionen</b>, <b>Listen</b> oder (ausklappbar) <b>Themen</b> — oder einen Schnellzugriff (<b>Heute dran</b>, <b>Fällige</b>, <b>Wackeln noch</b>, <b>Bald fällig</b>). <b>Heute dran</b> ist der empfohlene Startpunkt: die App stellt jeden Tag frisch zusammen, was heute am wichtigsten ist. Über den Knopf <b>7-Tage-Ausblick</b> siehst du, wie viel an den nächsten Tagen ansteht.</p>
-        <p>Auf der Karte zeigen die <b>Punkte oben</b> („Beherrschung je Wort“) für jedes Wort der Auswahl eine Farbe (siehe Stufen unten), der <b>Balken unten</b> fasst zusammen, wie viele schon <b>sitzen</b>. Mit dem <b>Vergrössern-Symbol</b> oben rechts gehst du in den Fokus-Modus — Verlassen mit dem Schliessen-Symbol, <b>Esc</b> oder Tippen daneben.</p>
+        <p><b>Auswahl:</b> oben wählst du <b>Lektionen</b>, <b>Listen</b> oder (ausklappbar) <b>Themen</b> — auch mehrere gleichzeitig (Mehrfachauswahl + „alle“). Dazu die vier <b>Schnellzugriffe</b> (<b>Heute dran</b>, <b>Fällige</b>, <b>Wackeln noch</b>, <b>Bald fällig</b>); der runde <b>„?"</b> daneben erklärt, was jeder bedeutet. <b>Heute dran</b> ist der empfohlene Startpunkt. Was in den nächsten Tagen ansteht, zeigt der <b>Übungsplan</b> (Knopf oben im Kopf).</p>
+        <p>Auf der Karte steht oben der <b>Übungsfortschritt</b> dieser Runde (%), unten der <b>Beherrschungs-Balken</b>: eine farbige Linie mit den fünf Stufen und den <b>Zahlen je Stufe</b> darunter (siehe Kapitel Statistik). Mit dem <b>Vergrössern-Symbol</b> oben rechts gehst du in den Fokus-Modus — Verlassen mit dem Schliessen-Symbol, <b>Esc</b> oder Tippen daneben. Mit <b>„Lektion verlassen"</b> kannst du jederzeit aufhören — dein Fortschritt ist nach jeder Antwort gespeichert.</p>
       </>
     ),
   },
@@ -75,7 +76,7 @@ const SECTIONS: Section[] = [
     body: (
       <>
         <p>Oben im Kopf siehst du dein <b>Tagesziel</b>. Die <b>Tage in Folge</b> (deine Serie) findest du im <b>Statistik</b>-Tab.</p>
-        <p>Die Statistik zeigt eine <b>Verteilungslinie</b>, wie deine Wörter sitzen, plus optionale Fokus-Listen („Worauf du dich konzentrieren kannst“). In der Wort-Tabelle steht je Wort die <b>Stufe</b>, ein <b>Hält-Kreis</b> (voll ≈ ein Monat) und deine Trefferquote. <b>Tippe eine Zeile</b> an für das Detail-Popup mit allen Gedächtnis-Werten des Worts.</p>
+        <p>Die Statistik zeigt denselben <b>Beherrschungs-Balken</b> wie die Karte: „<b>X Wörter insgesamt</b>", fünf farbige Segmente und die <b>Zahl je Stufe</b> mittig darunter (sehr schmale Segmente rücken die Zahl mit einem dünnen Strich nach unten). Darunter die <b>Legende</b> mit Farbe + Wort und ein <b>Verlauf</b>, der sich ab jetzt täglich aufbaut. Dazu optionale Fokus-Listen („Worauf du dich konzentrieren kannst“). In der Wort-Tabelle: je Wort die <b>Stufe</b>, ein <b>Hält-Kreis</b> (voll ≈ ein Monat) und die Trefferquote — <b>tippe eine Zeile</b> für alle Gedächtnis-Werte.</p>
         <p><b>Die fünf Stufen:</b> <b>neu / frisch</b> (blau, gerade gelernt) · <b>wackelt noch</b> (rot, kommt bald zurück) · <b>sitzt fast</b> (orange) · <b>sitzt</b> (grün, hält lange) · <b>noch nicht geübt</b> (grau). Zusätzlich <b>hartnäckig</b>: oft vergessen trotz Übung — da hilft eine Eselsbrücke.</p>
       </>
     ),
@@ -130,7 +131,7 @@ const SECTIONS: Section[] = [
 
 export function HelpGuide() {
   const [open, setOpen] = useState(false);
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [chapter, setChapter] = useState<number | null>(null);  // FR3-8: open chapter popup
   return (
     <>
       <button className="tipbtn" onClick={() => setOpen(true)} title="Anleitung" aria-label="Anleitung">
@@ -138,27 +139,39 @@ export function HelpGuide() {
       </button>
       {open && (
         <div className="modal-backdrop" onClick={() => setOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 660 }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620 }}>
             <div className="modal-head">
               <div>
                 <div className="modal-title"><Icon name="help" size={19} style={{ verticalAlign: "-3px", marginRight: 8 }} />Anleitung</div>
-                <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Tippe ein Thema an, um es aufzuklappen</div>
+                <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Tippe ein Kapitel an — es öffnet sich zum Lesen.</div>
               </div>
               <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setOpen(false)}><Icon name="x" size={16} /></button>
             </div>
-            <div className="help-acc">
-              {SECTIONS.map((s, i) => {
-                const expanded = openIdx === i;
-                return (
-                  <div className={"help-acc-item" + (expanded ? " open" : "")} key={i}>
-                    <button className="help-acc-head" aria-expanded={expanded} onClick={() => setOpenIdx(expanded ? null : i)}>
-                      <span>{s.title}</span>
-                      <Icon name="arrowRight" size={15} style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform .18s ease" }} />
-                    </button>
-                    {expanded && <div className="help-acc-body">{s.body}</div>}
-                  </div>
-                );
-              })}
+            <div className="help-chapters">
+              {SECTIONS.map((s, i) => (
+                <button className="help-chapter-box" key={i} onClick={() => setChapter(i)}>
+                  <span>{s.title}</span>
+                  <Icon name="arrowRight" size={15} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* FR3-8: a single chapter opens its own scrollable pop-up (over the list) */}
+      {open && chapter != null && (
+        <div className="modal-backdrop" style={{ zIndex: 60 }} onClick={() => setChapter(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620, maxHeight: "86vh", display: "flex", flexDirection: "column" } as any}>
+            <div className="modal-head">
+              <div className="modal-title">{SECTIONS[chapter].title}</div>
+              <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setChapter(null)}><Icon name="x" size={16} /></button>
+            </div>
+            <div className="help-chapter-body">{SECTIONS[chapter].body}</div>
+            <div className="modal-foot" style={{ marginTop: 12 }}>
+              <button className="btn btn-ghost btn-sm" disabled={chapter === 0} onClick={() => setChapter((c) => (c || 0) - 1)}>← Zurück</button>
+              <button className="btn btn-ghost btn-sm" disabled={chapter === SECTIONS.length - 1} onClick={() => setChapter((c) => (c || 0) + 1)}>Weiter →</button>
+              <span className="grow" />
+              <button className="btn btn-primary btn-sm" onClick={() => setChapter(null)}>Schliessen</button>
             </div>
           </div>
         </div>

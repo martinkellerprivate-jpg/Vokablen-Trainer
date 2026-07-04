@@ -273,6 +273,11 @@ input, button, textarea, select { font-family: inherit; }
 .picker-acc { margin-bottom: 6px; }
 .picker-acc-head { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 13px; padding: 4px 2px; color: var(--ink); }
 @media (max-width: 620px) { .picker-cols { flex-direction: column; } .picker-col { max-height: 40vh; } }
+/* FR3-8: Anleitung — chapter boxes (vertically centred) + scrollable chapter popup */
+.help-chapters { display: flex; flex-direction: column; gap: 8px; max-height: 62vh; overflow-y: auto; }
+.help-chapter-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 10px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-2); cursor: pointer; font: inherit; font-weight: 600; text-align: left; color: var(--ink); }
+.help-chapter-box:hover { border-color: var(--amber); color: var(--amber-deep); }
+.help-chapter-body { overflow-y: auto; padding-right: 6px; line-height: 1.5; }
 /* FR3-2: shared MasteryBar (card + Stats) */
 .mbar-total { font-size: 13px; font-weight: 700; color: var(--ink-soft); text-align: center; margin-bottom: 7px; }
 .mbar-body { position: relative; }

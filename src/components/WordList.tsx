@@ -313,10 +313,10 @@ export function WordList() {
         </div>
         <button className="btn btn-sm btn-amber" onClick={() => setScanOpen(true)}><Icon name="camera" size={15} /> Scan photo</button>
         <button className="btn btn-sm" onClick={() => { setPasteSeed(""); setPasteDraft(false); setPasteOpen(true); }}><Icon name="list" size={15} /> Einfügen</button>
-        <button className="btn btn-sm" onClick={() => fileRef.current.click()} disabled={busy}><Icon name="upload" size={15} /> Import</button>
+        <button className="btn btn-sm" onClick={() => fileRef.current.click()} disabled={busy} title="Wörter aus einer CSV-/Textdatei laden"><Icon name="upload" size={15} /> Datei-Import</button>
         <button className="btn btn-sm" onClick={downloadTemplate}><Icon name="download" size={15} /> Template</button>
         <button className="btn btn-sm" onClick={exportList}><Icon name="download" size={15} /> Export</button>
-        {isConfigured && <button className="btn btn-sm" onClick={() => openImport()}><Icon name="download" size={15} /> Liste importieren</button>}
+        {isConfigured && <button className="btn btn-sm" onClick={() => openImport()} title="Eine Liste, die dir jemand geteilt hat, übernehmen"><Icon name="download" size={15} /> Geteilte Liste importieren</button>}
         <button className={"btn btn-sm" + (selectMode ? " btn-primary" : "")} onClick={() => { setSelectMode((m) => !m); setSelectedIds([]); }}><Icon name="check" size={15} /> {selectMode ? "Auswahl beenden" : "Auswählen"}</button>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }}
           onChange={(e) => { onImportFile(e.target.files[0]); e.target.value = ""; }} />
