@@ -247,10 +247,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setListsState((ls: any) => [...ls, l]);
       return l.id;
     },
+    // FR3-6: the per-pair "Wörter ohne Liste" collection (system list). Auto-created,
+    // never duplicated. PFLICHT 2: not shareable/exportable-as-list, not deletable.
+    addLooseWord: (word: any, p: string) => {
+      const pr = p || "en-de";
+      let listId = lists.find((l: any) => l.system === "nolist" && l.pair === pr)?.id;
+      if (!listId) { listId = newId(); setListsState((ls: any) => [...ls, { id: listId, name: "Wörter ohne Liste", pair: pr, system: "nolist", createdAt: Date.now() }]); }
+      const wid = newId();
+      setVocabState((v: any) => [{ id: wid, review: false, source: "manual", pair: pr, lists: [listId], ...word }, ...v]);
+      return wid;
+    },
     renameList: (id: string, name: string) => {
       setListsState((ls: any) => ls.map((l: any) => (l.id === id ? { ...l, name } : l)));
     },
     deleteList: (id: string) => {
+      if (lists.find((l: any) => l.id === id)?.system === "nolist") return;   // PFLICHT 2: nolist not deletable
       setListsState((ls: any) => ls.filter((l: any) => l.id !== id));
       setVocabState((v: any) => v.map((w: any) => ({ ...w, lists: (w.lists || []).filter((x: string) => x !== id) })));
       // lessons are snapshots → unaffected by list deletion

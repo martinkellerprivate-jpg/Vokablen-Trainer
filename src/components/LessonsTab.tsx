@@ -9,7 +9,7 @@ import { PAIRS, fk, isLatinPair } from "../lib/pairs";
 import { latinHeadword } from "../lib/latin";
 import { resolveLesson, lessonProfile, snapshotMembers, examPrognosis } from "../lib/engine";
 import { STUFE, STUFE_ORDER, retentionFor, deriveProfile } from "../lib/fsrs";
-import { LessonBuilder } from "./LessonBuilder";
+import { LessonWordPicker } from "./LessonWordPicker";
 
 const DAY = 86400000;
 const toneVar = (t: string) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : t === "blue" ? "var(--blue)" : "var(--bg-2)";
@@ -31,13 +31,13 @@ export function LessonsTab() {
   const isLat = isLatinPair(pair);
   const retention = retentionFor(settings);
 
-  const [editId, setEditId] = useState<string | null>(null);     // rename
-  const [editName, setEditName] = useState("");
-  const [openEdit, setOpenEdit] = useState<string | null>(null); // member editor
+  const [openEdit, setOpenEdit] = useState<string | null>(null); // edit-mode lesson id
+  const [editName, setEditName] = useState("");                  // inline name buffer
   const [newName, setNewName] = useState("");
-  const [newTopic, setNewTopic] = useState("");
   const [addSrc, setAddSrc] = useState("");
-  const [showDnd, setShowDnd] = useState(false);   // V18
+  const [wordFgn, setWordFgn] = useState("");                    // FR3-6 way 3: manual word
+  const [wordDe, setWordDe] = useState("");
+  const [pickerFor, setPickerFor] = useState<string | null>(null); // FR3-7: two-column picker
 
   const pairLessons = useMemo(() => lessons.filter((l: any) => l.pair === pair), [lessons, pair]);
   const pairVocab = useMemo(() => vocab.filter((w: any) => w.pair === pair), [vocab, pair]);
@@ -55,14 +55,8 @@ export function LessonsTab() {
     toast(`Lektion „${name}" angelegt`, "check");
     setNewName("");
   };
-  const createFromTopic = () => {
-    if (!newTopic) return;
-    const members = snapshotMembers(vocab, pair, { type: "topic", ref: newTopic });
-    if (!members.length) { toast("Kein Wort in diesem Thema", "x"); return; }
-    store.addLesson({ name: newTopic, pair, members, origin: "Thema: " + newTopic });
-    toast(`Lektion „${newTopic}" · ${members.length} Wörter`, "check");
-    setNewTopic("");
-  };
+  const openEditLesson = (l: any) => { const on = openEdit === l.id; setOpenEdit(on ? null : l.id); if (!on) setEditName(l.name); };
+  const commitName = () => { if (openEdit) store.updateLesson(openEdit, { name: editName.trim() || "Lektion" }); };
   const addSnapshot = (l: any) => {
     if (!addSrc) return;
     const [type, ref] = addSrc.startsWith("t:") ? ["topic", addSrc.slice(2)] : ["list", addSrc];
@@ -71,8 +65,15 @@ export function LessonsTab() {
     toast(`${members.length} Wörter als Momentaufnahme hinzugefügt`, "check");
     setAddSrc("");
   };
-  const startRename = (l: any) => { setEditId(l.id); setEditName(l.name); };
-  const commitRename = () => { if (editId) store.updateLesson(editId, { name: editName.trim() || "Lektion" }); setEditId(null); };
+  // FR3-6 way 3: a hand-typed word → lands in the per-pair "Wörter ohne Liste" list + the lesson.
+  const addManualWord = (l: any) => {
+    const f = wordFgn.trim(), d = wordDe.trim();
+    if (!f || !d) return;
+    const wid = store.addLooseWord({ [fk(pair)]: f, de: d }, pair);
+    store.addWordsToLesson(l.id, [wid]);
+    toast(`„${f}" hinzugefügt (in „Wörter ohne Liste")`, "check");
+    setWordFgn(""); setWordDe("");
+  };
   const setDeadline = (l: any, val: string) => store.updateLesson(l.id, { dueDate: val ? new Date(val + "T08:00:00").getTime() : undefined });
 
   return (
@@ -85,21 +86,13 @@ export function LessonsTab() {
           </div>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          <input className="field" style={{ width: 150 }} placeholder="Neue Lektion …" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createEmpty()} />
-          <button className="btn btn-sm" onClick={createEmpty}><Icon name="plus" size={15} /> Leer</button>
-          <select className="field" style={{ width: "auto", minWidth: 140 }} value={newTopic} onChange={(e) => setNewTopic(e.target.value)}>
-            <option value="">Aus Thema …</option>
-            {topics.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <button className="btn btn-sm btn-primary" onClick={createFromTopic} disabled={!newTopic}><Icon name="plus" size={15} /> Aus Thema</button>
-          <button className={"btn btn-sm" + (showDnd ? " btn-primary" : "")} onClick={() => setShowDnd((s) => !s)}><Icon name="cards" size={15} /> Drag &amp; Drop</button>
+          <input className="field" style={{ width: 180 }} placeholder="Name der Lektion …" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createEmpty()} />
+          <button className="btn btn-sm btn-primary" onClick={createEmpty}><Icon name="plus" size={15} /> Erstellen</button>
         </div>
       </div>
 
-      {showDnd && <LessonBuilder pair={pair} />}
-
       {pairLessons.length === 0 && (
-        <div className="empty"><div className="big">Noch keine Lektionen</div><div>Lege oben eine leere Lektion oder eine aus einem Thema an — oder wähle in der Wortliste Wörter aus.</div></div>
+        <div className="empty"><div className="big">Noch keine Lektionen</div><div>Gib oben einen Namen ein und klicke „Erstellen" — danach kannst du Wörter hinzufügen.</div></div>
       )}
 
       <div className="col" style={{ gap: 12 }}>
@@ -112,8 +105,8 @@ export function LessonsTab() {
             <div key={l.id} className="panel" style={{ padding: "13px 15px" }}>
               <div className="row" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <span className="dot" style={{ width: 11, height: 11, borderRadius: "50%", background: toneVar(prof.tone), flex: "0 0 auto" }} />
-                {editId === l.id ? (
-                  <input className="mini-input grow" autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onBlur={commitRename} onKeyDown={(e) => e.key === "Enter" && commitRename()} />
+                {openEdit === l.id ? (
+                  <input className="mini-input grow" autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onBlur={commitName} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} title="Name bearbeiten" />
                 ) : (
                   <span className="grow" style={{ fontWeight: 600 }}>{l.name}
                     <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}> · {prof.total} {prof.total === 1 ? "Wort" : "Wörter"} · {Math.round(prof.pctSitzt * 100)}% sitzt</span>
@@ -121,8 +114,7 @@ export function LessonsTab() {
                   </span>
                 )}
                 {dl && <span className="badge" style={{ background: dl.near ? "var(--red-bg)" : "var(--bg-2)", color: dl.near ? "var(--red)" : "var(--ink-soft)" }}><Icon name="target" size={12} /> {dl.label}</span>}
-                <button className="icon-btn" style={{ width: 30, height: 30 }} title="Bearbeiten" onClick={() => setOpenEdit(openEdit === l.id ? null : l.id)}><Icon name="edit" size={14} /></button>
-                <button className="icon-btn" style={{ width: 30, height: 30 }} title="Umbenennen" onClick={() => startRename(l)}><Icon name="list" size={14} /></button>
+                <button className={"icon-btn" + (openEdit === l.id ? " active" : "")} style={{ width: 30, height: 30 }} title="Bearbeiten" onClick={() => openEditLesson(l)}><Icon name="edit" size={14} /></button>
                 <button className="icon-btn" style={{ width: 30, height: 30 }} title="Löschen" onClick={() => store.deleteLesson(l.id)}><Icon name="trash" size={14} /></button>
               </div>
 
@@ -168,24 +160,36 @@ export function LessonsTab() {
 
               {openEdit === l.id && (
                 <div className="chk-wrap" style={{ marginTop: 10, borderTop: "1px solid var(--line-soft)", paddingTop: 10 }}>
-                  <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                    <select className="field" style={{ width: "auto", minWidth: 150 }} value={addSrc} onChange={(e) => setAddSrc(e.target.value)}>
-                      <option value="">Liste / Thema hinzufügen (Momentaufnahme) …</option>
-                      {pairLists.map((li: any) => <option key={li.id} value={li.id}>Liste: {li.name}</option>)}
-                      {topics.map((t) => <option key={"t:" + t} value={"t:" + t}>Thema: {t}</option>)}
-                    </select>
-                    <button className="btn btn-sm" disabled={!addSrc} onClick={() => addSnapshot(l)}><Icon name="plus" size={14} /> Hinzufügen</button>
-                    <span className="grow" />
-                    <label className="faint" style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      Deadline: <input type="date" className="field" style={{ width: "auto" }} value={l.dueDate ? new Date(l.dueDate).toISOString().slice(0, 10) : ""} onChange={(e) => setDeadline(l, e.target.value)} />
-                    </label>
+                  <label className="faint" style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <Icon name="target" size={13} /> Prüfungstermin: <input type="date" className="field" style={{ width: "auto" }} value={l.dueDate ? new Date(l.dueDate).toISOString().slice(0, 10) : ""} onChange={(e) => setDeadline(l, e.target.value)} />
+                  </label>
+
+                  <div className="lesson-ways">
+                    {/* Weg 1: aus Listen auswählen (Zwei-Spalten-Picker) */}
+                    <button className="btn btn-sm" onClick={() => setPickerFor(l.id)}><Icon name="list" size={14} /> Aus Listen auswählen</button>
+                    {/* Weg 2: ganze Liste / ganzes Thema übernehmen */}
+                    <div className="row" style={{ gap: 6 }}>
+                      <select className="field" style={{ width: "auto", minWidth: 150 }} value={addSrc} onChange={(e) => setAddSrc(e.target.value)}>
+                        <option value="">Ganze Liste / Thema übernehmen …</option>
+                        {pairLists.filter((li: any) => li.system !== "nolist" || (li.members || pairVocab.filter((w:any)=>(w.lists||[]).includes(li.id))).length).map((li: any) => <option key={li.id} value={li.id}>Liste: {li.name}</option>)}
+                        {topics.map((t) => <option key={"t:" + t} value={"t:" + t}>Thema: {t}</option>)}
+                      </select>
+                      <button className="btn btn-sm" disabled={!addSrc} onClick={() => addSnapshot(l)}><Icon name="plus" size={14} /> Übernehmen</button>
+                    </div>
+                    {/* Weg 3: eigenes Wort tippen → "Wörter ohne Liste" */}
+                    <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+                      <input className="field" style={{ width: 130 }} placeholder={P.foreignLabel} value={wordFgn} onChange={(e) => setWordFgn(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addManualWord(l)} />
+                      <input className="field" style={{ width: 130 }} placeholder="Deutsch" value={wordDe} onChange={(e) => setWordDe(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addManualWord(l)} />
+                      <button className="btn btn-sm" disabled={!wordFgn.trim() || !wordDe.trim()} onClick={() => addManualWord(l)}><Icon name="plus" size={14} /> Eigenes Wort</button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                     {(l.members || []).length ? (l.members || []).map((wid: string) => {
                       const w = pairVocab.find((x: any) => x.id === wid);
                       if (!w) return null;
                       return <span key={wid} className="mini-chip" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>{fgn(w)} <button className="btn-ghost" style={{ border: "none", padding: 0, cursor: "pointer", color: "var(--ink-faint)" }} onClick={() => store.removeWordFromLesson(l.id, wid)}><Icon name="x" size={12} /></button></span>;
-                    }) : <span className="faint" style={{ fontSize: 12.5 }}>Noch keine Wörter — Liste/Thema oben hinzufügen oder in der Wortliste auswählen.</span>}
+                    }) : <span className="faint" style={{ fontSize: 12.5 }}>Noch keine Wörter — wähle oben aus Listen, übernimm eine Liste/ein Thema, oder tippe ein eigenes Wort.</span>}
                   </div>
                 </div>
               )}
@@ -193,6 +197,8 @@ export function LessonsTab() {
           );
         })}
       </div>
+
+      {pickerFor && <LessonWordPicker lessonId={pickerFor} pair={pair} onClose={() => setPickerFor(null)} />}
     </div>
   );
 }

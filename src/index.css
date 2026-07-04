@@ -261,6 +261,18 @@ input, button, textarea, select { font-family: inherit; }
 /* FR3-5: smart-chip "?" explainer button */
 .chips-help { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); font-weight: 800; font-size: 14px; cursor: pointer; display: inline-grid; place-items: center; align-self: center; }
 .chips-help:hover { color: var(--amber-deep); border-color: var(--amber); }
+/* FR3-6/7: lesson edit ways + two-column word picker */
+.lesson-ways { display: flex; flex-direction: column; gap: 8px; }
+.picker-cols { display: flex; gap: 12px; flex: 1; min-height: 0; overflow: hidden; }
+.picker-col { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 10px; overflow-y: auto; background: var(--card-2); }
+.picker-target { background: var(--amber-bg); }
+.picker-col-head { font-weight: 700; font-size: 13.5px; margin-bottom: 8px; position: sticky; top: 0; }
+.picker-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.picker-chip { cursor: pointer; border: 1px solid var(--line); }
+.picker-chip.in { background: var(--green-bg); color: var(--ink); border-color: var(--green); }
+.picker-acc { margin-bottom: 6px; }
+.picker-acc-head { display: flex; align-items: center; gap: 6px; width: 100%; background: none; border: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 13px; padding: 4px 2px; color: var(--ink); }
+@media (max-width: 620px) { .picker-cols { flex-direction: column; } .picker-col { max-height: 40vh; } }
 /* FR3-2: shared MasteryBar (card + Stats) */
 .mbar-total { font-size: 13px; font-weight: 700; color: var(--ink-soft); text-align: center; margin-bottom: 7px; }
 .mbar-body { position: relative; }

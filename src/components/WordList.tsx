@@ -79,6 +79,7 @@ export function WordList() {
   const canShare = isConfigured && !!auth.user;
 
   const pairLists = useMemo(() => lists.filter((l) => l.pair === pair), [lists, pair]);
+  const activeIsNoList = lists.find((l) => l.id === activeList)?.system === "nolist";
   const pairVocab = useMemo(() => vocab.filter((w) => w.pair === pair), [vocab, pair]);
 
   useEffect(() => { setActiveList("__all"); }, [pair]);
@@ -293,13 +294,14 @@ export function WordList() {
           ) : (
             <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {listNameOf(activeList)}
-              <button className="icon-btn" style={{ width: 30, height: 30 }} title="Rename"
-                onClick={() => { setEditingListId(activeList); setListName(listNameOf(activeList)); }}><Icon name="edit" size={14} /></button>
+              {/* PFLICHT 2: "Wörter ohne Liste" is device-local — not renamable/shareable/deletable as a list */}
+              {!activeIsNoList && <button className="icon-btn" style={{ width: 30, height: 30 }} title="Rename"
+                onClick={() => { setEditingListId(activeList); setListName(listNameOf(activeList)); }}><Icon name="edit" size={14} /></button>}
             </div>
           )}
           <div className="grow" />
-          {canShare && <button className="btn btn-ghost btn-sm" onClick={shareActiveList}><Icon name="upload" size={14} /> Teilen</button>}
-          <button className="btn btn-ghost btn-sm" onClick={deleteActiveList}><Icon name="trash" size={14} /> Delete list</button>
+          {canShare && !activeIsNoList && <button className="btn btn-ghost btn-sm" onClick={shareActiveList}><Icon name="upload" size={14} /> Teilen</button>}
+          {!activeIsNoList && <button className="btn btn-ghost btn-sm" onClick={deleteActiveList}><Icon name="trash" size={14} /> Delete list</button>}
         </div>
       )}
 

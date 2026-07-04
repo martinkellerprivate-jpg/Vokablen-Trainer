@@ -10,7 +10,7 @@ import { SMART, smartCount } from "../lib/engine";
 
 export function ListSelector({ selected, onChange, smart = ["tricky"], pair, mc }) {
   const { lists, lessons, vocab, stats } = useStore();
-  const pairLists = pair ? lists.filter((l) => l.pair === pair) : lists;
+  const pairLists = (pair ? lists.filter((l) => l.pair === pair) : lists).filter((l: any) => !(l.system === "nolist" && !(pair ? vocab.filter((w) => w.pair === pair) : vocab).some((w: any) => (w.lists || []).includes(l.id))));
   const pairLessons = (pair ? (lessons || []).filter((l: any) => l.pair === pair) : (lessons || []));
   const pairVocab = pair ? vocab.filter((w) => w.pair === pair) : vocab;
   const sel = selected || [];
