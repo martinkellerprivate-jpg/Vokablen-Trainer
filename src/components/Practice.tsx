@@ -137,6 +137,7 @@ export function Practice() {
   const [listsOpen, setListsOpen] = useState(false);
   const [topicsOpen, setTopicsOpen] = useState(false); // F-NAV: collapsible topics
   const [enoughAck, setEnoughAck] = useState(false);   // F-CARD-UI: "genug für heute" dismissed
+  const [chipsHelp, setChipsHelp] = useState(false);   // FR3-5: smart-chip explainer popup
   const hiddenAtRef = useRef(0);                        // F-CARD-UI: stale-session detection
   const inputRef = useRef(null);
   const recentRef = useRef([]);                // recently shown ids (spacing)
@@ -458,8 +459,35 @@ export function Practice() {
           <Icon name={s.icon} size={14} /> {s.label} <span className="lchip-n">{smartCountOf(s.ref)}</span>
         </button>
       ))}
+      <button className="chips-help" title="Was bedeuten diese?" aria-label="Erklärung" onClick={() => setChipsHelp(true)}>?</button>
     </div>
   );
+  // FR3-5: kindgerechte Erklärung der vier Schnellzugriffe (als Möglichkeit formuliert).
+  const CHIP_HELP = [
+    { label: "Heute dran", text: "Die Wörter, die du heute üben solltest — die App mischt Fälliges und Neues sinnvoll zusammen." },
+    { label: "Fällige Wörter", text: "Diese Wörter hast du schon länger nicht geübt. Wenn du sie jetzt auffrischst, bleiben sie besser sitzen." },
+    { label: "Wackeln noch", text: "Wörter, die du schon geübt hast, die aber noch nicht sicher sitzen." },
+    { label: "Bald fällig", text: "Die sitzen noch, aber es wäre bald wieder Zeit zum Auffrischen, damit sie sicher bleiben." },
+  ];
+  const chipsHelpEl = chipsHelp ? (
+    <div className="modal-backdrop" onClick={() => setChipsHelp(false)}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+        <div className="modal-head">
+          <div className="modal-title">Die vier Schnellzugriffe</div>
+          <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setChipsHelp(false)}><Icon name="x" size={16} /></button>
+        </div>
+        <div className="col" style={{ gap: 12 }}>
+          {CHIP_HELP.map((c) => (
+            <div key={c.label}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{c.label}</div>
+              <div className="muted" style={{ fontSize: 13.5, marginTop: 2 }}>{c.text}</div>
+            </div>
+          ))}
+        </div>
+        <div className="modal-foot" style={{ marginTop: 14 }}><button className="btn btn-primary" onClick={() => setChipsHelp(false)}>Verstanden</button></div>
+      </div>
+    </div>
+  ) : null;
   // V9: sort lessons by deadline (soonest first), show a mastery colour dot.
   const lessonRetention = retentionFor(settings);
   const dotTone = (t) => t === "green" ? "var(--green)" : t === "amber" ? "var(--amber)" : t === "red" ? "var(--red)" : "var(--ink-faint)";
@@ -526,7 +554,7 @@ export function Practice() {
     </div>
   ) : null;
   // V-PLAN: the 7-day outlook is gone — replaced by the "Übungsplan" panel (header).
-  const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}</div>);
+  const scopeBar = (<div className="lchips-wrap scope-bar">{smartChipsEl}{lessonSelectorEl}{chipsHelpEl}</div>);
 
   if (!pool.length) {
     return (
@@ -643,6 +671,7 @@ export function Practice() {
       {focus && <div className="focus-rotate-hint">Drehe dein Gerät quer für mehr Platz</div>}
       {smartChipsEl}
       {lessonSelectorEl}
+      {chipsHelpEl}
       {/* controls */}
       <div className="practice-controls p-controls">
         <div className="dir-pill">

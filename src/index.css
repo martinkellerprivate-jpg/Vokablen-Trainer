@@ -258,6 +258,9 @@ input, button, textarea, select { font-family: inherit; }
 .run-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
 .run-bar .enough-hint { display: flex; align-items: center; gap: 10px; margin-right: auto; font-size: 12.5px; color: var(--ink-soft); background: var(--amber-bg); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; }
 .run-leave { color: var(--ink-faint); }
+/* FR3-5: smart-chip "?" explainer button */
+.chips-help { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); font-weight: 800; font-size: 14px; cursor: pointer; display: inline-grid; place-items: center; align-self: center; }
+.chips-help:hover { color: var(--amber-deep); border-color: var(--amber); }
 /* FR3-2: shared MasteryBar (card + Stats) */
 .mbar-total { font-size: 13px; font-weight: 700; color: var(--ink-soft); text-align: center; margin-bottom: 7px; }
 .mbar-body { position: relative; }
