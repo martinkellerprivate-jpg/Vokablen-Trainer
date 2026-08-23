@@ -11,20 +11,26 @@ interface AuthApi {
   ready: boolean;          // initial session check done
   user: any | null;
   email: string | null;
+  recovering: boolean;     // true after the user followed a "reset password" email link
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<AuthResult>;
+  updatePassword: (password: string) => Promise<AuthResult>;
+  clearRecovery: () => void;
 }
 
 const AuthCtx = React.createContext<AuthApi>({
-  configured: false, ready: true, user: null, email: null,
+  configured: false, ready: true, user: null, email: null, recovering: false,
   signIn: async () => ({}), signUp: async () => ({}), signOut: async () => {},
+  resetPassword: async () => ({}), updatePassword: async () => ({}), clearRecovery: () => {},
 });
 export const useAuth = () => React.useContext(AuthCtx);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [ready, setReady] = useState(!isConfigured);
+  const [recovering, setRecovering] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -32,8 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.session?.user ?? null);
       setReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      // Fired when the user lands back on the app via the "reset password" email
+      // link (Supabase parses the recovery token from the URL automatically).
+      if (event === "PASSWORD_RECOVERY") setRecovering(true);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -56,12 +65,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  // Sends the user a "reset your password" email with a link back to this app.
+  const resetPassword = useCallback(async (email: string): Promise<AuthResult> => {
+    if (!supabase) return { error: "not-configured" };
+    const redirectTo = window.location.origin + import.meta.env.BASE_URL;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return error ? { error: error.message } : {};
+  }, []);
+
+  // Called from the "set a new password" form once the user followed the email link.
+  const updatePassword = useCallback(async (password: string): Promise<AuthResult> => {
+    if (!supabase) return { error: "not-configured" };
+    const { error } = await supabase.auth.updateUser({ password });
+    if (!error) setRecovering(false);
+    return error ? { error: error.message } : {};
+  }, []);
+
+  const clearRecovery = useCallback(() => setRecovering(false), []);
+
   const api: AuthApi = {
     configured: isConfigured,
     ready,
     user,
     email: user?.email ?? null,
-    signIn, signUp, signOut,
+    recovering,
+    signIn, signUp, signOut, resetPassword, updatePassword, clearRecovery,
   };
   return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
 }
