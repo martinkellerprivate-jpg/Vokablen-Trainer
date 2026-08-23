@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "../ui/Icon";
+import { useAuth } from "../sync/auth";
 
 /* ===================================================================
  * tips.jsx — "Lerntipps" button + popup with research-based study
@@ -31,7 +32,9 @@ export const LERN_TIPPS = [
 ];
 
 export function LearnTips() {
+  const auth = useAuth();
   const [open, setOpen] = useState(false);
+  const name = auth.username;
   return (
     <>
       <button className="tipbtn" onClick={() => setOpen(true)} title="Lerntipps">
@@ -48,7 +51,7 @@ export function LearnTips() {
               <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={() => setOpen(false)}><Icon name="x" size={16} /></button>
             </div>
             <div className="tips-intro">
-              Hallo Lilly-Anne! Du lernst schnell – mit diesen Tricks holst du aus jeder Übungsminute das Maximum heraus.
+              {name ? `Hallo ${name}! Du` : "Du"} lernst schnell – mit diesen Tricks holst du aus jeder Übungsminute das Maximum heraus.
             </div>
             <div className="tips-list">
               {LERN_TIPPS.map((t, i) => (

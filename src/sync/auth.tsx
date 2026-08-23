@@ -11,19 +11,21 @@ interface AuthApi {
   ready: boolean;          // initial session check done
   user: any | null;
   email: string | null;
+  username: string | null; // free-text display name, stored in Supabase user_metadata (no uniqueness check — single-family use)
   recovering: boolean;     // true after the user followed a "reset password" email link
   signIn: (email: string, password: string) => Promise<AuthResult>;
-  signUp: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string, username?: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  updateUsername: (username: string) => Promise<AuthResult>;
   clearRecovery: () => void;
 }
 
 const AuthCtx = React.createContext<AuthApi>({
-  configured: false, ready: true, user: null, email: null, recovering: false,
+  configured: false, ready: true, user: null, email: null, username: null, recovering: false,
   signIn: async () => ({}), signUp: async () => ({}), signOut: async () => {},
-  resetPassword: async () => ({}), updatePassword: async () => ({}), clearRecovery: () => {},
+  resetPassword: async () => ({}), updatePassword: async () => ({}), updateUsername: async () => ({}), clearRecovery: () => {},
 });
 export const useAuth = () => React.useContext(AuthCtx);
 
@@ -53,9 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error ? { error: error.message } : {};
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string): Promise<AuthResult> => {
+  const signUp = useCallback(async (email: string, password: string, username?: string): Promise<AuthResult> => {
     if (!supabase) return { error: "not-configured" };
-    const { error } = await supabase.auth.signUp({ email, password });
+    const opts = username?.trim() ? { data: { username: username.trim() } } : undefined;
+    const { error } = await supabase.auth.signUp({ email, password, options: opts });
     return error ? { error: error.message } : {};
   }, []);
 
@@ -81,6 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error ? { error: error.message } : {};
   }, []);
 
+  // Sets the free-text display name (Supabase user_metadata.username). No uniqueness
+  // check — fine for a small, single-family set of accounts.
+  const updateUsername = useCallback(async (username: string): Promise<AuthResult> => {
+    if (!supabase) return { error: "not-configured" };
+    const { error } = await supabase.auth.updateUser({ data: { username: username.trim() } });
+    return error ? { error: error.message } : {};
+  }, []);
+
   const clearRecovery = useCallback(() => setRecovering(false), []);
 
   const api: AuthApi = {
@@ -88,8 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ready,
     user,
     email: user?.email ?? null,
+    username: user?.user_metadata?.username ?? null,
     recovering,
-    signIn, signUp, signOut, resetPassword, updatePassword, clearRecovery,
+    signIn, signUp, signOut, resetPassword, updatePassword, updateUsername, clearRecovery,
   };
   return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
 }

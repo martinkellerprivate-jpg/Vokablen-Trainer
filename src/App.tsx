@@ -49,7 +49,7 @@ function Header() {
         <>
           <button className="tipbtn" title="Account & Sync" onClick={() => setAccountOpen(true)} style={{ gap: 8 }}>
             <span className="dot" style={{ width: 8, height: 8, borderRadius: "50%", background: SYNC_DOT[status] }} />
-            {auth.user ? "Konto" : "Anmelden"}
+            {auth.user ? (auth.username || "Konto") : "Anmelden"}
           </button>
           <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
         </>

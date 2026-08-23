@@ -1,5 +1,6 @@
 /* Account modal (Phase 3): email/password sign in & sign up, password reset,
- * sync status, sign out. Rendered only when Supabase is configured. */
+ * a free-text username, sync status, sign out. Rendered only when Supabase
+ * is configured. */
 import { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
 import { useAuth } from "../sync/auth";
@@ -24,6 +25,9 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
+  const [username, setUsername] = useState("");            // sign-up field
+  const [editingName, setEditingName] = useState(false);    // inline username edit (logged-in view)
+  const [nameDraft, setNameDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -38,7 +42,8 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
   useEffect(() => {
     if (open && !auth.recovering) {
       setMode("in");
-      setEmail(""); setPassword(""); setPassword2("");
+      setEmail(""); setPassword(""); setPassword2(""); setUsername("");
+      setEditingName(false); setNameDraft("");
       setError(""); setInfo("");
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,7 +72,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
       onClose();
       return;
     }
-    const r = mode === "in" ? await auth.signIn(email.trim(), password) : await auth.signUp(email.trim(), password);
+    const r = mode === "in" ? await auth.signIn(email.trim(), password) : await auth.signUp(email.trim(), password, username);
     setBusy(false);
     if (r.error) { setError(r.error); return; }
     if (mode === "up" && !auth.user) { setInfo("Account erstellt. Falls E-Mail-Bestätigung aktiv ist, bestätige zuerst die Mail."); return; }
@@ -75,6 +80,15 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
   };
 
   const close = () => { if (mode === "newpw") auth.clearRecovery(); onClose(); };
+
+  const startEditName = () => { setNameDraft(auth.username || ""); setEditingName(true); };
+  const commitUsername = async () => {
+    setEditingName(false);
+    const name = nameDraft.trim();
+    if (!name || name === auth.username) return;
+    const r = await auth.updateUsername(name);
+    if (r.error) toast(r.error, "x"); else toast("Benutzername gespeichert", "check");
+  };
 
   const titles: Record<Mode, string> = {
     in: "Anmelden", up: "Account erstellen", reset: "Passwort zurücksetzen", newpw: "Neues Passwort setzen",
@@ -90,7 +104,26 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
 
         {auth.user && mode !== "newpw" ? (
           <div className="col" style={{ gap: 14 }}>
-            <div className="muted" style={{ fontSize: 14 }}>Angemeldet als <b style={{ color: "var(--ink)" }}>{auth.email}</b></div>
+            <div className="muted" style={{ fontSize: 14 }}>
+              {editingName ? (
+                <span className="row" style={{ gap: 6, alignItems: "center" }}>
+                  Angemeldet als
+                  <input className="mini-input" autoFocus placeholder="Benutzername" value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)} onBlur={commitUsername}
+                    onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} />
+                </span>
+              ) : (
+                <>
+                  Angemeldet als <b style={{ color: "var(--ink)" }}>{auth.username || auth.email}</b>
+                  <button className="icon-btn" style={{ width: 26, height: 26, marginLeft: 6, verticalAlign: "-6px" }}
+                    title="Benutzername bearbeiten" onClick={startEditName}><Icon name="edit" size={12} /></button>
+                </>
+              )}
+            </div>
+            {!auth.username && !editingName && (
+              <div className="muted" style={{ fontSize: 12.5, marginTop: -8 }}>Noch kein Benutzername gesetzt — bisher zeigt die App deine E-Mail. Klicke den Stift, um einen festzulegen.</div>
+            )}
+            {auth.username && !editingName && <div className="faint" style={{ fontSize: 12, marginTop: -8 }}>{auth.email}</div>}
             <div className="badge slate" style={{ alignSelf: "flex-start" }}><span className="dot" />{STATUS_LABEL[status]}</div>
             <div className="muted" style={{ fontSize: 12.5, lineHeight: 1.45 }}>
               Deine Wörter, Listen und Fortschritte werden mit der Cloud synchronisiert und stehen auf deinen Geräten zur Verfügung. Offline läuft alles weiter und wird beim nächsten Mal nachgeholt.
@@ -125,6 +158,10 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         ) : (
           <div className="col" style={{ gap: 10 }}>
+            {mode === "up" && (
+              <input className="field" type="text" placeholder="Benutzername" value={username} autoComplete="nickname"
+                onChange={(e) => setUsername(e.target.value)} />
+            )}
             <input className="field" type="email" placeholder="E-Mail" value={email} autoComplete="email"
               onChange={(e) => setEmail(e.target.value)} />
             <input className="field" type="password" placeholder="Passwort" value={password} autoComplete={mode === "in" ? "current-password" : "new-password"}
