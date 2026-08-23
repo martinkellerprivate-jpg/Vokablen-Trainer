@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
 import { useAuth } from "../sync/auth";
 import { useSync, type SyncStatus } from "../sync/SyncBridge";
+import { useToast } from "../ui/Toast";
 
 const STATUS_LABEL: Record<SyncStatus, string> = {
   local: "Nur auf diesem Gerät",
@@ -18,6 +19,7 @@ type Mode = "in" | "up" | "reset" | "newpw";
 export function AccountModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const auth = useAuth();
   const { status } = useSync();
+  const toast = useToast();
   const [mode, setMode] = useState<Mode>("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +30,18 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
 
   // The user followed the "reset password" email link — force the new-password screen.
   useEffect(() => { if (auth.recovering) { setMode("newpw"); setError(""); setInfo(""); } }, [auth.recovering]);
+
+  // The modal never unmounts (App.tsx keeps it mounted, `open` just toggles visibility),
+  // so its mode/fields would otherwise leak across sessions — e.g. staying stuck on
+  // "newpw" forever after a password reset, hiding the signed-in view and sign-out.
+  // Every fresh open (outside an active recovery) starts clean on the sign-in screen.
+  useEffect(() => {
+    if (open && !auth.recovering) {
+      setMode("in");
+      setEmail(""); setPassword(""); setPassword2("");
+      setError(""); setInfo("");
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open && !auth.recovering) return null;
 
@@ -49,6 +63,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
       setBusy(false);
       if (r.error) { setError(r.error); return; }
       setPassword(""); setPassword2("");
+      toast("Passwort geändert", "check");
       onClose();
       return;
     }
