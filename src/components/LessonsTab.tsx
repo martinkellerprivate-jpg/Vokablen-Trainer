@@ -82,7 +82,7 @@ export function LessonsTab() {
         <div className="grow">
           <div className="section-title">Lektionen · {P.foreignLabel} ⇄ Deutsch</div>
           <div className="muted" style={{ fontSize: 13, marginTop: 3 }}>
-            Lektionen sind feste Momentaufnahmen von Wörtern. Farbe = wie gut sie sitzen (aus deinem Lernstand). Eine Deadline (klein, separat) zeigt, wie viel Zeit bleibt.
+            Lektionen sind feste Momentaufnahmen von Wörtern. Farbe = wie gut sie sitzen (aus deinem Lernstand). Ein Prüfungstermin ist optional und zeigt, wie viel Zeit bleibt.
           </div>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
@@ -160,9 +160,16 @@ export function LessonsTab() {
 
               {openEdit === l.id && (
                 <div className="chk-wrap" style={{ marginTop: 10, borderTop: "1px solid var(--line-soft)", paddingTop: 10 }}>
-                  <label className="faint" style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                    <Icon name="target" size={13} /> Prüfungstermin: <input type="date" className="field" style={{ width: "auto" }} value={l.dueDate ? new Date(l.dueDate).toISOString().slice(0, 10) : ""} onChange={(e) => setDeadline(l, e.target.value)} />
-                  </label>
+                  <div className="row" style={{ gap: 6, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
+                    <label className="faint" style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="target" size={13} /> Prüfungstermin (optional): <input type="date" className="field" style={{ width: "auto" }} value={l.dueDate ? new Date(l.dueDate).toISOString().slice(0, 10) : ""} onChange={(e) => setDeadline(l, e.target.value)} />
+                    </label>
+                    {/* A native date input can't reliably be cleared on iOS — give it an explicit way out. */}
+                    {l.dueDate && (
+                      <button className="icon-btn" style={{ width: 26, height: 26 }} title="Prüfungstermin entfernen"
+                        onClick={() => setDeadline(l, "")}><Icon name="x" size={12} /></button>
+                    )}
+                  </div>
 
                   <div className="lesson-ways">
                     {/* Weg 1: aus Listen auswählen (Zwei-Spalten-Picker) */}

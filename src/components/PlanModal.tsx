@@ -99,7 +99,7 @@ export function PlanModal({ open, onClose }: { open: boolean; onClose: () => voi
           </div>
         )}
 
-        <div className="section-title" style={{ marginBottom: 4 }}>Üben ohne Prüfungsdeadline</div>
+        <div className="section-title" style={{ marginBottom: 4 }}>Üben ohne Prüfungstermin</div>
         <div className="col" style={{ gap: 10 }}>
           <div className="plan-row">
             <div className="grow">
