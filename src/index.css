@@ -210,6 +210,7 @@ input, button, textarea, select { font-family: inherit; }
 /* Example sentences: set apart from the word itself — italic, quieter, with a
    rule down the side so they read as a quotation rather than another answer. */
 .card-examples { margin-top: 6px; max-width: 36ch; text-align: left; border-left: 2px solid var(--line); padding-left: 12px; display: flex; flex-direction: column; gap: 5px; }
+.card-phonetic { font-family: var(--mono); font-size: 13px; color: var(--ink-faint); letter-spacing: .01em; text-align: center; margin-top: -2px; }
 .card-examples p { margin: 0; font-family: var(--serif); font-style: italic; font-size: clamp(14px, 2.2vw, 16px); line-height: 1.45; color: var(--ink-soft); }
 .prompt-hint { font-size: 13.5px; color: var(--ink-soft); }
 .audio-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--card-2); display: grid; place-items: center; color: var(--amber-deep); box-shadow: var(--shadow-sm); transition: all .15s ease; }
@@ -288,12 +289,11 @@ input, button, textarea, select { font-family: inherit; }
 .mbar-band { display: flex; height: 16px; border-radius: 999px; overflow: hidden; gap: 2px; }
 .mbar-band > i { display: block; min-width: 3px; }
 .mbar-band > i.clickable { cursor: pointer; }
-.mbar-nums { position: relative; margin-top: 3px; }
-.mbar-num { position: absolute; top: 1px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; font-size: 12.5px; font-weight: 800; line-height: 1; }
-.mbar-num.tier2 { top: 0; }
-.mbar-conn { width: 1px; height: 15px; background: currentColor; opacity: .5; margin-bottom: 2px; }
-.mbar-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: center; margin-top: 9px; font-size: 12px; color: var(--ink-soft); }
+.mbar-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; margin-top: 11px; font-size: 12.5px; }
 .mbar-leg { display: inline-flex; align-items: center; gap: 6px; }
+.mbar-leg.clickable { cursor: pointer; }
+.mbar-leg b { font-weight: 800; }
+.mbar-leg-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 /* FR3-2: Stats trend */
 .mtrend { margin-top: 14px; }
 .mtrend-head { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }

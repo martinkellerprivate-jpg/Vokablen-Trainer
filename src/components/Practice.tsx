@@ -639,6 +639,10 @@ export function Practice() {
   // Example sentences are in the FOREIGN language, so they can give the answer
   // away — only ever shown on the solution side of the card, never on the prompt.
   const cardExamples = (current?.examples || []).filter(Boolean);
+  // Pronunciation belongs to the FOREIGN word, so it may only appear where that
+  // word itself is shown — otherwise it would hint at the answer.
+  const phon = (settings.showPhonetic !== false && current?.phonetic) ? String(current.phonetic).trim() : "";
+  const phoneticEl = phon ? <div className="card-phonetic">[{phon.replace(/^\[|\]$/g, "")}]</div> : null;
   const examplesEl = (settings.showExamples !== false && cardExamples.length) ? (
     <div className="card-examples">
       {cardExamples.map((s: string, i: number) => <p key={i}>{s}</p>)}
@@ -745,6 +749,7 @@ export function Practice() {
             </div>
             <div className="card-center">
               <div className="prompt-word">{sideText(current, srcKey)}</div>
+              {srcKey !== NATIVE && phoneticEl}
               {srcKey !== NATIVE && latinContext(current) && (
                 <div className="faint" style={{ fontSize: 14, marginTop: -6 }}>{latinContext(current)}</div>
               )}
@@ -771,6 +776,7 @@ export function Practice() {
                     <div className="diff-line">
                       {result.targetDiff.map((c, i) => <span key={i} className={"ch " + c.status}>{c.ch}</span>)}
                     </div>
+                    {tgtKey !== NATIVE && phoneticEl}
                     {isLat && tgtKey !== NATIVE && latinContext(current) && (
                       <div className="faint" style={{ fontSize: 14, textAlign: "center", marginTop: 6 }}>
                         Lernform: {current.lernform}
@@ -802,6 +808,7 @@ export function Practice() {
                 <div className="card-center" style={{ gap: 10 }}>
                   <div className="diff-label">{labelOf(tgtKey)}</div>
                   <div className="prompt-word">{revealText(current, tgtKey)}</div>
+                  {tgtKey !== NATIVE && phoneticEl}
                   <div className="faint" style={{ fontSize: 14 }}>{sideText(current, srcKey)}</div>
                   {examplesEl}
                 </div>

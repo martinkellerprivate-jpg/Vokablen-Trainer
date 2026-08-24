@@ -7,6 +7,7 @@ export const RECOMMENDED: Partial<Settings> = {
   choicesCount: 4,        // multiple-choice options when in Choose mode
   autoAudio: false,       // auto-play pronunciation each card
   showExamples: true,     // show a word's foreign-language example sentences on the solution side
+  showPhonetic: true,     // show the pronunciation next to the foreign word
   dailyGoal: 30,          // cards/day target (~15 min daily session)
   newPerDay: 10,          // new words introduced per day (8–12 is ideal)
   targetRetention: 0.9,    // V13: THE retention source (Lernintensität-Preset schreibt hierein)

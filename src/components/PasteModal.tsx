@@ -17,7 +17,8 @@ function splitForeign(text: string) {
     const p = s.split(/\s*[\t:|–—-]\s*|\s{2,}/).map((x) => x.trim()).filter(Boolean);
     // Fremd | Deutsch | Beispiel 1 | Beispiel 2 | Topic — extra columns are optional,
     // so shorter rows keep their old meaning (…| Topic as the third column).
-    if (p.length >= 5) out.push({ fgn: p[0], de: p[1], examples: [p[2], p[3]].filter(Boolean), topic: p.slice(4).join(" ") });
+    if (p.length >= 6) out.push({ fgn: p[0], de: p[1], examples: [p[2], p[3]].filter(Boolean), topic: p[4], phonetic: p[5] });
+    else if (p.length === 5) out.push({ fgn: p[0], de: p[1], examples: [p[2], p[3]].filter(Boolean), topic: p[4] });
     else if (p.length === 4) out.push({ fgn: p[0], de: p[1], examples: [p[2]].filter(Boolean), topic: p[3] });
     else if (p.length === 3) out.push({ fgn: p[0], de: p[1], topic: p[2] });
     else if (p.length === 2) out.push({ fgn: p[0], de: p[1] });
@@ -36,7 +37,8 @@ function splitLatin(text: string) {
     if (/^(unit|lektion|lesson|seite|page|wort|latein|deutsch|grundform)\b/i.test(s) && !/[\t|]/.test(s)) return;
     const p = s.split(/\s*[\t|]\s*|\s{2,}/).map((x) => x.trim()).filter(Boolean);
     // …| Deutsch | Beispiel 1 | Beispiel 2 | Topic (example columns optional)
-    if (p.length >= 7) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3], examples: [p[4], p[5]].filter(Boolean), topic: p[6] });
+    if (p.length >= 8) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3], examples: [p[4], p[5]].filter(Boolean), topic: p[6], phonetic: p[7] });
+    else if (p.length === 7) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3], examples: [p[4], p[5]].filter(Boolean), topic: p[6] });
     else if (p.length === 6) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3], examples: [p[4]].filter(Boolean), topic: p[5] });
     else if (p.length === 5) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3], topic: p[4] });
     else if (p.length === 4) out.push({ grundform: p[0], lernform: p[1], wortart: p[2], de: p[3] });
@@ -63,8 +65,8 @@ export function PasteModal({ open, pair, onParsed, onClose, initialText, draftHi
   if (!open) return null;
 
   const aiPrompt = isLat
-    ? `Erstelle eine lateinische Vokabelliste zum Thema „…". Gib NUR eine Tabelle aus, Spalten getrennt durch | , eine Zeile pro Wort, in genau dieser Reihenfolge:\nGrundform | Lernform | Wortart | Deutsch | Beispielsatz 1 | Beispielsatz 2 | Topic\nLernform = Stammformen (Nomen: Nominativ, Genitiv, Genus; Verb: 4 Stammformen; Adjektiv: 3 Genus-Endungen). Wortart ∈ {Nomen, Verb, Adjektiv, Zahlwort, Adverb}. Die Beispielsätze auf LATEIN, kurz und einfach; wenn dir nur einer einfällt, lass die zweite Spalte leer (die | trotzdem setzen). Deutsche Nomen mit Artikel (der/die/das). Keine Nummerierung, keine Überschrift, kein weiterer Text.`
-    : `Erstelle eine Vokabelliste ${P.foreignLabel} ⇄ Deutsch zum Thema „…". Gib NUR eine Tabelle aus, Spalten getrennt durch | , eine Zeile pro Wort, in genau dieser Reihenfolge:\n${P.foreignLabel} | Deutsch | Beispielsatz 1 | Beispielsatz 2 | Topic\nDie Beispielsätze auf ${P.foreignLabel}, kurz und einfach; wenn dir nur einer einfällt, lass die zweite Spalte leer (die | trotzdem setzen). Deutsche Nomen mit Artikel (der/die/das). Keine Nummerierung, keine Überschrift, kein weiterer Text.`;
+    ? `Erstelle eine lateinische Vokabelliste zum Thema „…". Gib NUR eine Tabelle aus, Spalten getrennt durch | , eine Zeile pro Wort, in genau dieser Reihenfolge:\nGrundform | Lernform | Wortart | Deutsch | Beispielsatz 1 | Beispielsatz 2 | Topic | Aussprache\nLernform = Stammformen (Nomen: Nominativ, Genitiv, Genus; Verb: 4 Stammformen; Adjektiv: 3 Genus-Endungen). Wortart ∈ {Nomen, Verb, Adjektiv, Zahlwort, Adverb}. Die Beispielsätze auf LATEIN, kurz und einfach; wenn dir nur einer einfällt, lass die zweite Spalte leer (die | trotzdem setzen). Aussprache = Lautschrift des Fremdworts (IPA, ohne Klammern); wenn unsicher, Spalte leer lassen. Deutsche Nomen mit Artikel (der/die/das). Keine Nummerierung, keine Überschrift, kein weiterer Text.`
+    : `Erstelle eine Vokabelliste ${P.foreignLabel} ⇄ Deutsch zum Thema „…". Gib NUR eine Tabelle aus, Spalten getrennt durch | , eine Zeile pro Wort, in genau dieser Reihenfolge:\n${P.foreignLabel} | Deutsch | Beispielsatz 1 | Beispielsatz 2 | Topic | Aussprache\nDie Beispielsätze auf ${P.foreignLabel}, kurz und einfach; wenn dir nur einer einfällt, lass die zweite Spalte leer (die | trotzdem setzen). Aussprache = Lautschrift des Fremdworts (IPA, ohne Klammern); wenn unsicher, Spalte leer lassen. Deutsche Nomen mit Artikel (der/die/das). Keine Nummerierung, keine Überschrift, kein weiterer Text.`;
 
   const copyPrompt = () => navigator.clipboard?.writeText(aiPrompt).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600); });
   const pasteClipboard = async () => {

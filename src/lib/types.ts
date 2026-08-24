@@ -33,6 +33,7 @@ export interface Word {
   lernform?: string;      // full stammformen, e.g. "video, videre, vidi, visum"
   wortart?: Wortart;
   examples?: string[];    // 1–2 example sentences IN THE FOREIGN LANGUAGE (school books print these)
+  phonetic?: string;      // optional pronunciation of the foreign word, e.g. "dɒɡ" or "dohg"
   topic?: string;
   lists?: string[];
   review?: boolean;

@@ -1,9 +1,9 @@
 /* FR3-2 — ONE shared distribution bar for the practice card AND Stats.
- * 5 segments (STUFE_ORDER), each number CENTERED under its segment midpoint with
- * NO connector line; a too-narrow segment's number drops to a second tier and is
- * linked by a thin vertical line (measured in px via ResizeObserver). Legend
- * below (colour + word). Same component, same look everywhere. */
-import { useRef, useState, useLayoutEffect } from "react";
+ * 5 segments (STUFE_ORDER); underneath, a colour-coded legend listing ONLY the
+ * levels that actually occur, each as "● count label" in the segment's colour.
+ * Labelling segments in place fails on real data — the narrow segments (the
+ * interesting ones) collide — so count and label live together in the legend,
+ * where colour + order + number make the mapping unambiguous at any width. */
 import { STUFE_ORDER } from "../lib/fsrs";
 
 const TONE: Record<string, string> = {
@@ -17,50 +17,28 @@ const LEG: Record<string, string> = {
 
 export function MasteryBar({ dist, total, onSegment, activeFilter, showLegend = true }:
   { dist: Record<string, number>; total: number; onSegment?: (k: string) => void; activeFilter?: string; showLegend?: boolean }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(0);
-  useLayoutEffect(() => {
-    const el = wrapRef.current; if (!el) return;
-    const ro = new ResizeObserver(() => setW(el.clientWidth));
-    ro.observe(el); setW(el.clientWidth);
-    return () => ro.disconnect();
-  }, []);
   if (!total) return null;
-
-  // segment midpoints (fraction 0..1) + per-number collision test in px
-  let cum = 0; const segs: any[] = [];
-  for (const k of STUFE_ORDER) {
-    const n = dist[k] || 0; if (!n) continue;
-    const share = n / total; const mid = cum + share / 2; cum += share;
-    const segPx = share * w;
-    const needPx = String(n).length * 7 + 14;   // digits + breathing room
-    segs.push({ k, n, mid, tier2: w > 0 && segPx < needPx });
-  }
-  const anyTier2 = segs.some((s) => s.tier2);
+  const present = STUFE_ORDER.filter((k) => dist[k]);
 
   return (
     <div className="mbar">
       <div className="mbar-total">{total} {total === 1 ? "Wort" : "Wörter"} insgesamt</div>
-      <div className="mbar-body" ref={wrapRef}>
-        <div className="mbar-band">
-          {STUFE_ORDER.map((k) => dist[k] ? (
-            <i key={k} className={onSegment ? "clickable" : ""} onClick={onSegment ? () => onSegment(k) : undefined}
-              style={{ flex: dist[k], background: TONE[k], opacity: activeFilter && activeFilter !== k ? 0.35 : 1 }}
-              title={`${LEG[k]}: ${dist[k]}`} />
-          ) : null)}
-        </div>
-        <div className="mbar-nums" style={{ height: anyTier2 ? 34 : 18 }}>
-          {segs.map((s) => (
-            <div key={s.k} className={"mbar-num" + (s.tier2 ? " tier2" : "")} style={{ left: s.mid * 100 + "%", color: TONE[s.k] }}>
-              {s.tier2 && <span className="mbar-conn" />}
-              <b>{s.n}</b>
-            </div>
-          ))}
-        </div>
+      <div className="mbar-band">
+        {present.map((k) => (
+          <i key={k} className={onSegment ? "clickable" : ""} onClick={onSegment ? () => onSegment(k) : undefined}
+            style={{ flex: dist[k], background: TONE[k], opacity: activeFilter && activeFilter !== k ? 0.35 : 1 }}
+            title={`${LEG[k]}: ${dist[k]}`} />
+        ))}
       </div>
       {showLegend && (
         <div className="mbar-legend">
-          {STUFE_ORDER.map((k) => <span key={k} className="mbar-leg"><span className="dot" style={{ background: TONE[k] }} />{LEG[k]}</span>)}
+          {present.map((k) => (
+            <span key={k} className={"mbar-leg" + (onSegment ? " clickable" : "")} style={{ color: TONE[k], opacity: activeFilter && activeFilter !== k ? 0.45 : 1 }}
+              onClick={onSegment ? () => onSegment(k) : undefined}>
+              <span className="mbar-leg-dot" style={{ background: TONE[k] }} />
+              <b>{dist[k]}</b> {LEG[k]}
+            </span>
+          ))}
         </div>
       )}
     </div>

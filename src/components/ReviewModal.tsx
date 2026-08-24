@@ -23,6 +23,7 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
         ? { grundform: r.grundform ?? r.fgn ?? "", lernform: r.lernform ?? "", wortart: r.wortart || "Nomen", de: r.de ?? "", topic: r.topic ?? "" }
         : { fgn: r.fgn ?? r.grundform ?? "", de: r.de ?? "", topic: r.topic ?? "" }),
       ex: (r.examples || []).filter(Boolean).join(" / "),
+      phonetic: r.phonetic ?? "",
     })));
   }, [open, rows, isLat]);
 
@@ -30,13 +31,13 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
 
   const setCell = (i: number, k: string, v: string) => setList((l) => l.map((r, j) => j === i ? { ...r, [k]: v } : r));
   const removeRow = (i: number) => setList((l) => l.filter((_, j) => j !== i));
-  const addRow = () => setList((l) => [...l, isLat ? { grundform: "", lernform: "", wortart: "Nomen", de: "", topic: "", ex: "" } : { fgn: "", de: "", topic: "", ex: "" }]);
+  const addRow = () => setList((l) => [...l, isLat ? { grundform: "", lernform: "", wortart: "Nomen", de: "", topic: "", ex: "", phonetic: "" } : { fgn: "", de: "", topic: "", ex: "", phonetic: "" }]);
   const g = (r: any, k: string) => ((r?.[k] ?? "") + "").trim();
   const valid = list
     .filter((r) => isLat ? (g(r, "grundform") || g(r, "lernform") || g(r, "de")) : (g(r, "fgn") || g(r, "de")))
     .map(({ ex, ...r }) => ({ ...r, examples: String(ex || "").split("/").map((s) => s.trim()).filter(Boolean) }));
 
-  const grid = isLat ? "1.1fr 1.5fr 0.8fr 1.2fr 1.4fr 0.8fr 30px" : "1.2fr 1.2fr 1.4fr 0.8fr 30px";
+  const grid = isLat ? "1.1fr 1.5fr 0.8fr 1.2fr 1.4fr 0.8fr 30px" : "1.1fr 1.1fr 0.8fr 1.3fr 0.8fr 30px";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -53,7 +54,7 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
           <div className="scan-row-head" style={{ display: "grid", gridTemplateColumns: grid, gap: 8 }}>
             {isLat
               ? <><span>Grundform</span><span>Lernform</span><span>Wortart</span><span>Deutsch</span><span>Beispielsätze</span><span>Topic</span><span /></>
-              : <><span>{P.foreignLabel}</span><span>Deutsch</span><span>Beispielsätze</span><span>Topic</span><span /></>}
+              : <><span>{P.foreignLabel}</span><span>Deutsch</span><span>Aussprache</span><span>Beispielsätze</span><span>Topic</span><span /></>}
           </div>
           {list.map((r, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: grid, gap: 8, alignItems: "center" }}>
@@ -72,6 +73,7 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
                 <>
                   <input className="mini-input" value={r.fgn} placeholder="—" onChange={(e) => setCell(i, "fgn", e.target.value)} />
                   <input className="mini-input" value={r.de} placeholder="—" onChange={(e) => setCell(i, "de", e.target.value)} />
+                  <input className="mini-input" value={r.phonetic ?? ""} placeholder="—" onChange={(e) => setCell(i, "phonetic", e.target.value)} />
                   <input className="mini-input" value={r.ex ?? ""} placeholder="—" title="Mehrere Sätze mit / trennen" onChange={(e) => setCell(i, "ex", e.target.value)} />
                   <input className="mini-input" value={r.topic} placeholder="—" onChange={(e) => setCell(i, "topic", e.target.value)} />
                 </>

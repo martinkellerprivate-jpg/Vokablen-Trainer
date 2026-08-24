@@ -145,6 +145,10 @@ export function SettingsTab() {
           desc="Zeigt die Beispielsätze eines Worts auf der Lösungsseite der Karte — dort, wo du die Antwort siehst. Ein Wort im Satz zu sehen, hilft beim Behalten. Sätze, die du nicht erfasst hast, ändern nichts.">
           <Toggle value={settings.showExamples !== false} onChange={(v) => set("showExamples", v)} />
         </Field>
+        <Field title="Aussprache anzeigen" recLabel="On" atRec={atR("showPhonetic")}
+          desc="Zeigt die Lautschrift eines Worts klein unter dem Fremdwort — überall dort, wo das Fremdwort selbst zu sehen ist. Wörter ohne erfasste Lautschrift bleiben unverändert.">
+          <Toggle value={settings.showPhonetic !== false} onChange={(v) => set("showPhonetic", v)} />
+        </Field>
         <Field title="Daily goal (cards)" recLabel={`${R.dailyGoal} (~15 min)`} atRec={atR("dailyGoal")}
           desc="A short daily session beats long, infrequent ones — daily exposure keeps memory fresh.">
           <SliderControl value={settings.dailyGoal} min={10} max={80} step={5} onChange={(v) => set("dailyGoal", v)} />
