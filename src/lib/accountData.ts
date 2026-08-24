@@ -26,6 +26,8 @@ export function exportAllData(stamp: string) {
  * re-seeds on the next load. Does NOT touch the Supabase auth session. */
 export function deleteLocalData() {
   Object.keys(localStorage)
-    .filter((k) => k.startsWith("vt_v1_"))
+    // "vtbackup_" holds pre-merge snapshots kept outside the vt_v1_ namespace —
+    // "delete everything" has to take those too.
+    .filter((k) => k.startsWith("vt_v1_") || k.startsWith("vtbackup_"))
     .forEach((k) => localStorage.removeItem(k));
 }

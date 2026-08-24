@@ -10,6 +10,7 @@
  *    and it retries on the next flush (reconnect / focus / session pause).
  */
 import { supabase, DOC_KEYS, type DocKey } from "../lib/supabase";
+import { LS } from "../lib/storage";
 
 const SYNC_KEY = "vt_v1_sync";
 
@@ -38,11 +39,24 @@ export function patchDocSync(key: DocKey, patch: Partial<DocSync>) {
   saveSyncState(s);
 }
 
-/* Snapshot all five local docs before a destructive first-login merge. */
+/* Snapshot the local docs before a destructive merge or a device reset.
+ * Deliberately stored OUTSIDE the vt_v1_ namespace so that clearLocalDocs()
+ * (which wipes that namespace) cannot delete the very backup it just made. */
+export const BACKUP_PREFIX = "vtbackup_";
 export function backupLocal(docs: Record<string, any>): number {
   const ts = Date.now();
-  try { localStorage.setItem("vt_v1_backup_" + ts, JSON.stringify(docs)); } catch {}
+  try { localStorage.setItem(BACKUP_PREFIX + ts, JSON.stringify(docs)); } catch {}
   return ts;
+}
+
+/* Drop this device's documents + sync bookkeeping. Used when a different
+ * account signs in: the local data belongs to the previous account and must
+ * never be pushed into the new one. Backups and the auth session survive. */
+export function clearLocalDocs() {
+  try {
+    for (const key of Object.values(LS)) localStorage.removeItem(key as string);
+    localStorage.removeItem(SYNC_KEY);
+  } catch {}
 }
 
 /* Push one doc. Server stamps updated_at via trigger and returns it. */

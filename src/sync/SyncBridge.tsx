@@ -11,8 +11,9 @@ import { useToast } from "../ui/Toast";
 import { DOC_KEYS, type DocKey } from "../lib/supabase";
 import {
   loadSyncState, saveSyncState, patchDocSync,
-  backupLocal, pushDoc, pullAll,
+  backupLocal, clearLocalDocs, pushDoc, pullAll,
 } from "./sync";
+import { DEFAULT_VOCAB } from "../data/seed";
 
 export type SyncStatus = "local" | "synced" | "syncing" | "offline" | "error";
 
@@ -23,6 +24,20 @@ export const useSync = () => React.useContext(SyncCtx);
 const DEFERRED: DocKey[] = ["stats", "meta"];
 const EAGER: DocKey[] = ["vocab", "lists", "settings"];
 const SYNC_UID_KEY = "vt_v1_sync_uid";
+const SWITCH_NOTICE_KEY = "vt_v1_switch_notice";
+
+/* Does this device hold anything the user made, beyond the shipped starter set?
+ * initData() always seeds DEFAULT_VOCAB into exactly one list, so that alone is
+ * not "own content" and must not trigger the adoption question. */
+export function hasOwnContent(docs: Record<string, any>): boolean {
+  const lists = docs.lists || [];
+  const lessons = docs.lessons || [];
+  const stats = docs.stats || {};
+  const vocab = docs.vocab || [];
+  return lists.length > 1 || lessons.length > 0
+    || Object.keys(stats).length > 0
+    || vocab.length > DEFAULT_VOCAB.length;
+}
 
 export function SyncBridge({ children }: { children: React.ReactNode }) {
   const store = useStore();
@@ -72,18 +87,54 @@ export function SyncBridge({ children }: { children: React.ReactNode }) {
     merging.current = true;
     setStatus("syncing");
     try {
-      // If a different account logs in, treat docs with data as local
-      // changes to protect (so the backup/merge guards apply).
       const prevUid = localStorage.getItem(SYNC_UID_KEY);
-      const s = loadSyncState();
-      if (prevUid !== uid) {
-        for (const k of DOC_KEYS) s[k] = { serverUpdatedAt: null, dirty: true };
-        saveSyncState(s);
+
+      // ---- account switch on this device ----------------------------
+      // The local documents belong to the PREVIOUS account. Never push them
+      // into this one (a new account has no cloud docs, so the "cloud missing
+      // → push local" branch below would otherwise hand it the other user's
+      // whole library). Snapshot, wipe the device, reload: this account then
+      // starts from its own cloud — empty for a fresh account.
+      if (prevUid && prevUid !== uid) {
+        backupLocal(docsRef.current);
+        clearLocalDocs();
         localStorage.setItem(SYNC_UID_KEY, uid);
+        localStorage.setItem(SWITCH_NOTICE_KEY, "1");
+        location.reload();
+        return;
       }
 
       const cloud = await pullAll(uid);
       const cloudEmpty = DOC_KEYS.every((k) => !cloud[k]);
+
+      // ---- first sign-in on this device ------------------------------
+      // Taking the local library into an account is a real ownership decision
+      // (a shared device may hold someone else's words), so ask rather than
+      // assume. Order of sign-ups is no proof of ownership.
+      if (!prevUid) {
+        if (cloudEmpty && hasOwnContent(docsRef.current)) {
+          const adopt = window.confirm(
+            "Auf diesem Gerät liegen bereits Wörter und Listen.\n\n" +
+            "OK – in diesen Account übernehmen\n" +
+            "Abbrechen – leer starten (die Daten bleiben als Backup auf dem Gerät)"
+          );
+          if (!adopt) {
+            backupLocal(docsRef.current);
+            clearLocalDocs();
+            localStorage.setItem(SYNC_UID_KEY, uid);
+            localStorage.setItem(SWITCH_NOTICE_KEY, "1");
+            location.reload();
+            return;
+          }
+        }
+        // Nothing on this device has ever been synced → everything counts as a
+        // local change, so the merge guards below apply.
+        const s = loadSyncState();
+        for (const k of DOC_KEYS) s[k] = { serverUpdatedAt: null, dirty: true };
+        saveSyncState(s);
+      }
+      localStorage.setItem(SYNC_UID_KEY, uid);
+
       const sync = loadSyncState();
       const anyDirty = DOC_KEYS.some((k) => sync[k].dirty);
 
@@ -111,6 +162,12 @@ export function SyncBridge({ children }: { children: React.ReactNode }) {
         }
       }
       setStatus("synced");
+      // The device was wiped for this account just before the reload that led
+      // here — say so, otherwise the app silently shows different data.
+      if (localStorage.getItem(SWITCH_NOTICE_KEY)) {
+        localStorage.removeItem(SWITCH_NOTICE_KEY);
+        toast("Gerät auf diesen Account umgestellt — die vorherigen Daten liegen als Backup auf dem Gerät.", "download");
+      }
     } catch {
       setStatus(navigator.onLine ? "error" : "offline");
     } finally {
