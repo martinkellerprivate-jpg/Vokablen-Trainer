@@ -17,6 +17,7 @@ import { ShareModal } from "./ShareModal";
 import { ReviewModal } from "./ReviewModal";
 import { PasteModal } from "./PasteModal";
 import { WordDetailModal } from "./WordDetailModal";
+import { LatinKeys } from "../ui/LatinKeys";
 import { useImport } from "./importContext";
 
 const WORTARTEN = ["Nomen", "Verb", "Adjektiv", "Zahlwort", "Adverb"];
@@ -383,6 +384,7 @@ export function WordList() {
             {busy ? <Icon name="refresh" size={15} /> : <Icon name="plus" size={15} />} Add
           </button>
         </div>
+        {isLat && <LatinKeys hint="Feld antippen, dann Zeichen wählen" />}
         <div className="row" style={{ marginTop: 10 }}>
           <input className="field" style={{ width: 150 }} placeholder="Aussprache (optional)" value={adding.phon}
             onChange={(e) => setAdding({ ...adding, phon: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addWord()} />
@@ -454,6 +456,7 @@ export function WordList() {
                     ))}
                   </div>
                   <input className="mini-input" style={{ marginTop: 8, maxWidth: 160 }} placeholder="Topic" value={draft.topic} onChange={(e) => setDraft({ ...draft, topic: e.target.value })} />
+                  {isLat && <LatinKeys />}
                   <input className="mini-input" style={{ marginTop: 6, maxWidth: 160 }} placeholder="Aussprache" value={draft.phon} onChange={(e) => setDraft({ ...draft, phon: e.target.value })} />
                   <input className="mini-input" style={{ marginTop: 6 }} placeholder={`Beispielsatz (${P.foreignLabel})`} value={draft.ex1} onChange={(e) => setDraft({ ...draft, ex1: e.target.value })} />
                   <input className="mini-input" style={{ marginTop: 6 }} placeholder="Zweiter Beispielsatz (optional)" value={draft.ex2} onChange={(e) => setDraft({ ...draft, ex2: e.target.value })} />

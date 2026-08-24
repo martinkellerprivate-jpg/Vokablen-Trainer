@@ -110,6 +110,15 @@ export function scoreAnswer(user: string, correct: string, opts?: ScoreOpts): Sc
     return { score: 0.8, verdict: "almost", note, targetDiff, userDiff, errorType: "article" }; // required-partial
   }
 
+  // Latin length marks (macron ā / breve ĕ) are a textbook reading aid, not
+  // spelling. If the user chose not to require them, a difference that is ONLY
+  // length marks counts as fully correct — the character diff still marks those
+  // positions, so the solution shows them in red. Umlauts/accents are unaffected.
+  const foldLen = (s: string) => ss(norm(s)).normalize("NFD").replace(/[\u0304\u0306]/g, "").normalize("NFC");
+  if (opts.macronsOptional && foldLen(userOrig) === foldLen(corrOrig)) {
+    return { score: 1, verdict: "correct", note: "Richtig — die Längenstriche sind in der Lösung rot markiert", targetDiff, userDiff, errorType: "accent" };
+  }
+
   // Umlauts / accents only
   if (!strictAccents && fold(userOrig) === fold(corrOrig)) {
     return finalize({ score: 0.8, verdict: "almost", note: "Mind the umlauts / accents", targetDiff, userDiff, errorType: "accent" });

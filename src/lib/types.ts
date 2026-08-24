@@ -107,6 +107,7 @@ export interface ScoreOpts {
   strictAccents?: boolean;
   articleMode?: "optional" | "required-full" | "required-partial";
   acceptPartial?: boolean;
+  macronsOptional?: boolean;   // Latin: length marks (ā ĕ) not required → still fully correct
 }
 
 export interface Settings {

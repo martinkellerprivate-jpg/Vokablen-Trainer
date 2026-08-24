@@ -17,6 +17,7 @@ export const RECOMMENDED: Partial<Settings> = {
   strictAccents: false,   // umlaut/accent slips = small mistake, not wrong
   articleMode: "required-partial", // missing der/die/das = small deduction
   acceptPartial: true,    // award partial credit for near-misses
+  latinMacronsOptional: false, // Latein: Längenstriche standardmässig nötig (Punktabzug)
   latinMode: "L2",        // Latin: ask the Grundform, show the full Lernform
   tipsFrequency: "occasional", // sporadic study tips at natural pauses
   skin: "paper",          // appearance: warm paper (today's look)

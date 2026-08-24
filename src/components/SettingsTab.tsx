@@ -205,6 +205,10 @@ export function SettingsTab() {
             <option value="L3">L3 · volle Lernform abfragen</option>
           </select>
         </Field>
+        <Field title="Längenstriche nicht nötig" recLabel="Aus (Längenstriche zählen)" atRec={!settings.latinMacronsOptional}
+          desc="Längenstriche (ā ē ī ō ū) sind auf Handy und Mac mühsam zu tippen. Aus: fehlt ein Strich, gibt es Punktabzug („fast“). Ein: die Antwort zählt als richtig — die Lösung markiert die Striche trotzdem rot, damit du sie siehst. Gilt nur für Latein.">
+          <Toggle value={!!settings.latinMacronsOptional} onChange={(v) => set("latinMacronsOptional", v)} />
+        </Field>
       </div>
 
       {/* Lernhilfen */}

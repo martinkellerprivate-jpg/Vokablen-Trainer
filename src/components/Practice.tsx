@@ -8,6 +8,7 @@ import { scoreAnswer } from "../lib/scoring";
 import { resolveLesson, resolveSmart, lessonProfile, resolveToday } from "../lib/engine";
 import { buildQueue, pick, record, outcomeOf, pendingGrades, progress, remaining } from "../lib/runqueue";
 import { MasteryBar } from "../ui/MasteryBar";
+import { LatinKeys } from "../ui/LatinKeys";
 import { retrievabilityOf, isDueCard, retentionFor, initialCard, deriveProfile, STUFE, STUFE_ORDER, deriveRating, gradeFromCard, getCfg } from "../lib/fsrs";
 import { PAIRS, NATIVE, practiceable, hasTTS, isLatinPair } from "../lib/pairs";
 import { latinHeadword, latinReveal, latinAnswerTarget, scoreLatinForm } from "../lib/latin";
@@ -338,7 +339,7 @@ export function Practice() {
     flip("back");
   }, [current, recordAttempt, flip, stats, maybeTip, hintUsed, resolveWord, mode]);
 
-  const answerOpts = () => ({ lenientCase: settings.lenientCase, strictAccents: settings.strictAccents, articleMode: settings.articleMode, acceptPartial: settings.acceptPartial });
+  const answerOpts = () => ({ lenientCase: settings.lenientCase, strictAccents: settings.strictAccents, articleMode: settings.articleMode, acceptPartial: settings.acceptPartial, macronsOptional: isLat && !!settings.latinMacronsOptional });
 
   const check = useCallback(() => {
     if (!current || face === "back" || anim) return;
@@ -826,6 +827,7 @@ export function Practice() {
         {face === "front" ? (
           mode === "type" ? (
             <>
+              {isLat && tgtKey !== NATIVE && <LatinKeys />}
               <div className="answer-row">
                 <input ref={inputRef} className="field" placeholder={`Type the ${labelOf(tgtKey)} word…`}
                   value={input} onChange={(e) => setInput(e.target.value)} autoComplete="off"
