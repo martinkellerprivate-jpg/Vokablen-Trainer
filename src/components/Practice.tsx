@@ -636,6 +636,15 @@ export function Practice() {
     );
   }
 
+  // Example sentences are in the FOREIGN language, so they can give the answer
+  // away — only ever shown on the solution side of the card, never on the prompt.
+  const cardExamples = (current?.examples || []).filter(Boolean);
+  const examplesEl = (settings.showExamples !== false && cardExamples.length) ? (
+    <div className="card-examples">
+      {cardExamples.map((s: string, i: number) => <p key={i}>{s}</p>)}
+    </div>
+  ) : null;
+
   const verdictMeta = {
     correct: { tone: "green", label: "Correct!", icon: "check" },
     almost: { tone: "amber", label: "Almost there", icon: "sparkle" },
@@ -781,6 +790,7 @@ export function Practice() {
                       {result.note}
                     </div>
                   )}
+                  {examplesEl}
                 </div>
               </>
             )}
@@ -793,6 +803,7 @@ export function Practice() {
                   <div className="diff-label">{labelOf(tgtKey)}</div>
                   <div className="prompt-word">{revealText(current, tgtKey)}</div>
                   <div className="faint" style={{ fontSize: 14 }}>{sideText(current, srcKey)}</div>
+                  {examplesEl}
                 </div>
               </>
             )}

@@ -16,24 +16,31 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
   useEffect(() => {
     if (!open) return;
     const src = rows && rows.length ? rows : [{}];
-    setList(src.map((r) => isLat
-      ? { grundform: r.grundform ?? r.fgn ?? "", lernform: r.lernform ?? "", wortart: r.wortart || "Nomen", de: r.de ?? "", topic: r.topic ?? "" }
-      : { fgn: r.fgn ?? r.grundform ?? "", de: r.de ?? "", topic: r.topic ?? "" }));
+    // `ex` is the editable join of the example sentences — normalising to a fixed
+    // shape would otherwise silently drop them on the way to the import.
+    setList(src.map((r) => ({
+      ...(isLat
+        ? { grundform: r.grundform ?? r.fgn ?? "", lernform: r.lernform ?? "", wortart: r.wortart || "Nomen", de: r.de ?? "", topic: r.topic ?? "" }
+        : { fgn: r.fgn ?? r.grundform ?? "", de: r.de ?? "", topic: r.topic ?? "" }),
+      ex: (r.examples || []).filter(Boolean).join(" / "),
+    })));
   }, [open, rows, isLat]);
 
   if (!open) return null;
 
   const setCell = (i: number, k: string, v: string) => setList((l) => l.map((r, j) => j === i ? { ...r, [k]: v } : r));
   const removeRow = (i: number) => setList((l) => l.filter((_, j) => j !== i));
-  const addRow = () => setList((l) => [...l, isLat ? { grundform: "", lernform: "", wortart: "Nomen", de: "", topic: "" } : { fgn: "", de: "", topic: "" }]);
+  const addRow = () => setList((l) => [...l, isLat ? { grundform: "", lernform: "", wortart: "Nomen", de: "", topic: "", ex: "" } : { fgn: "", de: "", topic: "", ex: "" }]);
   const g = (r: any, k: string) => ((r?.[k] ?? "") + "").trim();
-  const valid = list.filter((r) => isLat ? (g(r, "grundform") || g(r, "lernform") || g(r, "de")) : (g(r, "fgn") || g(r, "de")));
+  const valid = list
+    .filter((r) => isLat ? (g(r, "grundform") || g(r, "lernform") || g(r, "de")) : (g(r, "fgn") || g(r, "de")))
+    .map(({ ex, ...r }) => ({ ...r, examples: String(ex || "").split("/").map((s) => s.trim()).filter(Boolean) }));
 
-  const grid = isLat ? "1.1fr 1.6fr 0.9fr 1.3fr 0.9fr 30px" : "1.4fr 1.4fr 0.9fr 30px";
+  const grid = isLat ? "1.1fr 1.5fr 0.8fr 1.2fr 1.4fr 0.8fr 30px" : "1.2fr 1.2fr 1.4fr 0.8fr 30px";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: isLat ? 720 : 560, width: "94vw" }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: isLat ? 860 : 700, width: "94vw" }}>
         <div className="modal-head">
           <div className="modal-title">Wörter prüfen <span className="muted" style={{ fontSize: 14, fontWeight: 500 }}>· {P.foreignLabel} ⇄ Deutsch</span></div>
           <button className="icon-btn" style={{ width: 34, height: 34 }} onClick={onClose}><Icon name="x" size={16} /></button>
@@ -45,8 +52,8 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
         <div className="scan-review">
           <div className="scan-row-head" style={{ display: "grid", gridTemplateColumns: grid, gap: 8 }}>
             {isLat
-              ? <><span>Grundform</span><span>Lernform</span><span>Wortart</span><span>Deutsch</span><span>Topic</span><span /></>
-              : <><span>{P.foreignLabel}</span><span>Deutsch</span><span>Topic</span><span /></>}
+              ? <><span>Grundform</span><span>Lernform</span><span>Wortart</span><span>Deutsch</span><span>Beispielsätze</span><span>Topic</span><span /></>
+              : <><span>{P.foreignLabel}</span><span>Deutsch</span><span>Beispielsätze</span><span>Topic</span><span /></>}
           </div>
           {list.map((r, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: grid, gap: 8, alignItems: "center" }}>
@@ -58,12 +65,14 @@ export function ReviewModal({ open, rows, pair, onConfirm, onClose }: { open: bo
                     {WORTARTEN.map((wa) => <option key={wa} value={wa}>{wa}</option>)}
                   </select>
                   <input className="mini-input" value={r.de ?? ""} placeholder="—" onChange={(e) => setCell(i, "de", e.target.value)} />
+                  <input className="mini-input" value={r.ex ?? ""} placeholder="—" title="Mehrere Sätze mit / trennen" onChange={(e) => setCell(i, "ex", e.target.value)} />
                   <input className="mini-input" value={r.topic ?? ""} placeholder="—" onChange={(e) => setCell(i, "topic", e.target.value)} />
                 </>
               ) : (
                 <>
                   <input className="mini-input" value={r.fgn} placeholder="—" onChange={(e) => setCell(i, "fgn", e.target.value)} />
                   <input className="mini-input" value={r.de} placeholder="—" onChange={(e) => setCell(i, "de", e.target.value)} />
+                  <input className="mini-input" value={r.ex ?? ""} placeholder="—" title="Mehrere Sätze mit / trennen" onChange={(e) => setCell(i, "ex", e.target.value)} />
                   <input className="mini-input" value={r.topic} placeholder="—" onChange={(e) => setCell(i, "topic", e.target.value)} />
                 </>
               )}

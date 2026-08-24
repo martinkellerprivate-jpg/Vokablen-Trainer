@@ -33,6 +33,7 @@ const SECTIONS: Section[] = [
         </ul>
         <p className="help-callout"><b>Was bedeutet „KI-Prompt kopieren"?</b> (Das wird oft missverstanden.) Die App übersetzt oder strukturiert <b>nicht selbst</b> mit KI. Der Button kopiert dir einen <b>fertigen Prompt</b>, passend zum gewählten Sprachpaar und zum Importformat der App. Diesen Prompt fügst du in <b>dein eigenes KI-Chat</b> ein (z. B. ChatGPT oder Claude) — entweder um deine Wörter übersetzen zu lassen oder um eine Wortliste zu einem Thema generieren zu lassen, genau im Format, das die App importieren kann. Die Antwort der KI kopierst du dann <b>zurück ins Einfügen-Feld</b> → Überprüfen → speichern. Kurz: der Button ist die Brücke zu deiner KI, das Ergebnis kommt import-fertig zurück.</p>
         <p>Im <b>Überprüfen</b>-Dialog (Einfügen, CSV und Scan): Zeilen prüfen und korrigieren, deutsche Nomen mit Artikel (der/die/das), dann speichern. Beim Abfragen wird die Schweizer Schreibweise (ss) immer akzeptiert.</p>
+        <p><b>Beispielsätze:</b> Zu jedem Wort kannst du ein bis zwei Beispielsätze <b>in der Fremdsprache</b> erfassen — so, wie sie im Schulbuch stehen. Sie sind in der Vorlage und im Import als eigene Spalten dabei, und du kannst sie beim Bearbeiten eines Worts jederzeit nachtragen. Beim Üben erscheinen sie <b>nur auf der Lösungsseite</b> der Karte (sonst würden sie die Antwort verraten), kursiv abgesetzt. Abschalten kannst du sie unter <b>Einstellungen → Beispielsätze anzeigen</b>.</p>
       </>
     ),
   },

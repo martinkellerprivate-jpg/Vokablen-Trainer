@@ -84,6 +84,16 @@ export function WordDetailModal({ open, word, onClose, onEdit }: { open: boolean
           </div>
         )}
 
+        {/* example sentences (always shown here — this is the detail view) */}
+        {(word.examples || []).filter(Boolean).length > 0 && (
+          <div className="panel" style={{ padding: "12px 14px", marginBottom: 12 }}>
+            <div className="section-title" style={{ fontSize: 12.5, marginBottom: 6 }}>Beispielsätze</div>
+            <div className="card-examples" style={{ marginTop: 0, maxWidth: "none" }}>
+              {(word.examples || []).filter(Boolean).map((s: string, i: number) => <p key={i}>{s}</p>)}
+            </div>
+          </div>
+        )}
+
         {/* membership */}
         <div className="faint" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
           <div>Listen: {memberLists.length ? memberLists.join(", ") : "—"}</div>

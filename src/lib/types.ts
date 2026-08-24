@@ -32,6 +32,7 @@ export interface Word {
   grundform?: string;     // Nominativ / 1. Pers. Sg. / m-Form
   lernform?: string;      // full stammformen, e.g. "video, videre, vidi, visum"
   wortart?: Wortart;
+  examples?: string[];    // 1–2 example sentences IN THE FOREIGN LANGUAGE (school books print these)
   topic?: string;
   lists?: string[];
   review?: boolean;

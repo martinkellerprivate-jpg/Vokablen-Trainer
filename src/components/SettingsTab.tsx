@@ -141,6 +141,10 @@ export function SettingsTab() {
           desc="Read each new card aloud automatically. Great for listening practice; can distract in a quiet classroom.">
           <Toggle value={settings.autoAudio} onChange={(v) => set("autoAudio", v)} />
         </Field>
+        <Field title="Beispielsätze anzeigen" recLabel="On" atRec={atR("showExamples")}
+          desc="Zeigt die Beispielsätze eines Worts auf der Lösungsseite der Karte — dort, wo du die Antwort siehst. Ein Wort im Satz zu sehen, hilft beim Behalten. Sätze, die du nicht erfasst hast, ändern nichts.">
+          <Toggle value={settings.showExamples !== false} onChange={(v) => set("showExamples", v)} />
+        </Field>
         <Field title="Daily goal (cards)" recLabel={`${R.dailyGoal} (~15 min)`} atRec={atR("dailyGoal")}
           desc="A short daily session beats long, infrequent ones — daily exposure keeps memory fresh.">
           <SliderControl value={settings.dailyGoal} min={10} max={80} step={5} onChange={(v) => set("dailyGoal", v)} />

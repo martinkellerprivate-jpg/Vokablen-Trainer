@@ -43,8 +43,8 @@ export function WordList() {
   const [activeList, setActiveList] = useState("__all");   // '__all' | listId
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState({ fgn: "", de: "", topic: "", lists: [], lernform: "", wortart: "Nomen" });
-  const [adding, setAdding] = useState({ fgn: "", de: "", topic: "", listId: "", lernform: "", wortart: "Nomen" });
+  const [draft, setDraft] = useState({ fgn: "", de: "", topic: "", lists: [], lernform: "", wortart: "Nomen", ex1: "", ex2: "" });
+  const [adding, setAdding] = useState({ fgn: "", de: "", topic: "", listId: "", lernform: "", wortart: "Nomen", ex1: "" });
   const [busy, setBusy] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [pendingImport, setPendingImport] = useState(null);
@@ -100,14 +100,15 @@ export function WordList() {
   /* ---- add a word (auto-complete the missing side) ---- */
   const addWord = useCallback(async () => {
     const topic = adding.topic.trim() || "Custom", listId = adding.listId;
+    const examples = [adding.ex1].map((s) => (s || "").trim()).filter(Boolean);
     if (isLat) {
       // Latin: no auto-translation; store the learning forms directly.
       const grundform = adding.fgn.trim();
       const lernform = adding.lernform.trim();
       const de = adding.de.trim();
       if (!grundform && !lernform && !de) return;
-      store.addWord({ grundform, lernform, wortart: adding.wortart, de, topic, pair, lists: listId ? [listId] : [] });
-      setAdding((a) => ({ ...a, fgn: "", de: "", topic: "", lernform: "" }));
+      store.addWord({ grundform, lernform, wortart: adding.wortart, de, topic, examples, pair, lists: listId ? [listId] : [] });
+      setAdding((a) => ({ ...a, fgn: "", de: "", topic: "", lernform: "", ex1: "" }));
       return;
     }
     let fgn = adding.fgn.trim(), de = adding.de.trim();
@@ -124,15 +125,16 @@ export function WordList() {
       toast(r.source === "none" ? "Couldn't translate — please fill it in" : `Auto-filled “${fgn}” — please review`, r.source === "none" ? "x" : "sparkle");
       setBusy(false);
     }
-    store.addWord({ [foreign]: fgn, de, topic, review, pair, lists: listId ? [listId] : [] });
-    setAdding((a) => ({ ...a, fgn: "", de: "", topic: "" }));
+    store.addWord({ [foreign]: fgn, de, topic, examples, review, pair, lists: listId ? [listId] : [] });
+    setAdding((a) => ({ ...a, fgn: "", de: "", topic: "", ex1: "" }));
   }, [adding, store, toast, foreign, pair, isLat]);
 
-  const startEdit = (w) => { setEditingId(w.id); setDraft({ fgn: isLat ? (w.grundform || "") : (w[foreign] || ""), de: w.de, topic: w.topic || "", lists: w.lists || [], lernform: w.lernform || "", wortart: w.wortart || "Nomen" }); };
+  const startEdit = (w) => { setEditingId(w.id); setDraft({ fgn: isLat ? (w.grundform || "") : (w[foreign] || ""), de: w.de, topic: w.topic || "", lists: w.lists || [], lernform: w.lernform || "", wortart: w.wortart || "Nomen", ex1: (w.examples || [])[0] || "", ex2: (w.examples || [])[1] || "" }); };
   const saveEdit = (id) => {
+    const examples = [draft.ex1, draft.ex2].map((s) => (s || "").trim()).filter(Boolean);
     const patch = isLat
-      ? { grundform: draft.fgn.trim(), lernform: draft.lernform.trim(), wortart: draft.wortart, de: draft.de.trim(), topic: draft.topic.trim(), lists: draft.lists, review: false }
-      : { [foreign]: draft.fgn.trim(), de: draft.de.trim(), topic: draft.topic.trim(), lists: draft.lists, review: false };
+      ? { grundform: draft.fgn.trim(), lernform: draft.lernform.trim(), wortart: draft.wortart, de: draft.de.trim(), topic: draft.topic.trim(), examples, lists: draft.lists, review: false }
+      : { [foreign]: draft.fgn.trim(), de: draft.de.trim(), topic: draft.topic.trim(), examples, lists: draft.lists, review: false };
     store.updateWord(id, patch); setEditingId(null);
   };
   const toggleDraftList = (lid) => setDraft((d) => ({ ...d, lists: d.lists.includes(lid) ? d.lists.filter((x) => x !== lid) : [...d.lists, lid] }));
@@ -172,7 +174,8 @@ export function WordList() {
         const wortart = (r.wortart || "").trim();
         const de = (r.de || "").trim();
         const topic = (r.topic || "").trim() || "Imported";
-        if (grundform || lernform || de) result.push({ grundform, lernform, wortart, de, topic, review: false, pair, lists: [listId] });
+        const examples = (r.examples || []).map((s) => String(s).trim()).filter(Boolean);
+        if (grundform || lernform || de) result.push({ grundform, lernform, wortart, de, topic, examples, review: false, pair, lists: [listId] });
       }
       const key = (w) => ((w.grundform || "") + "|" + (w.de || "")).toLowerCase();
       const existing = new Set(pairVocab.map(key));
@@ -188,7 +191,8 @@ export function WordList() {
       const topic = (r.topic || "").trim() || "Imported"; let review = false;
       if (fgn && !de) { const tr = await translateWord(fgn, foreign, "de"); de = tr.text; review = true; if (tr.text) filled++; }
       else if (de && !fgn) { const tr = await translateWord(de, "de", foreign); fgn = tr.text; review = true; if (tr.text) filled++; }
-      if (fgn || de) result.push({ [foreign]: fgn, de, topic, review, pair, lists: [listId] });
+      const examples = (r.examples || []).map((s) => String(s).trim()).filter(Boolean);
+      if (fgn || de) result.push({ [foreign]: fgn, de, topic, examples, review, pair, lists: [listId] });
     }
     const existing = new Set(pairVocab.map((w) => ((w[foreign] || "") + "|" + w.de).toLowerCase()));
     const fresh = result.filter((w) => !existing.has(((w[foreign] || "") + "|" + w.de).toLowerCase()));
@@ -210,6 +214,15 @@ export function WordList() {
       for (const row of rows) {
         const deK = findKey(row, /germ|deut|^de$/i);
         const tpK = findKey(row, /top|thema|categ|subject|sujet/i);
+        // "Beispielsatz 1/2"; a single "Beispielsätze" cell may hold both on separate lines
+        const ex1K = findKey(row, /beispiel.*1|example.*1|satz.*1/i);
+        const ex2K = findKey(row, /beispiel.*2|example.*2|satz.*2/i);
+        const exK = ex1K ? null : findKey(row, /beispiel|example|satz|phrase/i);
+        const examples = [
+          ...(ex1K ? [String(row[ex1K])] : []),
+          ...(ex2K ? [String(row[ex2K])] : []),
+          ...(exK ? String(row[exK]).split(/\r?\n/) : []),
+        ].map((s) => s.trim()).filter(Boolean);
         if (isLat) {
           // Latin schema: Grundform | Lernform | Wortart | Deutsch | Topic
           const gfK = findKey(row, /grundform|grund|^la$|latein|lat/i);
@@ -220,14 +233,15 @@ export function WordList() {
           const wortart = (waK ? String(row[waK]) : "").trim();
           const de = (deK ? String(row[deK]) : "").trim();
           const topic = (tpK ? String(row[tpK]) : "").trim();
-          if (grundform || lernform || de) parsed.push({ grundform, lernform, wortart, de, topic });
+          if (grundform || lernform || de) parsed.push({ grundform, lernform, wortart, de, topic, examples });
           continue;
         }
-        const fgnK = findKey(row, /eng|fran|fren|^fr$|^en$/i) || Object.keys(row).find((k) => k !== deK && k !== tpK);
+        const skip = new Set([deK, tpK, ex1K, ex2K, exK].filter(Boolean) as string[]);
+        const fgnK = findKey(row, /eng|fran|fren|^fr$|^en$/i) || Object.keys(row).find((k) => !skip.has(k));
         const fgn = (fgnK ? String(row[fgnK]) : "").trim();
         const de = (deK ? String(row[deK]) : "").trim();
         const topic = (tpK ? String(row[tpK]) : "").trim();
-        if (fgn || de) parsed.push({ fgn, de, topic });
+        if (fgn || de) parsed.push({ fgn, de, topic, examples });
       }
       setBusy(false);
       if (!parsed.length) { toast("No words found in that file", "x"); return; }
@@ -235,29 +249,36 @@ export function WordList() {
     } catch (e) { setBusy(false); toast("Couldn't read that file", "x"); }
   }, [toast, isLat]);
 
+  // Two explicit example columns instead of one delimited cell: a sentence may
+  // contain any punctuation, and "|" / ";" are already column separators here.
   const exampleRows = isLat
-    ? [["canis", "canis, canis, m.", "Nomen", "der Hund", "Tiere"], ["video", "video, videre, vidi, visum", "Verb", "sehen", "Verben"], ["ruber", "ruber, rubra, rubrum", "Adjektiv", "rot", "Farben"]]
+    ? [["canis", "canis, canis, m.", "Nomen", "der Hund", "Canis in horto currit.", "", "Tiere"], ["video", "video, videre, vidi, visum", "Verb", "sehen", "Puellam video.", "Nihil videre possum.", "Verben"], ["ruber", "ruber, rubra, rubrum", "Adjektiv", "rot", "Rosa rubra est.", "", "Farben"]]
     : pair === "fr-de"
-    ? [["le chien", "der Hund", "Animaux"], ["rouge", "", "Couleurs"], ["", "das Buch", "École"]]
-    : [["dog", "der Hund", "Animals"], ["red", "", "Colours"], ["", "das Buch", "School"]];
+    ? [["le chien", "der Hund", "Le chien court dans le jardin.", "", "Animaux"], ["rouge", "", "La rose est rouge.", "", "Couleurs"], ["", "das Buch", "", "", "École"]]
+    : [["dog", "der Hund", "The dog runs in the garden.", "My dog is very old.", "Animals"], ["red", "", "The rose is red.", "", "Colours"], ["", "das Buch", "", "", "School"]];
   const downloadTemplate = () => {
-    const head = isLat ? ["Grundform", "Lernform", "Wortart", "Deutsch", "Topic"] : [P.foreignLabel, "Deutsch", "Topic"];
+    const head = isLat
+      ? ["Grundform", "Lernform", "Wortart", "Deutsch", "Beispielsatz 1", "Beispielsatz 2", "Topic"]
+      : [P.foreignLabel, "Deutsch", "Beispielsatz 1", "Beispielsatz 2", "Topic"];
     const ws = XLSX.utils.aoa_to_sheet([head, ...exampleRows]);
-    ws["!cols"] = isLat ? [{ wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 14 }] : [{ wch: 18 }, { wch: 20 }, { wch: 14 }];
+    ws["!cols"] = isLat
+      ? [{ wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 30 }, { wch: 30 }, { wch: 14 }]
+      : [{ wch: 18 }, { wch: 20 }, { wch: 30 }, { wch: 30 }, { wch: 14 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vocabulary"); XLSX.writeFile(wb, "vocabulary-template.xlsx");
     toast("Template downloaded — fill it and import", "download");
   };
   const exportList = () => {
     const src = activeList === "__all" ? pairVocab : filtered;
+    const ex = (w, i) => (w.examples || [])[i] || "";
     if (isLat) {
-      const ws = XLSX.utils.aoa_to_sheet([["Grundform", "Lernform", "Wortart", "Deutsch", "Topic"], ...src.map((w) => [w.grundform || "", w.lernform || "", w.wortart || "", w.de, w.topic || ""])]);
-      ws["!cols"] = [{ wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 14 }];
+      const ws = XLSX.utils.aoa_to_sheet([["Grundform", "Lernform", "Wortart", "Deutsch", "Beispielsatz 1", "Beispielsatz 2", "Topic"], ...src.map((w) => [w.grundform || "", w.lernform || "", w.wortart || "", w.de, ex(w, 0), ex(w, 1), w.topic || ""])]);
+      ws["!cols"] = [{ wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 30 }, { wch: 30 }, { wch: 14 }];
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vocabulary"); XLSX.writeFile(wb, "my-vocabulary.xlsx");
       toast("Exported your word list", "download");
       return;
     }
-    const ws = XLSX.utils.aoa_to_sheet([[P.foreignLabel, "Deutsch", "Topic"], ...src.map((w) => [w[foreign] || "", w.de, w.topic || ""])]);
-    ws["!cols"] = [{ wch: 18 }, { wch: 20 }, { wch: 14 }];
+    const ws = XLSX.utils.aoa_to_sheet([[P.foreignLabel, "Deutsch", "Beispielsatz 1", "Beispielsatz 2", "Topic"], ...src.map((w) => [w[foreign] || "", w.de, ex(w, 0), ex(w, 1), w.topic || ""])]);
+    ws["!cols"] = [{ wch: 18 }, { wch: 20 }, { wch: 30 }, { wch: 30 }, { wch: 14 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vocabulary"); XLSX.writeFile(wb, "my-vocabulary.xlsx");
     toast("Exported your word list", "download");
   };
@@ -356,6 +377,10 @@ export function WordList() {
             {busy ? <Icon name="refresh" size={15} /> : <Icon name="plus" size={15} />} Add
           </button>
         </div>
+        <div className="row" style={{ marginTop: 10 }}>
+          <input className="field grow" placeholder={`Beispielsatz auf ${P.foreignLabel} (optional)`} value={adding.ex1}
+            onChange={(e) => setAdding({ ...adding, ex1: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addWord()} />
+        </div>
         <div className="faint" style={{ fontSize: 12, marginTop: 9, display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="sparkle" size={13} /> {isLat ? "Latein: Grundform + volle Lernform (Stammformen) + Wortart eingeben." : "Fill in just one language — the app translates the other and flags it for your review."}
         </div>
@@ -421,6 +446,8 @@ export function WordList() {
                     ))}
                   </div>
                   <input className="mini-input" style={{ marginTop: 8, maxWidth: 160 }} placeholder="Topic" value={draft.topic} onChange={(e) => setDraft({ ...draft, topic: e.target.value })} />
+                  <input className="mini-input" style={{ marginTop: 6 }} placeholder={`Beispielsatz (${P.foreignLabel})`} value={draft.ex1} onChange={(e) => setDraft({ ...draft, ex1: e.target.value })} />
+                  <input className="mini-input" style={{ marginTop: 6 }} placeholder="Zweiter Beispielsatz (optional)" value={draft.ex2} onChange={(e) => setDraft({ ...draft, ex2: e.target.value })} />
                 </td>
                 <td>
                   <div className="row" style={{ gap: 6 }}>
